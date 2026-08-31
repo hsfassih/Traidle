@@ -28,3 +28,8 @@ build.ninja
 /.vs/
 /.vscode/
 CMakeUserPresets.json
+
+# Others
+scripts/
+.github/instructions/
+.github/*.md

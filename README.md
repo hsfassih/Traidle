@@ -1,5 +1,5 @@
 # TRAIDLE
-AI powered trading - An integration of live market stream with your custome trading strategy
+AI powered trading - An integration of live market stream with your custom trading strategy
 
 ## Live Futures Price Console
 
