@@ -1,0 +1,11 @@
+{
+  "name": "traidle",
+  "version": "0.1.0",
+  "dependencies": [
+    "boost-asio",
+    "boost-beast",
+    "boost-system",
+    "openssl",
+    "nlohmann-json"
+  ]
+}

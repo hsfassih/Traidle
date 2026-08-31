@@ -1,0 +1,30 @@
+# CMake and build output
+/build*/
+/out/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+build.ninja
+.ninja_deps
+.ninja_log
+
+# vcpkg manifest output
+/vcpkg_installed/
+
+# Compiler and debugger artifacts
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.obj
+*.lib
+*.a
+*.dll.a
+
+# Local IDE settings
+/.vs/
+/.vscode/
+CMakeUserPresets.json
