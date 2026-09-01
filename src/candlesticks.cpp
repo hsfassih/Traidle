@@ -9,116 +9,114 @@
 namespace candlesticks {
 namespace {
 
-std::string trim(const std::string& value) {
+string trim(const string& value) {
     const auto first = value.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos) {
+    if (first == string::npos) {
         return {};
     }
     const auto last = value.find_last_not_of(" \t\r\n");
     return value.substr(first, last - first + 1);
 }
 
-bool isSupportedBinanceInterval(const std::string& interval) {
-    static const std::array<std::string, 15> kSupportedIntervals = {
+bool isSupportedBinanceInterval(const string& interval) {
+    static const array<string, 15> kSupportedIntervals = {
         "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h",
         "12h", "1d", "3d", "1w", "1M",
     };
-    return std::find(kSupportedIntervals.begin(), kSupportedIntervals.end(), interval) !=
+    return find(kSupportedIntervals.begin(), kSupportedIntervals.end(), interval) !=
            kSupportedIntervals.end();
 }
 
-std::optional<std::string> stringField(const nlohmann::json& object, const char* key) {
+optional<string> stringField(const nlohmann::json& object, const char* key) {
     const auto field = object.find(key);
     if (field == object.end() || !field->is_string()) {
-        return std::nullopt;
+        return nullopt;
     }
-    return field->get<std::string>();
+    return field->get<string>();
 }
 
-std::optional<std::int64_t> integerField(const nlohmann::json& object, const char* key) {
+optional<int64_t> integerField(const nlohmann::json& object, const char* key) {
     const auto field = object.find(key);
     if (field == object.end() ||
         (!field->is_number_integer() && !field->is_number_unsigned())) {
-        return std::nullopt;
+        return nullopt;
     }
     try {
-        return field->get<std::int64_t>();
-    } catch (const std::exception&) {
-        return std::nullopt;
+        return field->get<int64_t>();
+    } catch (const exception&) {
+        return nullopt;
     }
 }
 
-std::optional<double> positivePriceField(const nlohmann::json& object, const char* key) {
+optional<double> positivePriceField(const nlohmann::json& object, const char* key) {
     const auto price = stringField(object, key);
     if (!price.has_value()) {
-        return std::nullopt;
+        return nullopt;
     }
 
     try {
-        const double value = std::stod(*price);
-        if (!std::isfinite(value) || value <= 0.0) {
-            return std::nullopt;
+        const double value = stod(*price);
+        if (!isfinite(value) || value <= 0.0) {
+            return nullopt;
         }
         return value;
-    } catch (const std::exception&) {
-        return std::nullopt;
+    } catch (const exception&) {
+        return nullopt;
     }
 }
 
-std::optional<double> positivePriceElement(const nlohmann::json& values, std::size_t index) {
+optional<double> positivePriceElement(const nlohmann::json& values, size_t index) {
     if (index >= values.size() || !values[index].is_string()) {
-        return std::nullopt;
+        return nullopt;
     }
 
     try {
-        const double value = std::stod(values[index].get<std::string>());
-        if (!std::isfinite(value) || value <= 0.0) {
-            return std::nullopt;
+        const double value = stod(values[index].get<string>());
+        if (!isfinite(value) || value <= 0.0) {
+            return nullopt;
         }
         return value;
-    } catch (const std::exception&) {
-        return std::nullopt;
+    } catch (const exception&) {
+        return nullopt;
     }
 }
 
 }  // namespace
 
-std::optional<std::string> toBinanceInterval(const std::string& rawTimeframe) {
-    const std::string timeframe = trim(rawTimeframe);
-    const auto unitStart = std::find_if(
+optional<string> toBinanceInterval(const string& rawTimeframe) {
+    const string timeframe = trim(rawTimeframe);
+    const auto unitStart = find_if(
         timeframe.begin(), timeframe.end(),
-        [](unsigned char character) { return !std::isdigit(character); });
+        [](unsigned char character) { return !isdigit(character); });
 
     if (unitStart == timeframe.begin() || unitStart == timeframe.end() ||
-        !std::all_of(timeframe.begin(), unitStart,
-                     [](unsigned char character) { return std::isdigit(character); })) {
-        return std::nullopt;
+        !all_of(timeframe.begin(), unitStart,
+                [](unsigned char character) { return isdigit(character); })) {
+        return nullopt;
     }
 
-    const std::string unit(unitStart, timeframe.end());
-    const std::string interval = unit == "mo"
-                                     ? std::string(timeframe.begin(), unitStart) + "M"
-                                     : timeframe;
+    const string unit(unitStart, timeframe.end());
+    const string interval = unit == "mo" ? string(timeframe.begin(), unitStart) + "M" : timeframe;
     if (!isSupportedBinanceInterval(interval)) {
-        return std::nullopt;
+        return nullopt;
     }
     return interval;
 }
 
-std::string supportedTimeframes() {
+string supportedTimeframes() {
     return "1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1mo";
 }
 
-std::optional<Candlestick> parseKlineMessage(const nlohmann::json& message) {
+optional<Candlestick> parseKlineMessage(const nlohmann::json& message) {
     if (!message.is_object()) {
-        return std::nullopt;
+        return nullopt;
     }
 
     const nlohmann::json* data = &message;
     const auto dataField = message.find("data");
     if (dataField != message.end()) {
         if (!dataField->is_object()) {
-            return std::nullopt;
+            return nullopt;
         }
         data = &*dataField;
     }
@@ -127,7 +125,7 @@ std::optional<Candlestick> parseKlineMessage(const nlohmann::json& message) {
     const auto klineField = data->find("k");
     if (!eventType.has_value() || *eventType != "kline" || klineField == data->end() ||
         !klineField->is_object()) {
-        return std::nullopt;
+        return nullopt;
     }
 
     const nlohmann::json& kline = *klineField;
@@ -143,23 +141,23 @@ std::optional<Candlestick> parseKlineMessage(const nlohmann::json& message) {
     if (!symbol.has_value() || !openTime.has_value() || !closeTime.has_value() ||
         !open.has_value() || !high.has_value() || !low.has_value() || !close.has_value() ||
         closedField == kline.end() || !closedField->is_boolean() ||
-        *high < std::max(*open, *close) || *low > std::min(*open, *close)) {
-        return std::nullopt;
+        *high < max(*open, *close) || *low > min(*open, *close)) {
+        return nullopt;
     }
 
     return Candlestick{*symbol, *openTime, *closeTime, *open, *high, *low, *close,
                        closedField->get<bool>()};
 }
 
-std::optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
-                                              const std::string& symbol) {
+optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
+                                         const string& symbol) {
     if (!response.is_array() || response.empty() || !response.front().is_array()) {
-        return std::nullopt;
+        return nullopt;
     }
 
     const nlohmann::json& kline = response.front();
     if (kline.size() < 7 || !kline[0].is_number() || !kline[6].is_number()) {
-        return std::nullopt;
+        return nullopt;
     }
 
     const auto open = positivePriceElement(kline, 1);
@@ -167,15 +165,15 @@ std::optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
     const auto low = positivePriceElement(kline, 3);
     const auto close = positivePriceElement(kline, 4);
     if (!open.has_value() || !high.has_value() || !low.has_value() || !close.has_value() ||
-        *high < std::max(*open, *close) || *low > std::min(*open, *close)) {
-        return std::nullopt;
+        *high < max(*open, *close) || *low > min(*open, *close)) {
+        return nullopt;
     }
 
     try {
-        return Candlestick{symbol, kline[0].get<std::int64_t>(),
-                           kline[6].get<std::int64_t>(), *open, *high, *low, *close, false};
-    } catch (const std::exception&) {
-        return std::nullopt;
+        return Candlestick{symbol, kline[0].get<int64_t>(), kline[6].get<int64_t>(), *open,
+                           *high, *low, *close, false};
+    } catch (const exception&) {
+        return nullopt;
     }
 }
 

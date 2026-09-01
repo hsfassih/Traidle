@@ -33,4 +33,3 @@ CMakeUserPresets.json
 scripts/
 .github/instructions/
 .github/*.md
-memory-bank/

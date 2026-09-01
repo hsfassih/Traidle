@@ -6,12 +6,14 @@
 
 #include <nlohmann/json.hpp>
 
+using namespace std;
+
 namespace candlesticks {
 
 struct Candlestick {
-    std::string symbol;
-    std::int64_t openTime;
-    std::int64_t closeTime;
+    string symbol;
+    int64_t openTime;
+    int64_t closeTime;
     double open;
     double high;
     double low;
@@ -25,11 +27,11 @@ enum class Trend {
     Neutral,
 };
 
-std::optional<std::string> toBinanceInterval(const std::string& timeframe);
-std::string supportedTimeframes();
-std::optional<Candlestick> parseKlineMessage(const nlohmann::json& message);
-std::optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
-                                              const std::string& symbol);
+optional<string> toBinanceInterval(const string& timeframe);
+string supportedTimeframes();
+optional<Candlestick> parseKlineMessage(const nlohmann::json& message);
+optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
+                                         const string& symbol);
 Trend trendOf(const Candlestick& candle);
 const char* trendLabel(Trend trend);
 
