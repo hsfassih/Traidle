@@ -1,4 +1,5 @@
 #include <boost/asio/connect.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/error.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -13,9 +14,11 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <functional>
 #include <sstream>
 #include <string>
 
@@ -54,8 +57,17 @@ string toLower(string value) {
     return value;
 }
 
-string formatEventTime(long long epochMs) {
-    const auto epochSeconds = static_cast<time_t>(epochMs / 1000);
+bool isPositivePrice(const string& value) {
+    try {
+        return !value.empty() && isfinite(stod(value)) && stod(value) > 0.0;
+    } catch (const exception&) {
+        return false;
+    }
+}
+
+string formatCurrentTime() {
+    const auto now = chrono::system_clock::now();
+    const auto epochSeconds = chrono::system_clock::to_time_t(now);
     tm localTm{};
 #if defined(_WIN32)
     localtime_s(&localTm, &epochSeconds);
@@ -65,13 +77,6 @@ string formatEventTime(long long epochMs) {
     ostringstream oss;
     oss << put_time(&localTm, "%H:%M:%S");
     return oss.str();
-}
-
-// Blocks until one WebSocket text frame arrives.
-string readMessage(WebSocketStream& ws) {
-    beast::flat_buffer buffer;
-    ws.read(buffer);
-    return beast::buffers_to_string(buffer.data());
 }
 
 }  // namespace
@@ -118,42 +123,74 @@ int main() {
 
         cout << "Streaming " << symbol << " last trade price. Press Ctrl+C to exit.\n";
 
-        auto nextDisplay = chrono::steady_clock::now();
-        while (true) {
-            const string payload = readMessage(ws);
+        string latestSymbol = symbol;
+        string latestPrice;
+        net::steady_timer displayTimer(ioc);
+        beast::flat_buffer buffer;
+        string errorMessage;
+        function<void(beast::error_code, size_t)> readHandler;
+        function<void(beast::error_code)> displayHandler;
 
-            json message;
+        readHandler = [&](beast::error_code ec, size_t) {
+            if (ec) {
+                errorMessage = "WebSocket read failed: " + ec.message();
+                ioc.stop();
+                return;
+            }
+
+            const string payload = beast::buffers_to_string(buffer.data());
+            buffer.consume(buffer.size());
             try {
-                message = json::parse(payload);
+                const json message = json::parse(payload);
+                if (message.contains("error")) {
+                    errorMessage = "Binance reported an error for " + symbol + ": " +
+                                   message["error"].dump();
+                    ioc.stop();
+                    return;
+                }
+
+                const json& data = message.contains("data") ? message["data"] : message;
+                if (data.value("e", "") == "trade") {
+                    const string candidatePrice = data.value("p", "");
+                    if (isPositivePrice(candidatePrice)) {
+                        latestSymbol = data.value("s", symbol);
+                        latestPrice = candidatePrice;
+                    }
+                }
             } catch (const json::parse_error& e) {
-                cerr << "\nReceived malformed message from Binance: " << e.what() << endl;
-                return 1;
+                errorMessage = "Received malformed message from Binance: " + string(e.what());
+                ioc.stop();
+                return;
             }
 
-            if (message.contains("error")) {
-                 cerr << "\nBinance reported an error for " << symbol << ": "
-                     << message["error"].dump() << endl;
-                return 1;
-            }
-            const json& data = message.contains("data") ? message["data"] : message;
-            if (data.value("e", "") != "trade") {
-                continue;
-            }
+            ws.async_read(buffer, readHandler);
+        };
 
-            const auto now = chrono::steady_clock::now();
-            if (now < nextDisplay) {
-                continue;
+        displayHandler = [&](beast::error_code ec) {
+            if (ec == net::error::operation_aborted) {
+                return;
             }
-            do {
-                nextDisplay += chrono::seconds(1);
-            } while (nextDisplay <= now);
+            if (ec) {
+                errorMessage = "Display timer failed: " + ec.message();
+                ioc.stop();
+                return;
+            }
+            if (!latestPrice.empty()) {
+                cout << "\r" << latestSymbol << "  " << latestPrice << "  ["
+                     << formatCurrentTime() << "]      " << flush;
+            }
+            displayTimer.expires_after(chrono::seconds(1));
+            displayTimer.async_wait(displayHandler);
+        };
 
-            const string eventSymbol = data.value("s", symbol);
-            const string price = data.value("p", "");
-            const long long eventTimeMs = data.value("E", 0LL);
+        ws.async_read(buffer, readHandler);
+        displayTimer.expires_after(chrono::seconds(1));
+        displayTimer.async_wait(displayHandler);
+        ioc.run();
 
-              cout << "\r" << eventSymbol << "  " << price << "  ["
-                  << formatEventTime(eventTimeMs) << "]      " << flush;
+        if (!errorMessage.empty()) {
+            cerr << "\nError: " << errorMessage << endl;
+            return 1;
         }
     } catch (const exception& e) {
         cerr << "\nError: " << e.what() << endl;
