@@ -1,3 +1,5 @@
+#include "candlesticks.h"
+
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -6,34 +8,37 @@
 #include <boost/asio/ssl/host_name_verification.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
+#include <boost/beast/http.hpp>
 #include <nlohmann/json.hpp>
 
 #include <openssl/ssl.h>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 #include <algorithm>
 #include <cctype>
 #include <chrono>
-#include <cmath>
 #include <ctime>
+#include <exception>
+#include <functional>
 #include <iomanip>
 #include <iostream>
-#include <functional>
+#include <optional>
 #include <sstream>
 #include <string>
 
 namespace beast = boost::beast;
-namespace websocket = beast::websocket;
+namespace http = beast::http;
 namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
 using json = nlohmann::json;
-using WebSocketStream = websocket::stream<ssl::stream<tcp::socket>>;
 using namespace std;
 
 namespace {
 
-constexpr auto kHost = "fstream.binance.com";
+constexpr auto kHost = "fapi.binance.com";
 constexpr auto kPort = "443";
 
 string trim(const string& value) {
@@ -57,14 +62,6 @@ string toLower(string value) {
     return value;
 }
 
-bool isPositivePrice(const string& value) {
-    try {
-        return !value.empty() && isfinite(stod(value)) && stod(value) > 0.0;
-    } catch (const exception&) {
-        return false;
-    }
-}
-
 string formatCurrentTime() {
     const auto now = chrono::system_clock::now();
     const auto epochSeconds = chrono::system_clock::to_time_t(now);
@@ -77,6 +74,150 @@ string formatCurrentTime() {
     ostringstream oss;
     oss << put_time(&localTm, "%H:%M:%S");
     return oss.str();
+}
+
+class CandlestickDisplay {
+public:
+    explicit CandlestickDisplay(string timeframe)
+        : timeframe_(move(timeframe)), useAnsiLineClear_(enableAnsiLineClear()) {}
+
+    void updateForming(const candlesticks::Candlestick& candle) {
+        render(candle, "FORMING", false);
+    }
+
+    void commitClosed(const candlesticks::Candlestick& candle) {
+        render(candle, "CLOSED", true);
+    }
+
+private:
+    static bool enableAnsiLineClear() {
+#if defined(_WIN32)
+        const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD mode = 0;
+        if (output == INVALID_HANDLE_VALUE || !GetConsoleMode(output, &mode)) {
+            return false;
+        }
+        return (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0 ||
+               SetConsoleMode(output, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0;
+#else
+        return true;
+#endif
+    }
+
+    static size_t terminalColumns() {
+#if defined(_WIN32)
+        const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+        CONSOLE_SCREEN_BUFFER_INFO bufferInfo{};
+        if (output != INVALID_HANDLE_VALUE &&
+            GetConsoleScreenBufferInfo(output, &bufferInfo)) {
+            return static_cast<size_t>(bufferInfo.srWindow.Right - bufferInfo.srWindow.Left + 1);
+        }
+#endif
+        return 0;
+    }
+
+    static string formatPrice(double price) {
+        ostringstream oss;
+        oss << setprecision(10) << defaultfloat << price;
+        return oss.str();
+    }
+
+    static const char* trendCode(candlesticks::Trend trend) {
+        switch (trend) {
+            case candlesticks::Trend::Bullish:
+                return "B";
+            case candlesticks::Trend::Bearish:
+                return "S";
+            case candlesticks::Trend::Neutral:
+                return "N";
+        }
+        return "?";
+    }
+
+    string formatLine(const candlesticks::Candlestick& candle, const char* state) const {
+        const string open = formatPrice(candle.open);
+        const string high = formatPrice(candle.high);
+        const string low = formatPrice(candle.low);
+        const string close = formatPrice(candle.close);
+        const auto trend = candlesticks::trendOf(candle);
+        const string fullLine = candle.symbol + " " + timeframe_ + " O:" + open + " H:" +
+                                high + " L:" + low + " C:" + close + " " +
+                                candlesticks::trendLabel(trend) + " " + state;
+        const size_t columns = terminalColumns();
+        if (columns == 0 || fullLine.size() < columns) {
+            return fullLine;
+        }
+
+        const string compactLine = "O:" + open + " H:" + high + " L:" + low + " C:" +
+                                   close + " " + trendCode(trend) + " " +
+                                   (state[0] == 'F' ? "F" : "C");
+        return compactLine;
+    }
+
+    void render(const candlesticks::Candlestick& candle, const char* state, bool commitLine) {
+        const string line = formatLine(candle, state);
+        cout << '\r';
+        if (useAnsiLineClear_) {
+            cout << "\x1b[2K";
+        }
+        cout << line;
+        if (!useAnsiLineClear_ && liveLineWidth_ > line.size()) {
+            cout << string(liveLineWidth_ - line.size(), ' ');
+        }
+        if (commitLine) {
+            cout << '\n';
+            liveLineWidth_ = 0;
+        } else {
+            liveLineWidth_ = line.size();
+        }
+        cout << flush;
+    }
+
+    string timeframe_;
+    bool useAnsiLineClear_;
+    size_t liveLineWidth_ = 0;
+};
+
+optional<candlesticks::Candlestick> fetchCurrentCandle(
+    net::io_context& ioc, ssl::context& ctx, const string& symbol, const string& interval) {
+    tcp::resolver resolver(ioc);
+    ssl::stream<tcp::socket> stream(ioc, ctx);
+
+    if (!SSL_set_tlsext_host_name(stream.native_handle(), kHost)) {
+        throw beast::system_error{beast::error_code(
+            static_cast<int>(::ERR_get_error()), net::error::get_ssl_category())};
+    }
+    stream.set_verify_callback(ssl::host_name_verification(kHost));
+
+    const auto results = resolver.resolve(kHost, kPort);
+    net::connect(stream.next_layer(), results);
+    stream.handshake(ssl::stream_base::client);
+
+    const string target = "/fapi/v1/klines?symbol=" + symbol + "&interval=" + interval +
+                          "&limit=1";
+    http::request<http::empty_body> request{http::verb::get, target, 11};
+    request.set(http::field::host, kHost);
+    request.set(http::field::user_agent, "Traidle");
+    http::write(stream, request);
+
+    beast::flat_buffer buffer;
+    http::response<http::string_body> response;
+    http::read(stream, buffer, response);
+
+    beast::error_code shutdownError;
+    stream.shutdown(shutdownError);
+    if (shutdownError == net::error::eof || shutdownError == ssl::error::stream_truncated) {
+        shutdownError = {};
+    }
+    if (shutdownError) {
+        throw beast::system_error(shutdownError);
+    }
+    if (response.result() != http::status::ok) {
+        throw runtime_error("Binance REST request failed with HTTP " +
+                            to_string(response.result_int()));
+    }
+
+    return candlesticks::parseKlineResponse(json::parse(response.body()), symbol);
 }
 
 }  // namespace
@@ -95,8 +236,20 @@ int main() {
         return 1;
     }
 
-    const string streamName = toLower(symbol) + "@trade";
-    const string target = "/ws/" + streamName;
+    cout << "Enter a candlestick timeframe (e.g. 1m, 15m, 1h, 4h, 1d, 1w, 1mo): ";
+    string rawTimeframe;
+    if (!getline(cin, rawTimeframe)) {
+        cerr << "No timeframe provided." << endl;
+        return 1;
+    }
+
+    const string timeframe = trim(rawTimeframe);
+    const auto binanceInterval = candlesticks::toBinanceInterval(timeframe);
+    if (!binanceInterval.has_value()) {
+        cerr << "Unsupported timeframe. Choose one of: "
+             << candlesticks::supportedTimeframes() << endl;
+        return 1;
+    }
 
     try {
         net::io_context ioc;
@@ -104,94 +257,39 @@ int main() {
         ctx.load_verify_file("C:/certs/cacert.pem");
         ctx.set_verify_mode(ssl::verify_peer);
 
-        WebSocketStream ws(ioc, ctx);
+           cout << "Polling " << symbol << " " << timeframe
+               << " candlesticks. Press Ctrl+C to exit.\n";
 
-        if (!SSL_set_tlsext_host_name(ws.next_layer().native_handle(), kHost)) {
-            throw beast::system_error{beast::error_code(
-                static_cast<int>(::ERR_get_error()), net::error::get_ssl_category())};
-        }
-        ws.next_layer().set_verify_callback(ssl::host_name_verification(kHost));
-
-        tcp::resolver resolver(ioc);
-        const auto results = resolver.resolve(kHost, kPort);
-        const auto endpoint = net::connect(beast::get_lowest_layer(ws), results);
-
-        ws.next_layer().handshake(ssl::stream_base::client);
-
-        const string hostHeader = string(kHost) + ":" + to_string(endpoint.port());
-        ws.handshake(hostHeader, target);
-
-        cout << "Streaming " << symbol << " last trade price. Press Ctrl+C to exit.\n";
-
-        string latestSymbol = symbol;
-        string latestPrice;
-        net::steady_timer displayTimer(ioc);
-        beast::flat_buffer buffer;
-        string errorMessage;
-        function<void(beast::error_code, size_t)> readHandler;
-        function<void(beast::error_code)> displayHandler;
-
-        readHandler = [&](beast::error_code ec, size_t) {
+        optional<candlesticks::Candlestick> latestCandle;
+          CandlestickDisplay candleDisplay(timeframe);
+        net::steady_timer pollTimer(ioc);
+        function<void(beast::error_code)> pollHandler;
+        pollHandler = [&](beast::error_code ec) {
             if (ec) {
-                errorMessage = "WebSocket read failed: " + ec.message();
-                ioc.stop();
                 return;
             }
 
-            const string payload = beast::buffers_to_string(buffer.data());
-            buffer.consume(buffer.size());
             try {
-                const json message = json::parse(payload);
-                if (message.contains("error")) {
-                    errorMessage = "Binance reported an error for " + symbol + ": " +
-                                   message["error"].dump();
-                    ioc.stop();
-                    return;
-                }
-
-                const json& data = message.contains("data") ? message["data"] : message;
-                if (data.value("e", "") == "trade") {
-                    const string candidatePrice = data.value("p", "");
-                    if (isPositivePrice(candidatePrice)) {
-                        latestSymbol = data.value("s", symbol);
-                        latestPrice = candidatePrice;
+                const auto candle = fetchCurrentCandle(ioc, ctx, symbol, *binanceInterval);
+                if (candle.has_value()) {
+                    if (latestCandle.has_value() &&
+                        latestCandle->openTime != candle->openTime) {
+                        latestCandle->closed = true;
+                        candleDisplay.commitClosed(*latestCandle);
                     }
+                    latestCandle = candle;
+                    candleDisplay.updateForming(*candle);
                 }
-            } catch (const json::parse_error& e) {
-                errorMessage = "Received malformed message from Binance: " + string(e.what());
-                ioc.stop();
-                return;
+            } catch (const exception& e) {
+                cerr << "Error retrieving candle: " << e.what() << endl;
             }
 
-            ws.async_read(buffer, readHandler);
+            pollTimer.expires_after(chrono::seconds(1));
+            pollTimer.async_wait(pollHandler);
         };
 
-        displayHandler = [&](beast::error_code ec) {
-            if (ec == net::error::operation_aborted) {
-                return;
-            }
-            if (ec) {
-                errorMessage = "Display timer failed: " + ec.message();
-                ioc.stop();
-                return;
-            }
-            if (!latestPrice.empty()) {
-                cout << "\r" << latestSymbol << "  " << latestPrice << "  ["
-                     << formatCurrentTime() << "]      " << flush;
-            }
-            displayTimer.expires_after(chrono::seconds(1));
-            displayTimer.async_wait(displayHandler);
-        };
-
-        ws.async_read(buffer, readHandler);
-        displayTimer.expires_after(chrono::seconds(1));
-        displayTimer.async_wait(displayHandler);
+        pollHandler({});
         ioc.run();
-
-        if (!errorMessage.empty()) {
-            cerr << "\nError: " << errorMessage << endl;
-            return 1;
-        }
     } catch (const exception& e) {
         cerr << "\nError: " << e.what() << endl;
         return 1;
