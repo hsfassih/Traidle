@@ -23,3 +23,18 @@ target_link_libraries(traidle PRIVATE
 if(WIN32)
     target_link_libraries(traidle PRIVATE ws2_32 mswsock crypt32)
 endif()
+
+add_executable(ws_diagnostic
+    scripts/ws_diagnostic.cpp
+)
+
+target_link_libraries(ws_diagnostic PRIVATE
+    Boost::system
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    nlohmann_json::nlohmann_json
+)
+
+if(WIN32)
+    target_link_libraries(ws_diagnostic PRIVATE ws2_32 mswsock crypt32)
+endif()
