@@ -9,7 +9,7 @@ find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 add_executable(traidle
-    src/main.cpp
+    src/binance.cpp
     src/candlesticks.cpp
 )
 
