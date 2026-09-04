@@ -33,3 +33,4 @@ CMakeUserPresets.json
 scripts/
 .github/instructions/
 .github/*.md
+*usdt/

@@ -12,6 +12,7 @@ find_package(Threads REQUIRED)
 add_executable(traidle
     src/binance.cpp
     src/candlesticks.cpp
+    src/historical_get.cpp
 )
 
 target_link_libraries(traidle PRIVATE

@@ -1,4 +1,5 @@
 #include "candlesticks.h"
+#include "historical_get.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -401,12 +402,29 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                         TerminalBoard& board) {
     const string label = task.rawTimeframe;
     try {
-        ofstream csv = openCsvAppend(csvPath);
-
         net::io_context ioc;
         ssl::context ctx(ssl::context::tlsv12_client);
         ctx.load_verify_file("C:/certs/cacert.pem");
         ctx.set_verify_mode(ssl::verify_peer);
+
+        // Before touching the live path at all: make sure the CSV is a
+        // continuous history from 3 years ago up to the candle that's
+        // currently forming. Covers a brand-new symbol (nothing on disk
+        // yet), a resumed/interrupted prior backfill, and a plain restart
+        // gap - all with the same logic. historical_get.cpp manages its own
+        // CSV handle for this and hands back a file that's ready for the
+        // live path to open in append mode below.
+        board.updateLine(task.rowIndex, "checking historical data...");
+        const bool historyOk = historical::ensureContinuousHistory(
+            ioc, ctx, symbol, task.binanceInterval, csvPath,
+            [&](const string& msg) { board.log("[" + label + "] " + msg); });
+        if (!historyOk) {
+            board.log("[" + label +
+                      "] historical backfill did not fully complete; continuing with live data "
+                      "only (some earlier candles may still be missing).");
+        }
+
+        ofstream csv = openCsvAppend(csvPath);
 
         auto renderLine = [&](const candlesticks::Candlestick& candle, const char* tag) {
             const size_t columns = terminalColumns();
