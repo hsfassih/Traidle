@@ -34,18 +34,32 @@
 // ---------------------------------------------------------------------------
 namespace historical {
 
+// Two separate callbacks, matching TerminalBoard's two display modes:
+//   - status: frequent, transient progress ("backfilling: 129,000 so far")
+//     that should overwrite the same row in place, exactly like a FORMING
+//     candle update. Called often (per page while a big backfill runs), so
+//     it must be cheap and must never grow the terminal's scrollback.
+//   - log: rare, noteworthy events (the final backfill result, or a hard
+//     failure) that are worth a permanent scrolling line. Called at most a
+//     couple of times per timeframe for an entire backfill.
+// Routing routine progress through `log` instead of `status` is exactly
+// what causes the terminal to fall apart on a large backfill: hundreds of
+// scroll lines break the fixed board's relative cursor-movement math once
+// the console has to scroll past its buffer.
+using StatusHandler = std::function<void(const std::string&)>;
 using LogHandler = std::function<void(const std::string&)>;
 
 // Backfills csvPath for `symbol`/`binanceInterval` until it is caught up to
 // "now". Returns true once caught up (including the trivial case where
-// nothing needed fetching, which does zero network requests). Returns false
-// only on an unrecoverable error (already reported via `log`); the caller
-// can still fall through to the live path in that case, just with whatever
-// gap remains unfilled. Safe to call from multiple threads concurrently
-// (one per timeframe) - a shared rate limiter keeps combined request weight
-// under Binance's per-IP budget.
+// nothing needed fetching, which does zero network requests and calls
+// neither callback). Returns false only on an unrecoverable error (already
+// reported via `log`); the caller can still fall through to the live path
+// in that case, just with whatever gap remains unfilled. Safe to call from
+// multiple threads concurrently (one per timeframe) - a shared rate
+// limiter keeps combined request weight under Binance's per-IP budget.
 bool ensureContinuousHistory(boost::asio::io_context& ioc, boost::asio::ssl::context& ctx,
                               const std::string& symbol, const std::string& binanceInterval,
-                              const std::filesystem::path& csvPath, const LogHandler& log);
+                              const std::filesystem::path& csvPath, const StatusHandler& status,
+                              const LogHandler& log);
 
 }  // namespace historical

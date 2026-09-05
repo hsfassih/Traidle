@@ -380,15 +380,22 @@ ofstream openCsvAppend(const filesystem::path& path) {
         throw runtime_error("Failed to open CSV file: " + path.string());
     }
     if (needsHeader) {
-        csv << "timestamp,open,high,low,close\n";
+        csv << "timestamp,base_volume,quote_volume,taker_buy_base_volume,taker_buy_quote_volume,"
+               "open,high,low,close\n";
         csv.flush();
     }
     return csv;
 }
 
 void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle) {
-    csv << formatUtcTimestamp(candle.openTime) << ',' << formatPrice(candle.open) << ','
-        << formatPrice(candle.high) << ',' << formatPrice(candle.low) << ','
+    csv << formatUtcTimestamp(candle.openTime) << ','
+        << formatPrice(candle.baseVolume) << ','
+        << formatPrice(candle.quoteVolume) << ','
+        << formatPrice(candle.takerBuyBaseVolume) << ','
+        << formatPrice(candle.takerBuyQuoteVolume) << ','
+        << formatPrice(candle.open) << ','
+        << formatPrice(candle.high) << ','
+        << formatPrice(candle.low) << ','
         << formatPrice(candle.close) << '\n';
     csv.flush();
 }
@@ -417,6 +424,7 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         board.updateLine(task.rowIndex, "checking historical data...");
         const bool historyOk = historical::ensureContinuousHistory(
             ioc, ctx, symbol, task.binanceInterval, csvPath,
+            [&](const string& msg) { board.updateLine(task.rowIndex, msg); },
             [&](const string& msg) { board.log("[" + label + "] " + msg); });
         if (!historyOk) {
             board.log("[" + label +

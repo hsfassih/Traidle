@@ -163,15 +163,22 @@ ofstream openCsvAppend(const filesystem::path& path) {
         throw runtime_error("Failed to open CSV file: " + path.string());
     }
     if (needsHeader) {
-        csv << "timestamp,open,high,low,close\n";
+        csv << "timestamp,base_volume,quote_volume,taker_buy_base_volume,taker_buy_quote_volume,"
+               "open,high,low,close\n";
         csv.flush();
     }
     return csv;
 }
 
 void writeRow(ofstream& csv, const candlesticks::Candlestick& candle) {
-    csv << formatUtcTimestamp(candle.openTime) << ',' << formatPrice(candle.open) << ','
-        << formatPrice(candle.high) << ',' << formatPrice(candle.low) << ','
+    csv << formatUtcTimestamp(candle.openTime) << ','
+        << formatPrice(candle.baseVolume) << ','
+        << formatPrice(candle.quoteVolume) << ','
+        << formatPrice(candle.takerBuyBaseVolume) << ','
+        << formatPrice(candle.takerBuyQuoteVolume) << ','
+        << formatPrice(candle.open) << ','
+        << formatPrice(candle.high) << ','
+        << formatPrice(candle.low) << ','
         << formatPrice(candle.close) << '\n';
     csv.flush();
 }
@@ -224,17 +231,18 @@ optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
             continue;
         }
 
-        // Require a fully-formed row (timestamp + 4 numeric fields) before
-        // trusting it as a resume point, so a row corrupted or truncated by
-        // a mid-write crash is skipped in favor of the last complete one
-        // rather than silently accepted with garbage/partial values.
+        // Require a fully-formed row (timestamp + 4 volume fields + 4 OHLC
+        // fields = 9 columns total) before trusting it as a resume point,
+        // so a row corrupted or truncated by a mid-write crash is skipped
+        // in favor of the last complete one rather than silently accepted
+        // with garbage/partial values.
         vector<string> fields;
         stringstream fieldStream(*it);
         string field;
         while (getline(fieldStream, field, ',')) {
             fields.push_back(field);
         }
-        if (fields.size() != 5) {
+        if (fields.size() != 9) {
             continue;
         }
         bool fieldsValid = true;
@@ -368,9 +376,10 @@ private:
     }
 
     // Reuses candlesticks::parseKlineResponse()'s validation (positive
-    // prices, high/low consistency, etc.) for every row by wrapping each
-    // one as its own single-row response, instead of duplicating that
-    // logic here. candlesticks.cpp itself is never modified.
+    // prices, high/low consistency, volume fields, etc.) for every row by
+    // wrapping each one as its own single-row response, instead of
+    // duplicating that logic here. candlesticks.cpp itself is never
+    // modified by this module.
     static vector<candlesticks::Candlestick> parseKlineArray(const json& body,
                                                               const string& symbol) {
         vector<candlesticks::Candlestick> candles;
@@ -402,7 +411,7 @@ int64_t nowMs() {
 
 bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const string& symbol,
                               const string& binanceInterval, const filesystem::path& csvPath,
-                              const LogHandler& log) {
+                              const StatusHandler& status, const LogHandler& log) {
     try {
         int64_t nextNeededOpenTimeMs = nowMs() - kHistoryWindowMs;
         if (auto last = lastStoredOpenTimeMs(csvPath)) {
@@ -417,7 +426,7 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
         KlineHistoryConnection connection(ioc, ctx);
 
         int64_t fetchedCount = 0;
-        auto lastProgressLog = steady_clock::now();
+        auto lastProgressUpdate = steady_clock::now();
 
         // "now" is re-sampled every iteration (not captured once up front),
         // so a multi-hour backfill on a fast timeframe still converges: each
@@ -452,9 +461,12 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
                 break;
             }
 
-            if (steady_clock::now() - lastProgressLog > seconds(5)) {
-                log("backfilling history: " + to_string(fetchedCount) + " candle(s) so far");
-                lastProgressLog = steady_clock::now();
+            // In-place status update only - this can fire hundreds of times
+            // during a large 1m/3m/5m backfill, so it must never touch the
+            // scrolling log (see the StatusHandler/LogHandler split above).
+            if (steady_clock::now() - lastProgressUpdate > milliseconds(750)) {
+                status("backfilling history: " + to_string(fetchedCount) + " candle(s) so far");
+                lastProgressUpdate = steady_clock::now();
             }
         }
 

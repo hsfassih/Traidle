@@ -81,6 +81,43 @@ optional<double> positivePriceElement(const nlohmann::json& values, size_t index
     }
 }
 
+// Volume fields are string-encoded numbers just like prices, but unlike
+// prices a volume of exactly zero is a legitimate value (e.g. a
+// thinly-traded pair during a quiet candle), so these two helpers accept
+// >= 0.0 instead of the strict > 0.0 that positivePriceField/Element use.
+optional<double> nonNegativeField(const nlohmann::json& object, const char* key) {
+    const auto raw = stringField(object, key);
+    if (!raw.has_value()) {
+        return nullopt;
+    }
+
+    try {
+        const double value = stod(*raw);
+        if (!isfinite(value) || value < 0.0) {
+            return nullopt;
+        }
+        return value;
+    } catch (const exception&) {
+        return nullopt;
+    }
+}
+
+optional<double> nonNegativeElement(const nlohmann::json& values, size_t index) {
+    if (index >= values.size() || !values[index].is_string()) {
+        return nullopt;
+    }
+
+    try {
+        const double value = stod(values[index].get<string>());
+        if (!isfinite(value) || value < 0.0) {
+            return nullopt;
+        }
+        return value;
+    } catch (const exception&) {
+        return nullopt;
+    }
+}
+
 }  // namespace
 
 optional<string> toBinanceInterval(const string& rawTimeframe) {
@@ -136,16 +173,32 @@ optional<Candlestick> parseKlineMessage(const nlohmann::json& message) {
     const auto high = positivePriceField(kline, "h");
     const auto low = positivePriceField(kline, "l");
     const auto close = positivePriceField(kline, "c");
+    const auto baseVolume = nonNegativeField(kline, "v");
+    const auto quoteVolume = nonNegativeField(kline, "q");
+    const auto takerBuyBaseVolume = nonNegativeField(kline, "V");
+    const auto takerBuyQuoteVolume = nonNegativeField(kline, "Q");
     const auto closedField = kline.find("x");
 
     if (!symbol.has_value() || !openTime.has_value() || !closeTime.has_value() ||
         !open.has_value() || !high.has_value() || !low.has_value() || !close.has_value() ||
+        !baseVolume.has_value() || !quoteVolume.has_value() ||
+        !takerBuyBaseVolume.has_value() || !takerBuyQuoteVolume.has_value() ||
         closedField == kline.end() || !closedField->is_boolean() ||
         *high < max(*open, *close) || *low > min(*open, *close)) {
         return nullopt;
     }
 
-    return Candlestick{*symbol, *openTime, *closeTime, *open, *high, *low, *close,
+    return Candlestick{*symbol,
+                       *openTime,
+                       *closeTime,
+                       *open,
+                       *high,
+                       *low,
+                       *close,
+                       *baseVolume,
+                       *quoteVolume,
+                       *takerBuyBaseVolume,
+                       *takerBuyQuoteVolume,
                        closedField->get<bool>()};
 }
 
@@ -156,7 +209,9 @@ optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
     }
 
     const nlohmann::json& kline = response.front();
-    if (kline.size() < 7 || !kline[0].is_number() || !kline[6].is_number()) {
+    // Need indices up through 10 (taker buy quote volume) now, not just 6
+    // (close time), so the minimum accepted row length grows accordingly.
+    if (kline.size() < 11 || !kline[0].is_number() || !kline[6].is_number()) {
         return nullopt;
     }
 
@@ -164,14 +219,30 @@ optional<Candlestick> parseKlineResponse(const nlohmann::json& response,
     const auto high = positivePriceElement(kline, 2);
     const auto low = positivePriceElement(kline, 3);
     const auto close = positivePriceElement(kline, 4);
+    const auto baseVolume = nonNegativeElement(kline, 5);
+    const auto quoteVolume = nonNegativeElement(kline, 7);
+    const auto takerBuyBaseVolume = nonNegativeElement(kline, 9);
+    const auto takerBuyQuoteVolume = nonNegativeElement(kline, 10);
     if (!open.has_value() || !high.has_value() || !low.has_value() || !close.has_value() ||
+        !baseVolume.has_value() || !quoteVolume.has_value() ||
+        !takerBuyBaseVolume.has_value() || !takerBuyQuoteVolume.has_value() ||
         *high < max(*open, *close) || *low > min(*open, *close)) {
         return nullopt;
     }
 
     try {
-        return Candlestick{symbol, kline[0].get<int64_t>(), kline[6].get<int64_t>(), *open,
-                           *high, *low, *close, false};
+        return Candlestick{symbol,
+                           kline[0].get<int64_t>(),
+                           kline[6].get<int64_t>(),
+                           *open,
+                           *high,
+                           *low,
+                           *close,
+                           *baseVolume,
+                           *quoteVolume,
+                           *takerBuyBaseVolume,
+                           *takerBuyQuoteVolume,
+                           false};
     } catch (const exception&) {
         return nullopt;
     }
