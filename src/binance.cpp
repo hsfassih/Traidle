@@ -1,5 +1,6 @@
 #include "candlesticks.h"
 #include "historical_get.h"
+#include "indicators.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -381,18 +382,21 @@ ofstream openCsvAppend(const filesystem::path& path) {
     }
     if (needsHeader) {
         csv << "timestamp,base_volume,quote_volume,taker_buy_base_volume,taker_buy_quote_volume,"
-               "open,high,low,close\n";
+            << indicators::indicatorHeader() << "open,high,low,close\n";
         csv.flush();
     }
     return csv;
 }
 
-void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle) {
+void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle,
+                          indicators::IndicatorEngine& engine) {
+    const auto snapshot = engine.update(candle);
     csv << formatUtcTimestamp(candle.openTime) << ','
         << formatPrice(candle.baseVolume) << ','
         << formatPrice(candle.quoteVolume) << ','
         << formatPrice(candle.takerBuyBaseVolume) << ','
         << formatPrice(candle.takerBuyQuoteVolume) << ','
+        << indicators::formatIndicatorRow(snapshot)
         << formatPrice(candle.open) << ','
         << formatPrice(candle.high) << ','
         << formatPrice(candle.low) << ','
@@ -402,8 +406,9 @@ void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle
 
 // ---------------------------------------------------------------------------
 // One fully isolated worker per timeframe: own io_context/ssl::context, own
-// CSV file, own REST-priming/WS-reconnect/watchdog/REST-fallback state. A
-// failure or fallback on one timeframe cannot affect any other.
+// CSV file, own REST-priming/WS-reconnect/watchdog/REST-fallback state, and
+// (as of this version) its own IndicatorEngine. A failure or fallback on
+// one timeframe cannot affect any other.
 // ---------------------------------------------------------------------------
 void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::path csvPath,
                         TerminalBoard& board) {
@@ -413,6 +418,16 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         ssl::context ctx(ssl::context::tlsv12_client);
         ctx.load_verify_file("C:/certs/cacert.pem");
         ctx.set_verify_mode(ssl::verify_peer);
+
+        // One IndicatorEngine for this timeframe's entire lifetime - handed
+        // to ensureContinuousHistory() below (which warms it up from
+        // whatever is already on disk and keeps updating it through
+        // backfill), then reused unmodified by the live path further down.
+        // Constructing a second, fresh engine for the live path would
+        // silently reset every indicator's warm-up right at the seam
+        // between "history that existed before this run" and "candles
+        // this run has actually seen".
+        indicators::IndicatorEngine engine;
 
         // Before touching the live path at all: make sure the CSV is a
         // continuous history from 3 years ago up to the candle that's
@@ -425,7 +440,8 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         const bool historyOk = historical::ensureContinuousHistory(
             ioc, ctx, symbol, task.binanceInterval, csvPath,
             [&](const string& msg) { board.updateLine(task.rowIndex, msg); },
-            [&](const string& msg) { board.log("[" + label + "] " + msg); });
+            [&](const string& msg) { board.log("[" + label + "] " + msg); },
+            engine);
         if (!historyOk) {
             board.log("[" + label +
                       "] historical backfill did not fully complete; continuing with live data "
@@ -451,7 +467,7 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         auto ingestCandle = [&](const candlesticks::Candlestick& candle) {
             if (candle.closed) {
                 // WebSocket told us directly: this candle just closed.
-                writeClosedCandleRow(csv, candle);
+                writeClosedCandleRow(csv, candle, engine);
                 lastCandle.reset();
                 board.updateLine(task.rowIndex, "last candle saved to CSV");
                 return;
@@ -460,7 +476,7 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                 // Rollover detected between two REST polls / forming ticks.
                 candlesticks::Candlestick finished = *lastCandle;
                 finished.closed = true;
-                writeClosedCandleRow(csv, finished);
+                writeClosedCandleRow(csv, finished, engine);
             }
             lastCandle = candle;
             renderLine(candle, "FORMING");

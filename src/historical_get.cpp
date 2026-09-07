@@ -1,6 +1,7 @@
 #include "historical_get.h"
 
 #include "candlesticks.h"
+#include "indicators.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -46,10 +47,10 @@ constexpr auto kPort = "443";
 // (confirmed against the current API docs for GET /fapi/v1/klines).
 constexpr int kMaxPageLimit = 1500;
 
-// How far back "3 years" reaches. Doesn't need to land on an exact interval
+// How far back "5 years" reaches. Doesn't need to land on an exact interval
 // boundary - Binance buckets whatever startTime we send into the correct
 // candle boundaries on its own.
-constexpr int64_t kHistoryWindowMs = int64_t(3) * 365 * 24 * 3600 * 1000;
+constexpr int64_t kHistoryWindowMs = int64_t(5) * 365 * 24 * 3600 * 1000;
 
 // A candle isn't trusted as "closed" until its closeTime is this far in the
 // past, to absorb clock skew / request latency between when we snapshot
@@ -62,6 +63,18 @@ constexpr int64_t kClosedSafetyMarginMs = 2000;
 // each thread also makes). We stay well under that so backfilling never
 // crowds out the live path or risks a 429/418 ban.
 constexpr int kSafeWeightPerMinute = 900;
+
+// CSV column layout: timestamp(1) + volume(4) + indicators(14) + OHLC(4).
+// Kept as named constants since both the resume-point scan and the replay
+// reader below need to agree on exactly where each field lives.
+constexpr size_t kTotalColumns = 23;
+constexpr size_t kBaseVolumeColumn = 1;
+constexpr size_t kFirstIndicatorColumn = 5;
+constexpr size_t kLastIndicatorColumn = 18;  // inclusive
+constexpr size_t kOpenColumn = 19;
+constexpr size_t kHighColumn = 20;
+constexpr size_t kLowColumn = 21;
+constexpr size_t kCloseColumn = 22;
 
 int requestWeightForLimit(int limit) {
     // Weight table from GET /fapi/v1/klines docs.
@@ -164,23 +177,39 @@ ofstream openCsvAppend(const filesystem::path& path) {
     }
     if (needsHeader) {
         csv << "timestamp,base_volume,quote_volume,taker_buy_base_volume,taker_buy_quote_volume,"
-               "open,high,low,close\n";
+            << indicators::indicatorHeader() << "open,high,low,close\n";
         csv.flush();
     }
     return csv;
 }
 
-void writeRow(ofstream& csv, const candlesticks::Candlestick& candle) {
+void writeRow(ofstream& csv, const candlesticks::Candlestick& candle,
+              indicators::IndicatorEngine& engine) {
+    const auto snapshot = engine.update(candle);
     csv << formatUtcTimestamp(candle.openTime) << ','
         << formatPrice(candle.baseVolume) << ','
         << formatPrice(candle.quoteVolume) << ','
         << formatPrice(candle.takerBuyBaseVolume) << ','
         << formatPrice(candle.takerBuyQuoteVolume) << ','
+        << indicators::formatIndicatorRow(snapshot)
         << formatPrice(candle.open) << ','
         << formatPrice(candle.high) << ','
         << formatPrice(candle.low) << ','
         << formatPrice(candle.close) << '\n';
     csv.flush();
+}
+
+// Splits one CSV data line into its comma-separated fields. Shared by the
+// resume-point scanner and the full-file replay reader below so the two
+// can never disagree about how a row is tokenized.
+vector<string> splitCsvLine(const string& line) {
+    vector<string> fields;
+    stringstream fieldStream(line);
+    string field;
+    while (getline(fieldStream, field, ',')) {
+        fields.push_back(field);
+    }
+    return fields;
 }
 
 // Reads only the tail of the file (cheap even for a multi-million-row 1m
@@ -231,22 +260,27 @@ optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
             continue;
         }
 
-        // Require a fully-formed row (timestamp + 4 volume fields + 4 OHLC
-        // fields = 9 columns total) before trusting it as a resume point,
-        // so a row corrupted or truncated by a mid-write crash is skipped
-        // in favor of the last complete one rather than silently accepted
-        // with garbage/partial values.
-        vector<string> fields;
-        stringstream fieldStream(*it);
-        string field;
-        while (getline(fieldStream, field, ',')) {
-            fields.push_back(field);
-        }
-        if (fields.size() != 9) {
+        // Require a fully-formed row (timestamp + 4 volume + 14 indicator
+        // + 4 OHLC = 23 columns total) before trusting it as a resume
+        // point, so a row corrupted or truncated by a mid-write crash is
+        // skipped in favor of the last complete one rather than silently
+        // accepted with garbage/partial values.
+        const vector<string> fields = splitCsvLine(*it);
+        if (fields.size() != kTotalColumns) {
             continue;
         }
+
+        // Indices 1-4 (volume) and 19-22 (OHLC) must always be populated,
+        // parseable numbers. Indices 5-18 (the 14 indicator columns) may
+        // legitimately be an empty cell during that indicator's warm-up
+        // period - that is expected, valid data, not corruption, so a
+        // blank there does not disqualify the row.
         bool fieldsValid = true;
         for (size_t i = 1; i < fields.size(); ++i) {
+            const bool isIndicatorColumn = (i >= kFirstIndicatorColumn && i <= kLastIndicatorColumn);
+            if (isIndicatorColumn && fields[i].empty()) {
+                continue;
+            }
             try {
                 size_t consumed = 0;
                 stod(fields[i], &consumed);
@@ -267,6 +301,68 @@ optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
         }
     }
     return nullopt;
+}
+
+// Reads every existing data row in csvPath (if any) and replays it through
+// `engine`, oldest to newest (i.e. plain file order - candles are always
+// appended in chronological order), so the engine's internal state is
+// exactly as if this run had been going the whole time instead of
+// restarting. Only the columns IndicatorEngine::update() actually reads
+// (open time, OHLC, base volume) are reconstructed; the rest of the
+// Candlestick struct (symbol, close time, quote/taker volumes, closed
+// flag) is left default since nothing here consults them. A row that
+// doesn't match the current 23-column schema, or whose OHLCV cells don't
+// parse, is skipped rather than aborting the whole replay - crash-torn or
+// stale-schema rows are exactly what the resume-point scanner above is
+// already designed to tolerate at the very end of the file, and a handful
+// of skipped rows in the middle cannot happen under normal operation.
+void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
+                                  indicators::IndicatorEngine& engine) {
+    if (!filesystem::exists(csvPath)) {
+        return;
+    }
+    ifstream file(csvPath);
+    if (!file.is_open()) {
+        return;
+    }
+
+    string line;
+    bool isHeaderLine = true;
+    while (getline(file, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (isHeaderLine) {
+            isHeaderLine = false;
+            continue;
+        }
+        if (line.empty()) {
+            continue;
+        }
+
+        const vector<string> fields = splitCsvLine(line);
+        if (fields.size() != kTotalColumns) {
+            continue;
+        }
+
+        const auto openTimeMs = parseUtcTimestampToEpochMs(fields[0]);
+        if (!openTimeMs.has_value()) {
+            continue;
+        }
+
+        try {
+            candlesticks::Candlestick candle{};
+            candle.openTime = *openTimeMs;
+            candle.baseVolume = stod(fields[kBaseVolumeColumn]);
+            candle.open = stod(fields[kOpenColumn]);
+            candle.high = stod(fields[kHighColumn]);
+            candle.low = stod(fields[kLowColumn]);
+            candle.close = stod(fields[kCloseColumn]);
+            engine.update(candle);
+        } catch (const exception&) {
+            continue;  // corrupt row - skip it rather than abort the whole replay
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -411,8 +507,18 @@ int64_t nowMs() {
 
 bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const string& symbol,
                               const string& binanceInterval, const filesystem::path& csvPath,
-                              const StatusHandler& status, const LogHandler& log) {
+                              const StatusHandler& status, const LogHandler& log,
+                              indicators::IndicatorEngine& engine) {
     try {
+        // Restore the engine's internal state (rolling windows, seeded
+        // EMAs, VWAP's daily accumulator, OBV's running total) from
+        // whatever is already on disk BEFORE computing or writing a
+        // single new indicator value below. Unconditional and always
+        // first - even in the "already continuous, nothing to backfill"
+        // early-return case just below, the engine still needs to be
+        // caught up before it's handed to the live path.
+        replayExistingRowsIntoEngine(csvPath, engine);
+
         int64_t nextNeededOpenTimeMs = nowMs() - kHistoryWindowMs;
         if (auto last = lastStoredOpenTimeMs(csvPath)) {
             nextNeededOpenTimeMs = *last + 1;
@@ -451,7 +557,7 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
                     // path (fetchCurrentCandle / WebSocket) to pick up.
                     break;
                 }
-                writeRow(csv, candle);
+                writeRow(csv, candle, engine);
                 nextNeededOpenTimeMs = candle.openTime + 1;
                 ++fetchedCount;
                 wroteAny = true;

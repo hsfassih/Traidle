@@ -1,5 +1,7 @@
 #pragma once
 
+#include "indicators.h"
+
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
 
@@ -57,9 +59,25 @@ using LogHandler = std::function<void(const std::string&)>;
 // in that case, just with whatever gap remains unfilled. Safe to call from
 // multiple threads concurrently (one per timeframe) - a shared rate
 // limiter keeps combined request weight under Binance's per-IP budget.
+//
+// `engine` is the caller's IndicatorEngine for this exact symbol/timeframe
+// (one instance per timeframe worker, matching the isolation binance.cpp
+// already gives every other piece of per-timeframe state). Before doing
+// anything else, this function replays every data row already present in
+// csvPath through `engine`, oldest to newest, so its rolling windows,
+// seeded EMAs, VWAP daily accumulator, and OBV running total are restored
+// to wherever they'd be had the process never restarted - otherwise every
+// restart would silently reset every indicator's warm-up to zero even with
+// years of history already on disk. It then keeps feeding `engine` every
+// candle it backfills, in order, so indicator values written for backfilled
+// rows are correct and continuous with what was already stored. By the
+// time this function returns (success or failure), `engine` reflects every
+// row now on disk and is ready to be reused, unmodified, by the live
+// streaming path - constructing a fresh IndicatorEngine for the live path
+// instead would silently restart every indicator's warm-up.
 bool ensureContinuousHistory(boost::asio::io_context& ioc, boost::asio::ssl::context& ctx,
                               const std::string& symbol, const std::string& binanceInterval,
                               const std::filesystem::path& csvPath, const StatusHandler& status,
-                              const LogHandler& log);
+                              const LogHandler& log, indicators::IndicatorEngine& engine);
 
 }  // namespace historical

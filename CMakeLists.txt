@@ -13,6 +13,7 @@ add_executable(traidle
     src/binance.cpp
     src/candlesticks.cpp
     src/historical_get.cpp
+    src/indicators.cpp
 )
 
 target_link_libraries(traidle PRIVATE
