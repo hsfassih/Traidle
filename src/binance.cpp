@@ -1,6 +1,7 @@
 #include "candlesticks.h"
 #include "historical_get.h"
 #include "indicators.h"
+#include "visualization.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -57,6 +58,11 @@ constexpr auto kHost = "fapi.binance.com";
 constexpr auto kPort = "443";
 constexpr auto kWsHost = "fstream.binance.com";
 constexpr auto kWsPort = "443";
+
+// Port the local (loopback-only) visualization WebSocket server listens
+// on. Change here and in web/visualizer.html's port field if it conflicts
+// with something else on your machine.
+constexpr unsigned short kVisualizationPort = 8765;
 
 string trim(const string& value) {
     const auto first = value.find_first_not_of(" \t\r\n");
@@ -388,8 +394,35 @@ ofstream openCsvAppend(const filesystem::path& path) {
     return csv;
 }
 
+// Builds the flat wire-format message the visualization layer broadcasts,
+// out of whatever candle + indicator snapshot we've already computed for
+// the CSV row. Shared by the live-write path (writeClosedCandleRow below)
+// and the backfill/replay seed-history hook (see runTimeframeStream), so
+// the two never drift out of sync on field mapping.
+visualization::VisualizationMessage buildVisualizationMessage(
+    const string& symbol, const string& timeframeLabel, const candlesticks::Candlestick& candle,
+    const indicators::IndicatorSnapshot& snapshot) {
+    visualization::VisualizationMessage message;
+    message.symbol = symbol;
+    message.timeframe = timeframeLabel;
+    message.openTime = candle.openTime;
+    message.closeTime = candle.closeTime;
+    message.open = candle.open;
+    message.high = candle.high;
+    message.low = candle.low;
+    message.close = candle.close;
+    message.baseVolume = candle.baseVolume;
+    message.quoteVolume = candle.quoteVolume;
+    message.takerBuyBaseVolume = candle.takerBuyBaseVolume;
+    message.takerBuyQuoteVolume = candle.takerBuyQuoteVolume;
+    message.indicatorValues = snapshot;
+    return message;
+}
+
 void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle,
-                          indicators::IndicatorEngine& engine) {
+                          indicators::IndicatorEngine& engine,
+                          visualization::VisualizationServer& vizServer, const string& symbol,
+                          const string& timeframeLabel) {
     const auto snapshot = engine.update(candle);
     csv << formatUtcTimestamp(candle.openTime) << ','
         << formatPrice(candle.baseVolume) << ','
@@ -402,6 +435,12 @@ void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle
         << formatPrice(candle.low) << ','
         << formatPrice(candle.close) << '\n';
     csv.flush();
+
+    // Tap point for the visualization layer: same snapshot just computed
+    // above, handed off as a plain data copy. push() is thread-safe,
+    // non-blocking, and never throws, so it can never delay the CSV write
+    // above it or anything else in this function's caller.
+    vizServer.push(buildVisualizationMessage(symbol, timeframeLabel, candle, snapshot));
 }
 
 // ---------------------------------------------------------------------------
@@ -411,7 +450,7 @@ void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle
 // one timeframe cannot affect any other.
 // ---------------------------------------------------------------------------
 void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::path csvPath,
-                        TerminalBoard& board) {
+                        TerminalBoard& board, visualization::VisualizationServer& vizServer) {
     const string label = task.rawTimeframe;
     try {
         net::io_context ioc;
@@ -441,7 +480,15 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
             ioc, ctx, symbol, task.binanceInterval, csvPath,
             [&](const string& msg) { board.updateLine(task.rowIndex, msg); },
             [&](const string& msg) { board.log("[" + label + "] " + msg); },
-            engine);
+            engine,
+            [&](const candlesticks::Candlestick& candle, const indicators::IndicatorSnapshot& snapshot) {
+                // Seeds the visualizer's per-timeframe history ring buffer
+                // from every row already on disk (replayed) plus every
+                // freshly backfilled row - never broadcast live, just
+                // available so a browser connecting right after startup
+                // has recent context to draw immediately.
+                vizServer.seedHistory(buildVisualizationMessage(symbol, label, candle, snapshot));
+            });
         if (!historyOk) {
             board.log("[" + label +
                       "] historical backfill did not fully complete; continuing with live data "
@@ -467,7 +514,7 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         auto ingestCandle = [&](const candlesticks::Candlestick& candle) {
             if (candle.closed) {
                 // WebSocket told us directly: this candle just closed.
-                writeClosedCandleRow(csv, candle, engine);
+                writeClosedCandleRow(csv, candle, engine, vizServer, symbol, label);
                 lastCandle.reset();
                 board.updateLine(task.rowIndex, "last candle saved to CSV");
                 return;
@@ -476,7 +523,7 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                 // Rollover detected between two REST polls / forming ticks.
                 candlesticks::Candlestick finished = *lastCandle;
                 finished.closed = true;
-                writeClosedCandleRow(csv, finished, engine);
+                writeClosedCandleRow(csv, finished, engine, vizServer, symbol, label);
             }
             lastCandle = candle;
             renderLine(candle, "FORMING");
@@ -661,11 +708,19 @@ int main() {
     }
     TerminalBoard board(labels);
 
+    // Started once, shared by every timeframe worker below (single-viewer/
+    // local by design - see visualization.h). A bind failure here only
+    // disables live charting; it never stops candle streaming, CSV
+    // writes, or indicator computation.
+    visualization::VisualizationServer vizServer(kVisualizationPort);
+    vizServer.start();
+
     vector<thread> workers;
     workers.reserve(tasks.size());
     for (const auto& task : tasks) {
         filesystem::path csvPath = filesystem::path(symbolFolder) / (task.englishName + ".csv");
-        workers.emplace_back(runTimeframeStream, symbol, task, move(csvPath), ref(board));
+        workers.emplace_back(runTimeframeStream, symbol, task, move(csvPath), ref(board),
+                             ref(vizServer));
     }
 
     for (auto& worker : workers) {

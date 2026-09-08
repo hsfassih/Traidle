@@ -14,6 +14,7 @@ add_executable(traidle
     src/candlesticks.cpp
     src/historical_get.cpp
     src/indicators.cpp
+    src/visualization.cpp
 )
 
 target_link_libraries(traidle PRIVATE

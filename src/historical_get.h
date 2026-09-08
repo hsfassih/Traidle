@@ -51,6 +51,22 @@ namespace historical {
 using StatusHandler = std::function<void(const std::string&)>;
 using LogHandler = std::function<void(const std::string&)>;
 
+// Invoked once per candle this module processes - both for every row
+// already on disk that gets replayed into the engine on startup, and for
+// every row freshly backfilled from Binance - with the exact (candle,
+// indicator snapshot) pair this module already computed for its own CSV
+// write. Entirely optional and side-effect-free from this module's own
+// point of view: it exists purely so an interested caller can observe
+// that data without this module needing any awareness of who's listening
+// or why. Currently used by binance.cpp to seed the visualization layer's
+// per-timeframe history ring buffer, so a browser connecting right after
+// startup has recent context to draw immediately - but historical_get.cpp
+// itself has no dependency on (or knowledge of) the visualization module,
+// keeping the two fully decoupled. Left default-constructed (a no-op) by
+// callers that have no use for it.
+using HistorySeedHandler =
+    std::function<void(const candlesticks::Candlestick&, const indicators::IndicatorSnapshot&)>;
+
 // Backfills csvPath for `symbol`/`binanceInterval` until it is caught up to
 // "now". Returns true once caught up (including the trivial case where
 // nothing needed fetching, which does zero network requests and calls
@@ -75,9 +91,14 @@ using LogHandler = std::function<void(const std::string&)>;
 // row now on disk and is ready to be reused, unmodified, by the live
 // streaming path - constructing a fresh IndicatorEngine for the live path
 // instead would silently restart every indicator's warm-up.
+//
+// `seedHistory`, if provided, is called for every one of those same
+// candles (both replayed and freshly backfilled) alongside the snapshot
+// this function already computed for it - see HistorySeedHandler above.
 bool ensureContinuousHistory(boost::asio::io_context& ioc, boost::asio::ssl::context& ctx,
                               const std::string& symbol, const std::string& binanceInterval,
                               const std::filesystem::path& csvPath, const StatusHandler& status,
-                              const LogHandler& log, indicators::IndicatorEngine& engine);
+                              const LogHandler& log, indicators::IndicatorEngine& engine,
+                              const HistorySeedHandler& seedHistory = HistorySeedHandler{});
 
 }  // namespace historical

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Traidle — Live Chart</title>
+<!--
+  Pinned to an exact version, not a floating "latest" pointer: Lightweight
+  Charts v5 changed series creation to addSeries(SeriesType, options), which
+  would silently break every call below if the CDN ever served v5 here.
+  Bump this deliberately if you want to move to v5.
+-->
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0e1117; color: #d1d4dc;
+               font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #topbar { display: flex; align-items: center; gap: 16px; padding: 8px 12px;
+            background: #161a25; border-bottom: 1px solid #2a2e39; }
+  #status { display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+  #statusDot { width: 9px; height: 9px; border-radius: 50%; background: #888; display: inline-block; }
+  #statusDot.connecting { background: #ffca28; }
+  #statusDot.connected { background: #26a69a; }
+  #statusDot.disconnected { background: #ef5350; }
+  #portInput { width: 60px; background: #0e1117; color: #d1d4dc; border: 1px solid #2a2e39;
+               padding: 2px 4px; border-radius: 3px; }
+  #reconnectBtn { background: #1e222d; color: #d1d4dc; border: 1px solid #2a2e39;
+                  padding: 4px 10px; border-radius: 3px; cursor: pointer; }
+  #tabs { display: flex; gap: 4px; margin-left: 8px; flex-wrap: wrap; }
+  .tab { background: #1e222d; color: #d1d4dc; border: 1px solid #2a2e39; padding: 4px 10px;
+         cursor: pointer; border-radius: 3px; font-size: 12px; }
+  .tab.active { background: #2962ff; border-color: #2962ff; color: white; }
+  #main { display: flex; height: calc(100vh - 45px); }
+  #chartContainer { flex: 1; }
+  #readout { width: 260px; padding: 12px; border-left: 1px solid #2a2e39; overflow-y: auto; }
+  #readoutSymbol { margin: 0 0 8px 0; font-size: 15px; }
+  #readoutTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #readoutTable td { padding: 4px 2px; border-bottom: 1px solid #1e222d; }
+  #readoutTable td:first-child { color: #868c98; }
+  #readoutTable td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  #predictionBox { margin-top: 12px; font-size: 12px; color: #868c98; }
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <div id="status"><span id="statusDot" class="connecting"></span><span id="statusText">connecting...</span></div>
+    <label>Port: <input id="portInput" value="8765" size="6" /></label>
+    <button id="reconnectBtn">Reconnect</button>
+    <div id="tabs"></div>
+  </div>
+  <div id="main">
+    <div id="chartContainer"></div>
+    <div id="readout">
+      <h3 id="readoutSymbol">—</h3>
+      <table id="readoutTable"></table>
+      <div id="predictionBox"></div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- state ----
+  const state = {
+    ws: null,
+    reconnectTimer: null,
+    activeTimeframe: null,
+    dataByTimeframe: new Map(),   // timeframe -> Map(openTimeSeconds -> message)
+    knownTimeframes: [],         // first-seen order, drives the tab bar
+  };
+
+  // ---- DOM ----
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const portInput = document.getElementById('portInput');
+  const reconnectBtn = document.getElementById('reconnectBtn');
+  const tabsEl = document.getElementById('tabs');
+  const chartContainer = document.getElementById('chartContainer');
+  const readoutSymbol = document.getElementById('readoutSymbol');
+  const readoutTable = document.getElementById('readoutTable');
+  const predictionBox = document.getElementById('predictionBox');
+
+  // ---- chart setup (one instance, reused across timeframe tab switches) ----
+  const chart = LightweightCharts.createChart(chartContainer, {
+    layout: { background: { color: '#0e1117' }, textColor: '#d1d4dc' },
+    grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
+    timeScale: { timeVisible: true, secondsVisible: true, borderColor: '#2a2e39' },
+    rightPriceScale: { borderColor: '#2a2e39' },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  });
+
+  const candleSeries = chart.addCandlestickSeries({
+    upColor: '#26a69a', downColor: '#ef5350', borderVisible: false,
+    wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+  });
+
+  const volumeSeries = chart.addHistogramSeries({
+    priceFormat: { type: 'volume' },
+    priceScaleId: '', // overlay, not a separate pane
+  });
+  volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
+
+  // SMA/EMA/Bollinger share the price scale, so they overlay directly.
+  // RSI/MACD/Stoch/ATR/VWAP/OBV don't (different ranges/units) - they go
+  // to the numeric readout panel instead of extra chart panes; see
+  // updateReadout() below.
+  const smaSeries = chart.addLineSeries({ color: '#42a5f5', lineWidth: 1, priceLineVisible: false, title: 'SMA20' });
+  const emaSeries = chart.addLineSeries({ color: '#ffa726', lineWidth: 1, priceLineVisible: false, title: 'EMA20' });
+  const bbUpperSeries = chart.addLineSeries({ color: 'rgba(255,255,255,0.35)', lineWidth: 1, priceLineVisible: false, title: 'BB Upper' });
+  const bbLowerSeries = chart.addLineSeries({ color: 'rgba(255,255,255,0.35)', lineWidth: 1, priceLineVisible: false, title: 'BB Lower' });
+
+  let activePriceLines = [];
+
+  function resizeChart() {
+    chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
+  }
+  window.addEventListener('resize', resizeChart);
+  resizeChart();
+
+  // ---- websocket ----
+  function connect() {
+    const port = portInput.value.trim() || '8765';
+    setStatus('connecting', `connecting to ws://localhost:${port} ...`);
+    const ws = new WebSocket(`ws://localhost:${port}`);
+    state.ws = ws;
+
+    ws.onopen = () => setStatus('connected', `connected on port ${port}`);
+    ws.onclose = () => {
+      setStatus('disconnected', 'disconnected — retrying in 2s');
+      scheduleReconnect();
+    };
+    ws.onerror = () => { /* onclose fires right after in every browser tested; let that path retry */ };
+    ws.onmessage = (event) => {
+      let msg;
+      try { msg = JSON.parse(event.data); } catch (e) { return; } // ignore malformed frames
+      if (msg.type === 'candle') ingestMessage(msg);
+    };
+  }
+
+  function scheduleReconnect() {
+    if (state.reconnectTimer) return;
+    state.reconnectTimer = setTimeout(() => { state.reconnectTimer = null; connect(); }, 2000);
+  }
+
+  function setStatus(kind, text) {
+    statusDot.className = kind;
+    statusText.textContent = text;
+  }
+
+  reconnectBtn.addEventListener('click', () => {
+    if (state.ws) state.ws.close();
+    connect();
+  });
+
+  // ---- message ingestion ----
+  function ingestMessage(msg) {
+    const tf = msg.timeframe;
+    const isNewTimeframe = !state.dataByTimeframe.has(tf);
+    if (isNewTimeframe) {
+      state.dataByTimeframe.set(tf, new Map());
+      state.knownTimeframes.push(tf);
+    }
+
+    const timeSec = Math.floor(msg.open_time / 1000);
+    state.dataByTimeframe.get(tf).set(timeSec, msg);
+
+    if (state.activeTimeframe === null) {
+      switchTimeframe(tf); // first message ever received - adopt its timeframe as the default view
+      return;
+    }
+
+    if (isNewTimeframe) {
+      renderTabs(); // just adds this timeframe's tab button; doesn't touch the chart
+    }
+
+    if (tf === state.activeTimeframe) {
+      applyLiveUpdate(msg, timeSec);
+    }
+  }
+
+  function renderTabs() {
+    tabsEl.innerHTML = '';
+    state.knownTimeframes.forEach((tf) => {
+      const btn = document.createElement('button');
+      btn.textContent = tf;
+      btn.className = tf === state.activeTimeframe ? 'tab active' : 'tab';
+      btn.addEventListener('click', () => switchTimeframe(tf));
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function switchTimeframe(tf) {
+    state.activeTimeframe = tf;
+    renderTabs();
+
+    const rows = Array.from(state.dataByTimeframe.get(tf).entries())
+      .sort((a, b) => a[0] - b[0])
+      .map((entry) => entry[1]);
+
+    candleSeries.setData(rows.map((r) => ({
+      time: Math.floor(r.open_time / 1000), open: r.open, high: r.high, low: r.low, close: r.close,
+    })));
+    volumeSeries.setData(rows.map((r) => ({
+      time: Math.floor(r.open_time / 1000), value: r.base_volume,
+      color: r.close >= r.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
+    })));
+    setLineData(smaSeries, rows, (r) => r.indicators.sma);
+    setLineData(emaSeries, rows, (r) => r.indicators.ema);
+    setLineData(bbUpperSeries, rows, (r) => r.indicators.bb_upper);
+    setLineData(bbLowerSeries, rows, (r) => r.indicators.bb_lower);
+
+    chart.timeScale().fitContent();
+
+    const last = rows[rows.length - 1];
+    if (last) {
+      updateReadout(last);
+      applyPredictionLines(last);
+    } else {
+      readoutTable.innerHTML = '';
+      predictionBox.innerHTML = '';
+      readoutSymbol.textContent = '—';
+    }
+  }
+
+  function setLineData(series, rows, pick) {
+    const points = [];
+    for (const r of rows) {
+      const v = pick(r);
+      if (v !== null && v !== undefined) {
+        points.push({ time: Math.floor(r.open_time / 1000), value: v });
+      }
+    }
+    series.setData(points);
+  }
+
+  function applyLiveUpdate(msg, timeSec) {
+    candleSeries.update({ time: timeSec, open: msg.open, high: msg.high, low: msg.low, close: msg.close });
+    volumeSeries.update({
+      time: timeSec, value: msg.base_volume,
+      color: msg.close >= msg.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
+    });
+    const ind = msg.indicators;
+    if (ind.sma !== null) smaSeries.update({ time: timeSec, value: ind.sma });
+    if (ind.ema !== null) emaSeries.update({ time: timeSec, value: ind.ema });
+    if (ind.bb_upper !== null) bbUpperSeries.update({ time: timeSec, value: ind.bb_upper });
+    if (ind.bb_lower !== null) bbLowerSeries.update({ time: timeSec, value: ind.bb_lower });
+
+    updateReadout(msg);
+    applyPredictionLines(msg);
+  }
+
+  // ---- readout panel (oscillators that don't share the price chart's scale) ----
+  function fmt(v, digits) {
+    if (v === null || v === undefined) return '—';
+    return Number(v).toFixed(digits === undefined ? 4 : digits);
+  }
+
+  function updateReadout(msg) {
+    readoutSymbol.textContent = `${msg.symbol} · ${msg.timeframe}`;
+    const ind = msg.indicators;
+    const rows = [
+      ['Close', fmt(msg.close, 4)],
+      ['Base Vol', fmt(msg.base_volume, 2)],
+      ['RSI(14)', fmt(ind.rsi, 2)],
+      ['MACD', `${fmt(ind.macd_line, 4)} / ${fmt(ind.macd_signal, 4)} / ${fmt(ind.macd_histogram, 4)}`],
+      ['Stoch %K/%D', `${fmt(ind.stoch_k, 2)} / ${fmt(ind.stoch_d, 2)}`],
+      ['ATR(14)', fmt(ind.atr, 4)],
+      ['VWAP', fmt(ind.vwap, 4)],
+      ['OBV', fmt(ind.obv, 0)],
+    ];
+    readoutTable.innerHTML = rows.map(([label, value]) => `<tr><td>${label}</td><td>${value}</td></tr>`).join('');
+  }
+
+  // ---- prediction overlay (entry/TP/SL price lines + zone bounds) ----
+  // Zones render as a pair of price lines marking their high/low bounds
+  // rather than a shaded rectangle: Lightweight Charts v4's price-line API
+  // covers this with zero extra dependencies, whereas true shaded regions
+  // need a custom canvas primitive that's out of scope until the
+  // prediction engine itself exists and it's clear how zones actually look
+  // in practice.
+  function applyPredictionLines(msg) {
+    activePriceLines.forEach((line) => candleSeries.removePriceLine(line));
+    activePriceLines = [];
+    predictionBox.innerHTML = '';
+
+    const p = msg.prediction;
+    if (!p) return;
+
+    const addLine = (price, color, title) => {
+      if (price === null || price === undefined) return;
+      activePriceLines.push(candleSeries.createPriceLine({
+        price, color, lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true, title,
+      }));
+    };
+
+    addLine(p.entry_long, '#26a69a', 'Entry L');
+    addLine(p.entry_short, '#ef5350', 'Entry S');
+    addLine(p.take_profit_long, '#26a69a', 'TP L');
+    addLine(p.take_profit_short, '#ef5350', 'TP S');
+    addLine(p.stop_loss_long, '#b71c1c', 'SL L');
+    addLine(p.stop_loss_short, '#b71c1c', 'SL S');
+    (p.zones || []).forEach((zone) => {
+      addLine(zone.price_high, '#ffa726', `${zone.label} hi`);
+      addLine(zone.price_low, '#ffa726', `${zone.label} lo`);
+    });
+
+    predictionBox.innerHTML = '<em>Prediction active — see dashed price lines on the chart.</em>';
+  }
+
+  connect();
+})();
+</script>
+</body>
+</html>

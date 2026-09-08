@@ -183,8 +183,8 @@ ofstream openCsvAppend(const filesystem::path& path) {
     return csv;
 }
 
-void writeRow(ofstream& csv, const candlesticks::Candlestick& candle,
-              indicators::IndicatorEngine& engine) {
+indicators::IndicatorSnapshot writeRow(ofstream& csv, const candlesticks::Candlestick& candle,
+                                       indicators::IndicatorEngine& engine) {
     const auto snapshot = engine.update(candle);
     csv << formatUtcTimestamp(candle.openTime) << ','
         << formatPrice(candle.baseVolume) << ','
@@ -197,6 +197,7 @@ void writeRow(ofstream& csv, const candlesticks::Candlestick& candle,
         << formatPrice(candle.low) << ','
         << formatPrice(candle.close) << '\n';
     csv.flush();
+    return snapshot;
 }
 
 // Splits one CSV data line into its comma-separated fields. Shared by the
@@ -316,8 +317,12 @@ optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
 // stale-schema rows are exactly what the resume-point scanner above is
 // already designed to tolerate at the very end of the file, and a handful
 // of skipped rows in the middle cannot happen under normal operation.
+//
+// If `seedHistory` is set, it's invoked with each successfully-replayed
+// (candle, snapshot) pair - see HistorySeedHandler's declaration for why.
 void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
-                                  indicators::IndicatorEngine& engine) {
+                                  indicators::IndicatorEngine& engine,
+                                  const HistorySeedHandler& seedHistory) {
     if (!filesystem::exists(csvPath)) {
         return;
     }
@@ -358,7 +363,10 @@ void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
             candle.high = stod(fields[kHighColumn]);
             candle.low = stod(fields[kLowColumn]);
             candle.close = stod(fields[kCloseColumn]);
-            engine.update(candle);
+            const auto snapshot = engine.update(candle);
+            if (seedHistory) {
+                seedHistory(candle, snapshot);
+            }
         } catch (const exception&) {
             continue;  // corrupt row - skip it rather than abort the whole replay
         }
@@ -508,7 +516,8 @@ int64_t nowMs() {
 bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const string& symbol,
                               const string& binanceInterval, const filesystem::path& csvPath,
                               const StatusHandler& status, const LogHandler& log,
-                              indicators::IndicatorEngine& engine) {
+                              indicators::IndicatorEngine& engine,
+                              const HistorySeedHandler& seedHistory) {
     try {
         // Restore the engine's internal state (rolling windows, seeded
         // EMAs, VWAP's daily accumulator, OBV's running total) from
@@ -517,7 +526,7 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
         // first - even in the "already continuous, nothing to backfill"
         // early-return case just below, the engine still needs to be
         // caught up before it's handed to the live path.
-        replayExistingRowsIntoEngine(csvPath, engine);
+        replayExistingRowsIntoEngine(csvPath, engine, seedHistory);
 
         int64_t nextNeededOpenTimeMs = nowMs() - kHistoryWindowMs;
         if (auto last = lastStoredOpenTimeMs(csvPath)) {
@@ -557,7 +566,10 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
                     // path (fetchCurrentCandle / WebSocket) to pick up.
                     break;
                 }
-                writeRow(csv, candle, engine);
+                const auto snapshot = writeRow(csv, candle, engine);
+                if (seedHistory) {
+                    seedHistory(candle, snapshot);
+                }
                 nextNeededOpenTimeMs = candle.openTime + 1;
                 ++fetchedCount;
                 wroteAny = true;
