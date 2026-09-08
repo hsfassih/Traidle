@@ -396,9 +396,10 @@ ofstream openCsvAppend(const filesystem::path& path) {
 
 // Builds the flat wire-format message the visualization layer broadcasts,
 // out of whatever candle + indicator snapshot we've already computed for
-// the CSV row. Shared by the live-write path (writeClosedCandleRow below)
-// and the backfill/replay seed-history hook (see runTimeframeStream), so
-// the two never drift out of sync on field mapping.
+// the CSV row. Shared by the live-write path (writeClosedCandleRow below),
+// the live-forming-candle path (renderLine, inside runTimeframeStream),
+// and the backfill/replay seed-history hook (also inside runTimeframeStream),
+// so all three never drift out of sync on field mapping.
 visualization::VisualizationMessage buildVisualizationMessage(
     const string& symbol, const string& timeframeLabel, const candlesticks::Candlestick& candle,
     const indicators::IndicatorSnapshot& snapshot) {
@@ -407,6 +408,7 @@ visualization::VisualizationMessage buildVisualizationMessage(
     message.timeframe = timeframeLabel;
     message.openTime = candle.openTime;
     message.closeTime = candle.closeTime;
+    message.closed = candle.closed;
     message.open = candle.open;
     message.high = candle.high;
     message.low = candle.low;
@@ -504,6 +506,21 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                 line = formatCandleLine(symbol, candle, tag, true);
             }
             board.updateLine(task.rowIndex, line);
+
+            // Live/forming-candle tap point for the visualization layer.
+            // Unlike writeClosedCandleRow, this must NOT touch `engine` -
+            // IndicatorEngine is a one-shot-per-closed-candle stateful
+            // recursion (EMA/RSI/etc.), and calling update() speculatively
+            // on a still-forming candle would permanently corrupt that
+            // state. The pushed message therefore carries a blank
+            // (all-nullopt) indicator snapshot; the frontend simply leaves
+            // indicator lines untouched until the real, final value
+            // arrives when this candle actually closes. As a useful side
+            // effect, this also keeps the WebSocket link under roughly
+            // constant traffic during active trading (about once per
+            // second per timeframe), rather than only at candle-close
+            // boundaries.
+            vizServer.push(buildVisualizationMessage(symbol, label, candle, indicators::IndicatorSnapshot{}));
         };
 
         // Tracks the last candle seen from ANY source so we can detect a

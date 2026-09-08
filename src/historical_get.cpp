@@ -309,14 +309,17 @@ optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
 // appended in chronological order), so the engine's internal state is
 // exactly as if this run had been going the whole time instead of
 // restarting. Only the columns IndicatorEngine::update() actually reads
-// (open time, OHLC, base volume) are reconstructed; the rest of the
-// Candlestick struct (symbol, close time, quote/taker volumes, closed
-// flag) is left default since nothing here consults them. A row that
-// doesn't match the current 23-column schema, or whose OHLCV cells don't
-// parse, is skipped rather than aborting the whole replay - crash-torn or
-// stale-schema rows are exactly what the resume-point scanner above is
-// already designed to tolerate at the very end of the file, and a handful
-// of skipped rows in the middle cannot happen under normal operation.
+// (open time, OHLC, base volume) are reconstructed from the CSV; `closed`
+// is set explicitly to true below (every row on disk represents a candle
+// that was already closed at write time - the default-constructed value
+// would otherwise read as false, which is wrong now that a `closed` flag
+// is a genuine part of the wire format the visualization layer consumes).
+// A row that doesn't match the current 23-column schema, or whose OHLCV
+// cells don't parse, is skipped rather than aborting the whole replay -
+// crash-torn or stale-schema rows are exactly what the resume-point
+// scanner above is already designed to tolerate at the very end of the
+// file, and a handful of skipped rows in the middle cannot happen under
+// normal operation.
 //
 // If `seedHistory` is set, it's invoked with each successfully-replayed
 // (candle, snapshot) pair - see HistorySeedHandler's declaration for why.
@@ -363,6 +366,7 @@ void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
             candle.high = stod(fields[kHighColumn]);
             candle.low = stod(fields[kLowColumn]);
             candle.close = stod(fields[kCloseColumn]);
+            candle.closed = true;
             const auto snapshot = engine.update(candle);
             if (seedHistory) {
                 seedHistory(candle, snapshot);
@@ -568,7 +572,17 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
                 }
                 const auto snapshot = writeRow(csv, candle, engine);
                 if (seedHistory) {
-                    seedHistory(candle, snapshot);
+                    // parseKlineResponse() always reports closed=false (a
+                    // REST response has no direct way to signal this) -
+                    // but the closeTime check just above already proves
+                    // this candle is safely in the past, so we know
+                    // definitively it's closed. Only the copy handed to
+                    // seedHistory needs the corrected flag; the CSV itself
+                    // doesn't store this field at all, so `candle` is left
+                    // untouched for everything else in this loop.
+                    candlesticks::Candlestick closedCandle = candle;
+                    closedCandle.closed = true;
+                    seedHistory(closedCandle, snapshot);
                 }
                 nextNeededOpenTimeMs = candle.openTime + 1;
                 ++fetchedCount;

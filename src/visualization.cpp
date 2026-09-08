@@ -14,6 +14,7 @@
 #include <deque>
 #include <exception>
 #include <iostream>
+#include <map>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
@@ -30,8 +31,9 @@ using namespace std::chrono;
 namespace visualization {
 namespace {
 
-constexpr size_t kMaxQueueSize = 500;   // bounded outbound broadcast queue (drop-oldest when full)
-constexpr size_t kHistoryDepth = 500;   // candles retained per timeframe for snapshot-on-connect
+constexpr size_t kMaxQueueSize = 500;      // bounded outbound broadcast queue (drop-oldest when full)
+constexpr size_t kHistoryDepth = 500;      // distinct candles retained per timeframe for snapshot-on-connect
+constexpr auto kHeartbeatInterval = seconds(15);  // sent only if nothing real went out in this window
 
 json optionalToJson(const optional<double>& value) {
     return value.has_value() ? json(*value) : json(nullptr);
@@ -90,6 +92,7 @@ string toJson(const VisualizationMessage& message) {
     j["timeframe"] = message.timeframe;
     j["open_time"] = message.openTime;
     j["close_time"] = message.closeTime;
+    j["closed"] = message.closed;
     j["open"] = message.open;
     j["high"] = message.high;
     j["low"] = message.low;
@@ -120,7 +123,18 @@ public:
         : ws_(move(socket)), onReady_(move(onReady)) {}
 
     void run() {
-        ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::server));
+        // Tightened from Beast's server-role defaults (300s idle / a ping
+        // around the ~150s mark, keep_alive_pings already true by
+        // default) to something snappier: this is a local, single-viewer
+        // tool, so a stale session (e.g. a closed browser tab that never
+        // sent a clean close frame) should be noticed and cleaned up in
+        // seconds, not minutes. A 20s idle window is still far longer
+        // than a loopback ping/pong round trip needs, so a healthy
+        // connection is never at real risk of a spurious timeout.
+        auto timeoutOpt = websocket::stream_base::timeout::suggested(beast::role_type::server);
+        timeoutOpt.idle_timeout = seconds(20);
+        timeoutOpt.keep_alive_pings = true;  // explicit, though already the server-role default
+        ws_.set_option(timeoutOpt);
         ws_.set_option(websocket::stream_base::decorator([](websocket::response_type& res) {
             res.set(http::field::server, "Traidle-Visualizer");
         }));
@@ -205,12 +219,20 @@ struct VisualizationServer::Impl {
     bool running = false;
 
     shared_ptr<Session> activeSession;  // touched only from ioThread - see Session's class comment
+    steady_clock::time_point lastSentAt = steady_clock::now();  // touched only from ioThread
 
     mutex queueMutex;
     deque<VisualizationMessage> outboundQueue;
 
+    // Keyed by open time (not just appended in arrival order) so a
+    // still-forming candle's repeated ticks overwrite the same slot
+    // instead of piling up kHistoryDepth's worth of superseded
+    // intermediate versions of what is really just one candle. A
+    // std::map (not unordered_map) keeps each timeframe's buffer naturally
+    // sorted by time, which sendHistorySnapshot() below relies on to
+    // replay history to a freshly connected browser in chronological order.
     mutex historyMutex;
-    unordered_map<string, deque<VisualizationMessage>> historyByTimeframe;
+    unordered_map<string, map<int64_t, VisualizationMessage>> historyByTimeframe;
 
     void startAccept() {
         acceptor.async_accept([this](beast::error_code ec, tcp::socket socket) {
@@ -225,6 +247,7 @@ struct VisualizationServer::Impl {
                     }
                     activeSession = ready;
                     sendHistorySnapshot(ready);
+                    lastSentAt = steady_clock::now();
                 });
                 session->run();
             }
@@ -237,8 +260,8 @@ struct VisualizationServer::Impl {
     void sendHistorySnapshot(const shared_ptr<Session>& session) {
         lock_guard<mutex> lock(historyMutex);
         for (const auto& [timeframe, buffer] : historyByTimeframe) {
-            for (const auto& message : buffer) {
-                session->send(toJson(message));
+            for (const auto& entry : buffer) {
+                session->send(toJson(entry.second));
             }
         }
     }
@@ -260,20 +283,33 @@ struct VisualizationServer::Impl {
             lock_guard<mutex> lock(queueMutex);
             batch.swap(outboundQueue);
         }
-        if (batch.empty() || !activeSession) {
+        if (!activeSession) {
             return;
         }
-        for (const auto& message : batch) {
-            activeSession->send(toJson(message));
+        if (!batch.empty()) {
+            for (const auto& message : batch) {
+                activeSession->send(toJson(message));
+            }
+            lastSentAt = steady_clock::now();
+            return;
+        }
+        // Nothing real to send this tick - keep the link demonstrably
+        // alive with a lightweight heartbeat once it's been quiet for a
+        // while. Belt-and-suspenders alongside Beast's own keep-alive
+        // pings: this also gives the frontend an explicit, low-latency
+        // liveness signal independent of how often candles actually close.
+        if (steady_clock::now() - lastSentAt > kHeartbeatInterval) {
+            activeSession->send(R"({"type":"heartbeat"})");
+            lastSentAt = steady_clock::now();
         }
     }
 
     void recordHistory(const VisualizationMessage& message) {
         lock_guard<mutex> lock(historyMutex);
         auto& buffer = historyByTimeframe[message.timeframe];
-        buffer.push_back(message);
+        buffer[message.openTime] = message;  // insert or overwrite-in-place
         if (buffer.size() > kHistoryDepth) {
-            buffer.pop_front();
+            buffer.erase(buffer.begin());  // std::map is sorted - this is the oldest open time
         }
     }
 };

@@ -15,8 +15,10 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #0e1117; color: #d1d4dc;
                font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+
   #topbar { display: flex; align-items: center; gap: 16px; padding: 8px 12px;
-            background: #161a25; border-bottom: 1px solid #2a2e39; }
+            background: #161a25; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
   #status { display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
   #statusDot { width: 9px; height: 9px; border-radius: 50%; background: #888; display: inline-block; }
   #statusDot.connecting { background: #ffca28; }
@@ -30,10 +32,24 @@
   .tab { background: #1e222d; color: #d1d4dc; border: 1px solid #2a2e39; padding: 4px 10px;
          cursor: pointer; border-radius: 3px; font-size: 12px; }
   .tab.active { background: #2962ff; border-color: #2962ff; color: white; }
-  #main { display: flex; height: calc(100vh - 45px); }
-  #chartContainer { flex: 1; }
+
+  #toolbar2 { display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+              background: #12151d; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
+  .toolbar-label { color: #868c98; font-size: 12px; margin-right: 2px; }
+  .toggle-btn { background: #1e222d; color: #868c98; border: 1px solid #2a2e39;
+                padding: 3px 10px; border-radius: 12px; cursor: pointer; font-size: 11px; }
+  .toggle-btn.active { background: rgba(38,166,154,0.18); border-color: #26a69a; color: #26a69a; }
+
+  #main { display: flex; flex: 1; min-height: 0; }
+  #chartContainer { flex: 1; position: relative; }
+  #volumeProfileOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .vp-bar { position: absolute; left: 0; }
+  .vp-buy { background: rgba(38,166,154,0.45); }
+  .vp-sell { background: rgba(239,83,80,0.45); }
+
   #readout { width: 260px; padding: 12px; border-left: 1px solid #2a2e39; overflow-y: auto; }
   #readoutSymbol { margin: 0 0 8px 0; font-size: 15px; }
+  .liveBadge { color: #ef5350; font-size: 11px; font-weight: bold; margin-left: 6px; }
   #readoutTable { width: 100%; border-collapse: collapse; font-size: 12px; }
   #readoutTable td { padding: 4px 2px; border-bottom: 1px solid #1e222d; }
   #readoutTable td:first-child { color: #868c98; }
@@ -42,11 +58,20 @@
 </style>
 </head>
 <body>
+<div id="app">
   <div id="topbar">
     <div id="status"><span id="statusDot" class="connecting"></span><span id="statusText">connecting...</span></div>
     <label>Port: <input id="portInput" value="8765" size="6" /></label>
     <button id="reconnectBtn">Reconnect</button>
     <div id="tabs"></div>
+  </div>
+  <div id="toolbar2">
+    <span class="toolbar-label">Show:</span>
+    <button class="toggle-btn active" data-target="sma">SMA</button>
+    <button class="toggle-btn active" data-target="ema">EMA</button>
+    <button class="toggle-btn active" data-target="bb">Bollinger</button>
+    <button class="toggle-btn active" data-target="volume">Volume</button>
+    <button class="toggle-btn active" data-target="volumeProfile">Vol Profile</button>
   </div>
   <div id="main">
     <div id="chartContainer"></div>
@@ -56,19 +81,31 @@
       <div id="predictionBox"></div>
     </div>
   </div>
+</div>
 
 <script>
 (function () {
   'use strict';
 
+  // ---- constants ----
+  const kMaxReconnectDelayMs = 3000;
+  const kWatchdogSilenceMs = 20000;    // no message at all (not even a heartbeat) for this long -> force reconnect
+  const kWatchdogCheckIntervalMs = 5000;
+  const kVolumeProfileBuckets = 24;
+  const kVolumeProfileMaxWidthPx = 90;
+
   // ---- state ----
   const state = {
     ws: null,
     reconnectTimer: null,
+    reconnectDelayMs: 500,
+    lastMessageAt: Date.now(),
     activeTimeframe: null,
     dataByTimeframe: new Map(),   // timeframe -> Map(openTimeSeconds -> message)
     knownTimeframes: [],         // first-seen order, drives the tab bar
   };
+
+  const toggleState = { sma: true, ema: true, bb: true, volume: true, volumeProfile: true };
 
   // ---- DOM ----
   const statusDot = document.getElementById('statusDot');
@@ -110,13 +147,45 @@
   const bbUpperSeries = chart.addLineSeries({ color: 'rgba(255,255,255,0.35)', lineWidth: 1, priceLineVisible: false, title: 'BB Upper' });
   const bbLowerSeries = chart.addLineSeries({ color: 'rgba(255,255,255,0.35)', lineWidth: 1, priceLineVisible: false, title: 'BB Lower' });
 
+  const seriesByToggleKey = {
+    sma: [smaSeries],
+    ema: [emaSeries],
+    bb: [bbUpperSeries, bbLowerSeries],
+    volume: [volumeSeries],
+  };
+
   let activePriceLines = [];
+
+  // Volume-profile overlay: a plain absolutely-positioned div, appended
+  // AFTER createChart() has already run its own DOM setup on
+  // chartContainer, so there's no risk of the library clobbering a
+  // pre-existing child during its own initialization.
+  const volumeProfileEl = document.createElement('div');
+  volumeProfileEl.id = 'volumeProfileOverlay';
+  chartContainer.appendChild(volumeProfileEl);
 
   function resizeChart() {
     chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
+    recomputeVolumeProfile();
   }
   window.addEventListener('resize', resizeChart);
   resizeChart();
+
+  chart.timeScale().subscribeVisibleLogicalRangeChange(() => recomputeVolumeProfile());
+
+  // ---- indicator/overlay toggles ----
+  document.querySelectorAll('.toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.target;
+      toggleState[key] = !toggleState[key];
+      btn.classList.toggle('active', toggleState[key]);
+      if (key === 'volumeProfile') {
+        recomputeVolumeProfile();
+      } else {
+        (seriesByToggleKey[key] || []).forEach((s) => s.applyOptions({ visible: toggleState[key] }));
+      }
+    });
+  });
 
   // ---- websocket ----
   function connect() {
@@ -125,23 +194,42 @@
     const ws = new WebSocket(`ws://localhost:${port}`);
     state.ws = ws;
 
-    ws.onopen = () => setStatus('connected', `connected on port ${port}`);
+    ws.onopen = () => {
+      state.reconnectDelayMs = 500; // reset backoff after a successful connect
+      state.lastMessageAt = Date.now();
+      setStatus('connected', `connected on port ${port}`);
+    };
     ws.onclose = () => {
-      setStatus('disconnected', 'disconnected — retrying in 2s');
+      setStatus('disconnected', 'disconnected — reconnecting...');
       scheduleReconnect();
     };
     ws.onerror = () => { /* onclose fires right after in every browser tested; let that path retry */ };
     ws.onmessage = (event) => {
+      state.lastMessageAt = Date.now();
       let msg;
       try { msg = JSON.parse(event.data); } catch (e) { return; } // ignore malformed frames
       if (msg.type === 'candle') ingestMessage(msg);
+      // heartbeat messages need no further handling beyond the lastMessageAt update above
     };
   }
 
   function scheduleReconnect() {
     if (state.reconnectTimer) return;
-    state.reconnectTimer = setTimeout(() => { state.reconnectTimer = null; connect(); }, 2000);
+    state.reconnectTimer = setTimeout(() => { state.reconnectTimer = null; connect(); }, state.reconnectDelayMs);
+    state.reconnectDelayMs = Math.min(state.reconnectDelayMs * 2, kMaxReconnectDelayMs);
   }
+
+  // Client-side watchdog, mirroring the same silent-connection pattern the
+  // C++ backend already uses for its own Binance WebSocket streams: if
+  // nothing at all (not even a heartbeat) arrives for kWatchdogSilenceMs,
+  // treat the link as dead and force a reconnect rather than waiting on
+  // the browser's own close-detection.
+  setInterval(() => {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN &&
+        Date.now() - state.lastMessageAt > kWatchdogSilenceMs) {
+      state.ws.close();
+    }
+  }, kWatchdogCheckIntervalMs);
 
   function setStatus(kind, text) {
     statusDot.className = kind;
@@ -163,7 +251,7 @@
     }
 
     const timeSec = Math.floor(msg.open_time / 1000);
-    state.dataByTimeframe.get(tf).set(timeSec, msg);
+    state.dataByTimeframe.get(tf).set(timeSec, msg); // overwrites in place as a forming candle ticks
 
     if (state.activeTimeframe === null) {
       switchTimeframe(tf); // first message ever received - adopt its timeframe as the default view
@@ -211,6 +299,7 @@
     setLineData(bbLowerSeries, rows, (r) => r.indicators.bb_lower);
 
     chart.timeScale().fitContent();
+    recomputeVolumeProfile();
 
     const last = rows[rows.length - 1];
     if (last) {
@@ -240,6 +329,10 @@
       time: timeSec, value: msg.base_volume,
       color: msg.close >= msg.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
     });
+    // Indicators are only ever non-null on the candle's FINAL closed
+    // update (see the comment in binance.cpp's renderLine) - so this
+    // naturally leaves indicator lines untouched while a candle is still
+    // forming, and only extends them once the real value lands at close.
     const ind = msg.indicators;
     if (ind.sma !== null) smaSeries.update({ time: timeSec, value: ind.sma });
     if (ind.ema !== null) emaSeries.update({ time: timeSec, value: ind.ema });
@@ -248,6 +341,7 @@
 
     updateReadout(msg);
     applyPredictionLines(msg);
+    recomputeVolumeProfile(); // the forming candle's own H/L can shift the visible price range
   }
 
   // ---- readout panel (oscillators that don't share the price chart's scale) ----
@@ -257,7 +351,8 @@
   }
 
   function updateReadout(msg) {
-    readoutSymbol.textContent = `${msg.symbol} · ${msg.timeframe}`;
+    const liveBadge = msg.closed === false ? '<span class="liveBadge">● LIVE</span>' : '';
+    readoutSymbol.innerHTML = `${msg.symbol} · ${msg.timeframe}${liveBadge}`;
     const ind = msg.indicators;
     const rows = [
       ['Close', fmt(msg.close, 4)],
@@ -308,6 +403,99 @@
     });
 
     predictionBox.innerHTML = '<em>Prediction active — see dashed price lines on the chart.</em>';
+  }
+
+  // ---- volume profile (visible-range volume-by-price, left-side bars) ----
+  // Approximated from OHLCV since we have no tick/aggTrade data: each
+  // candle's base_volume is distributed across the price buckets its
+  // [low, high] range overlaps, weighted by overlap fraction. Each
+  // bucket's bar is then split into a buy segment (using
+  // taker_buy_base_volume, which we already capture) and a sell segment
+  // (the remainder), so it reads like a buy/sell footprint even though
+  // it's fundamentally a price-based volume profile, not per-candle order
+  // flow. Scoped to the chart's current visible logical range, so it
+  // updates as you pan/zoom.
+  function recomputeVolumeProfile() {
+    volumeProfileEl.innerHTML = '';
+    if (!toggleState.volumeProfile) return;
+    if (state.activeTimeframe === null) return;
+
+    const allRows = Array.from(state.dataByTimeframe.get(state.activeTimeframe).values())
+      .sort((a, b) => a.open_time - b.open_time);
+    if (allRows.length === 0) return;
+
+    let rows = allRows;
+    const visibleRange = chart.timeScale().getVisibleLogicalRange();
+    if (visibleRange) {
+      const from = Math.max(0, Math.floor(visibleRange.from));
+      const to = Math.min(allRows.length - 1, Math.ceil(visibleRange.to));
+      if (from <= to) rows = allRows.slice(from, to + 1);
+    }
+    if (rows.length === 0) return;
+
+    let minPrice = Infinity, maxPrice = -Infinity;
+    for (const r of rows) {
+      if (r.low < minPrice) minPrice = r.low;
+      if (r.high > maxPrice) maxPrice = r.high;
+    }
+    if (!isFinite(minPrice) || !isFinite(maxPrice) || maxPrice <= minPrice) return;
+
+    const bucketSize = (maxPrice - minPrice) / kVolumeProfileBuckets;
+    const buyVol = new Array(kVolumeProfileBuckets).fill(0);
+    const sellVol = new Array(kVolumeProfileBuckets).fill(0);
+
+    for (const r of rows) {
+      const candleRange = (r.high - r.low) || bucketSize;
+      const buyShare = r.base_volume > 0 ? (r.taker_buy_base_volume / r.base_volume) : 0.5;
+      const firstBucket = Math.max(0, Math.floor((r.low - minPrice) / bucketSize));
+      const lastBucket = Math.min(kVolumeProfileBuckets - 1, Math.floor((r.high - minPrice) / bucketSize));
+      for (let b = firstBucket; b <= lastBucket; b++) {
+        const bucketLo = minPrice + b * bucketSize;
+        const bucketHi = bucketLo + bucketSize;
+        const overlapLo = Math.max(bucketLo, r.low);
+        const overlapHi = Math.min(bucketHi, r.high);
+        const overlap = Math.max(0, overlapHi - overlapLo);
+        const share = overlap / candleRange;
+        buyVol[b] += r.base_volume * share * buyShare;
+        sellVol[b] += r.base_volume * share * (1 - buyShare);
+      }
+    }
+
+    let maxTotal = 0;
+    for (let b = 0; b < kVolumeProfileBuckets; b++) {
+      maxTotal = Math.max(maxTotal, buyVol[b] + sellVol[b]);
+    }
+    if (maxTotal <= 0) return;
+
+    const frag = document.createDocumentFragment();
+    for (let b = 0; b < kVolumeProfileBuckets; b++) {
+      const total = buyVol[b] + sellVol[b];
+      if (total <= 0) continue;
+      const bucketLo = minPrice + b * bucketSize;
+      const bucketHi = bucketLo + bucketSize;
+      const yTop = candleSeries.priceToCoordinate(bucketHi);
+      const yBottom = candleSeries.priceToCoordinate(bucketLo);
+      if (yTop === null || yBottom === null) continue;
+      const barHeight = Math.max(1, yBottom - yTop);
+      const buyWidth = (buyVol[b] / maxTotal) * kVolumeProfileMaxWidthPx;
+      const sellWidth = (sellVol[b] / maxTotal) * kVolumeProfileMaxWidthPx;
+
+      const buyBar = document.createElement('div');
+      buyBar.className = 'vp-bar vp-buy';
+      buyBar.style.top = `${yTop}px`;
+      buyBar.style.height = `${barHeight}px`;
+      buyBar.style.width = `${buyWidth}px`;
+      frag.appendChild(buyBar);
+
+      const sellBar = document.createElement('div');
+      sellBar.className = 'vp-bar vp-sell';
+      sellBar.style.top = `${yTop}px`;
+      sellBar.style.left = `${buyWidth}px`;
+      sellBar.style.height = `${barHeight}px`;
+      sellBar.style.width = `${sellWidth}px`;
+      frag.appendChild(sellBar);
+    }
+    volumeProfileEl.appendChild(frag);
   }
 
   connect();

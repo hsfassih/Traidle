@@ -57,7 +57,7 @@ struct PredictionSnapshot {
 };
 
 // One broadcastable unit of chart data: everything the frontend needs to
-// render one closed candle's worth of candlestick, volume, and indicator
+// render one candle's worth of candlestick, volume, and indicator
 // information, plus an optional prediction overlay. Deliberately a plain,
 // flat struct (not reusing candlesticks::Candlestick / indicators::
 // IndicatorSnapshot by inheritance) so this module's wire format can
@@ -67,6 +67,10 @@ struct VisualizationMessage {
     string timeframe;   // raw label, e.g. "1m", exactly as typed at startup
     int64_t openTime = 0;
     int64_t closeTime = 0;
+    bool closed = true;  // false while this candle is still forming; the
+                          // frontend uses this only for display (e.g. a
+                          // "LIVE" badge) - indicatorValues being all-null
+                          // is what actually gates indicator-line updates
     double open = 0.0;
     double high = 0.0;
     double low = 0.0;
@@ -105,10 +109,11 @@ public:
     void stop();
 
     // Thread-safe, non-blocking, never throws. Called by a timeframe
-    // worker with a freshly closed live candle: enqueues it for broadcast
-    // to the active session (if any) AND records it into that
-    // timeframe's in-memory history ring buffer (see seedHistory() for
-    // the backfill-time equivalent that skips the broadcast step).
+    // worker with EVERY candle it sees - both still-forming ticks and the
+    // final closed candle: enqueues it for broadcast to the active session
+    // (if any) AND records/overwrites it in that timeframe's in-memory
+    // history ring buffer, keyed by open time (see seedHistory() for the
+    // backfill-time equivalent that skips the broadcast step).
     void push(VisualizationMessage message);
 
     // Thread-safe, non-blocking, never throws. Called during startup
