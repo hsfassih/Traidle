@@ -55,6 +55,15 @@
   #readoutTable td:first-child { color: #868c98; }
   #readoutTable td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
   #predictionBox { margin-top: 12px; font-size: 12px; color: #868c98; }
+
+  #selectedCandleBox { margin-top: 16px; padding-top: 12px; border-top: 1px solid #2a2e39; }
+  #selectedCandleBox h4 { margin: 0 0 8px 0; font-size: 12px; color: #868c98; font-weight: 600;
+                          text-transform: uppercase; letter-spacing: 0.03em; }
+  #selectedCandleContent table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #selectedCandleContent td { padding: 4px 2px; border-bottom: 1px solid #1e222d; }
+  #selectedCandleContent td:first-child { color: #868c98; }
+  #selectedCandleContent td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  #selectedCandleContent .placeholder { color: #5c6270; font-style: italic; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -79,6 +88,10 @@
       <h3 id="readoutSymbol">—</h3>
       <table id="readoutTable"></table>
       <div id="predictionBox"></div>
+      <div id="selectedCandleBox">
+        <h4>Selected Candle</h4>
+        <div id="selectedCandleContent"><span class="placeholder">Click a candlestick to inspect it.</span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -93,6 +106,7 @@
   const kWatchdogCheckIntervalMs = 5000;
   const kVolumeProfileBuckets = 24;
   const kVolumeProfileMaxWidthPx = 90;
+  const kMaxCandlesPerTimeframe = 50000; // mirrors the backend's ring-buffer cap (see visualization.cpp)
 
   // ---- state ----
   const state = {
@@ -107,6 +121,36 @@
 
   const toggleState = { sma: true, ema: true, bb: true, volume: true, volumeProfile: true };
 
+  // Last known non-null value per indicator field, per timeframe. Forming
+  // (not-yet-closed) candles broadcast an all-null indicator snapshot -
+  // without this, the readout panel would blank RSI/MACD/etc. on nearly
+  // every tick and only flash the real values for the instant a candle
+  // closes. Populated from every message (live or history), independent
+  // of which tab is currently active, so switching tabs shows correct
+  // values immediately rather than waiting for a fresh tick.
+  const lastIndicatorsByTf = new Map();
+
+  function mergeIndicators(tf, incoming) {
+    if (!incoming) return;
+    const merged = lastIndicatorsByTf.get(tf) || {};
+    for (const key of Object.keys(incoming)) {
+      const value = incoming[key];
+      if (value !== null && value !== undefined) {
+        merged[key] = value;
+      } else if (!(key in merged)) {
+        merged[key] = null; // still warming up, never seen a value yet
+      }
+    }
+    lastIndicatorsByTf.set(tf, merged);
+  }
+
+  function trimHistoryMap(map) {
+    while (map.size > kMaxCandlesPerTimeframe) {
+      const oldestKey = map.keys().next().value;
+      map.delete(oldestKey);
+    }
+  }
+
   // ---- DOM ----
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
@@ -117,6 +161,7 @@
   const readoutSymbol = document.getElementById('readoutSymbol');
   const readoutTable = document.getElementById('readoutTable');
   const predictionBox = document.getElementById('predictionBox');
+  const selectedCandleContent = document.getElementById('selectedCandleContent');
 
   // ---- chart setup (one instance, reused across timeframe tab switches) ----
   const chart = LightweightCharts.createChart(chartContainer, {
@@ -173,6 +218,31 @@
 
   chart.timeScale().subscribeVisibleLogicalRangeChange(() => recomputeVolumeProfile());
 
+  // ---- click-to-inspect: show a clicked candle's OHLC in the side panel ----
+  chart.subscribeClick((param) => {
+    if (!param.time || state.activeTimeframe === null) return;
+    const tfMap = state.dataByTimeframe.get(state.activeTimeframe);
+    const row = tfMap ? tfMap.get(param.time) : null;
+    if (!row) return; // clicked empty space / off a bar - leave the last selection as-is
+    showSelectedCandle(row);
+  });
+
+  function showSelectedCandle(row) {
+    const dt = new Date(row.open_time);
+    const liveTag = row.closed === false ? ' <span class="liveBadge">● LIVE</span>' : '';
+    const rows = [
+      ['Time', dt.toLocaleString() + liveTag],
+      ['Open', fmt(row.open, 4)],
+      ['High', fmt(row.high, 4)],
+      ['Low', fmt(row.low, 4)],
+      ['Close', fmt(row.close, 4)],
+      ['Base Vol', fmt(row.base_volume, 2)],
+      ['Taker Buy Vol', fmt(row.taker_buy_base_volume, 2)],
+    ];
+    selectedCandleContent.innerHTML =
+      '<table>' + rows.map(([label, value]) => `<tr><td>${label}</td><td>${value}</td></tr>`).join('') + '</table>';
+  }
+
   // ---- indicator/overlay toggles ----
   document.querySelectorAll('.toggle-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -208,7 +278,11 @@
       state.lastMessageAt = Date.now();
       let msg;
       try { msg = JSON.parse(event.data); } catch (e) { return; } // ignore malformed frames
-      if (msg.type === 'candle') ingestMessage(msg);
+      if (msg.type === 'candle') {
+        ingestMessage(msg);
+      } else if (msg.type === 'history') {
+        ingestHistoryBatch(msg);
+      }
       // heartbeat messages need no further handling beyond the lastMessageAt update above
     };
   }
@@ -241,7 +315,7 @@
     connect();
   });
 
-  // ---- message ingestion ----
+  // ---- message ingestion (single live/forming/closed candle) ----
   function ingestMessage(msg) {
     const tf = msg.timeframe;
     const isNewTimeframe = !state.dataByTimeframe.has(tf);
@@ -251,7 +325,10 @@
     }
 
     const timeSec = Math.floor(msg.open_time / 1000);
-    state.dataByTimeframe.get(tf).set(timeSec, msg); // overwrites in place as a forming candle ticks
+    const tfMap = state.dataByTimeframe.get(tf);
+    tfMap.set(timeSec, msg); // overwrites in place as a forming candle ticks
+    trimHistoryMap(tfMap);
+    mergeIndicators(tf, msg.indicators);
 
     if (state.activeTimeframe === null) {
       switchTimeframe(tf); // first message ever received - adopt its timeframe as the default view
@@ -264,6 +341,48 @@
 
     if (tf === state.activeTimeframe) {
       applyLiveUpdate(msg, timeSec);
+    }
+  }
+
+  // ---- message ingestion (bulk history snapshot for one timeframe) ----
+  // Sent once per timeframe right after connecting (see visualization.cpp's
+  // sendHistorySnapshot / toHistoryJson) - up to 50,000 candles in one
+  // message, applied via the same bulk switchTimeframe()->setData() path
+  // used for tab switches, rather than 50,000 individual update() calls.
+  function ingestHistoryBatch(msg) {
+    const tf = msg.timeframe;
+    if (!msg.candles || msg.candles.length === 0) return;
+
+    const isNewTimeframe = !state.dataByTimeframe.has(tf);
+    if (isNewTimeframe) {
+      state.dataByTimeframe.set(tf, new Map());
+      state.knownTimeframes.push(tf);
+    }
+
+    const tfMap = state.dataByTimeframe.get(tf);
+    let lastRow = null;
+    for (const candle of msg.candles) {
+      const row = { ...candle, symbol: msg.symbol, timeframe: tf };
+      const timeSec = Math.floor(row.open_time / 1000);
+      tfMap.set(timeSec, row);
+      lastRow = row;
+    }
+    trimHistoryMap(tfMap);
+    if (lastRow) {
+      mergeIndicators(tf, lastRow.indicators);
+    }
+
+    if (state.activeTimeframe === null) {
+      switchTimeframe(tf); // first data ever received - adopt this timeframe as the default view
+      return;
+    }
+
+    if (isNewTimeframe) {
+      renderTabs();
+    }
+
+    if (tf === state.activeTimeframe) {
+      switchTimeframe(tf); // bulk-redraw now that this timeframe's history has arrived
     }
   }
 
@@ -331,8 +450,10 @@
     });
     // Indicators are only ever non-null on the candle's FINAL closed
     // update (see the comment in binance.cpp's renderLine) - so this
-    // naturally leaves indicator lines untouched while a candle is still
+    // naturally leaves indicator LINES untouched while a candle is still
     // forming, and only extends them once the real value lands at close.
+    // (The numeric readout panel below uses the separately-merged
+    // "last known" values instead - see mergeIndicators/updateReadout.)
     const ind = msg.indicators;
     if (ind.sma !== null) smaSeries.update({ time: timeSec, value: ind.sma });
     if (ind.ema !== null) emaSeries.update({ time: timeSec, value: ind.ema });
@@ -353,7 +474,11 @@
   function updateReadout(msg) {
     const liveBadge = msg.closed === false ? '<span class="liveBadge">● LIVE</span>' : '';
     readoutSymbol.innerHTML = `${msg.symbol} · ${msg.timeframe}${liveBadge}`;
-    const ind = msg.indicators;
+    // Use the merged "last known" indicators, not msg.indicators directly -
+    // msg.indicators is blank on every forming-candle tick, and using it
+    // raw here would blank the panel almost all the time. See
+    // mergeIndicators() above.
+    const ind = lastIndicatorsByTf.get(msg.timeframe) || msg.indicators;
     const rows = [
       ['Close', fmt(msg.close, 4)],
       ['Base Vol', fmt(msg.base_volume, 2)],

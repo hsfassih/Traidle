@@ -161,4 +161,14 @@ IndicatorSnapshot IndicatorEngine::update(const candlesticks::Candlestick& candl
     return snapshot;
 }
 
+IndicatorSnapshot IndicatorEngine::peek(const candlesticks::Candlestick& candle) const {
+    // A throwaway copy of this engine's current state, advanced by one
+    // normal update() call and then discarded. The real engine (`this`)
+    // is never modified - see the declaration comment in indicators.h for
+    // why this is both correct and cheap enough to call on every live
+    // tick.
+    IndicatorEngine scratch = *this;
+    return scratch.update(candle);
+}
+
 }  // namespace indicators

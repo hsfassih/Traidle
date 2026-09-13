@@ -4,6 +4,7 @@ project(traidle CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(Boost CONFIG REQUIRED COMPONENTS system)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
@@ -15,6 +16,10 @@ add_executable(traidle
     src/historical_get.cpp
     src/indicators.cpp
     src/visualization.cpp
+)
+
+add_executable(ws_diagnostic
+    scripts/ws_diagnostic.cpp
 )
 
 target_link_libraries(traidle PRIVATE
@@ -29,9 +34,6 @@ if(WIN32)
     target_link_libraries(traidle PRIVATE ws2_32 mswsock crypt32)
 endif()
 
-add_executable(ws_diagnostic
-    scripts/ws_diagnostic.cpp
-)
 
 target_link_libraries(ws_diagnostic PRIVATE
     Boost::system

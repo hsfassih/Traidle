@@ -76,6 +76,26 @@ public:
     // once, in order - including during CSV replay after a restart.
     IndicatorSnapshot update(const candlesticks::Candlestick& candle);
 
+    // Read-only "what if this candle closed right now" preview: computes
+    // the indicator values the *next* update(candle) call would produce,
+    // without mutating this engine's actual rolling state in any way. This
+    // is what lets the live-forming-candle tap point in binance.cpp show
+    // real-time RSI/MACD/Stoch/ATR/VWAP/OBV that track the current,
+    // still-moving price - the same "current bar" behavior every real
+    // charting platform has - instead of freezing at whatever they were
+    // as of the last CLOSED candle (which could be up to a full timeframe
+    // period stale, e.g. up to an hour on 1h or a full day on 1d).
+    //
+    // Implemented as a full copy of this engine's internal state (small,
+    // fixed-size rolling windows - a handful of doubles once warmed up)
+    // followed by a normal update() on that copy, which is then discarded.
+    // update() is otherwise required to be called exactly once per closed
+    // candle; this preserves that invariant for the real engine while
+    // still answering "what would it be" as often as needed (safe to call
+    // on every live tick - the copy is cheap enough that this is not a
+    // performance concern).
+    IndicatorSnapshot peek(const candlesticks::Candlestick& candle) const;
+
 private:
     // ---- Small reusable building blocks. Kept private/nested since they
     // are implementation details of this one engine, not a general-purpose

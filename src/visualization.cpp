@@ -18,6 +18,7 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -32,7 +33,7 @@ namespace visualization {
 namespace {
 
 constexpr size_t kMaxQueueSize = 500;      // bounded outbound broadcast queue (drop-oldest when full)
-constexpr size_t kHistoryDepth = 500;      // distinct candles retained per timeframe for snapshot-on-connect
+constexpr size_t kHistoryDepth = 50000;    // distinct candles retained per timeframe for snapshot-on-connect
 constexpr auto kHeartbeatInterval = seconds(15);  // sent only if nothing real went out in this window
 
 json optionalToJson(const optional<double>& value) {
@@ -83,13 +84,15 @@ json predictionToJson(const optional<PredictionSnapshot>& prediction) {
     return j;
 }
 
-}  // namespace
-
-string toJson(const VisualizationMessage& message) {
+// Every field a single candle contributes to the wire format, EXCEPT the
+// envelope fields ("type"/"symbol"/"timeframe") that toJson() adds for a
+// live message and toHistoryJson() below adds once for the whole batch
+// instead of repeating per-candle - at up to 50,000 candles per timeframe,
+// that repetition would meaningfully bloat the initial-connect payload for
+// no benefit, since every candle in one history batch already shares the
+// same symbol/timeframe.
+json candleFieldsToJson(const VisualizationMessage& message) {
     json j;
-    j["type"] = "candle";
-    j["symbol"] = message.symbol;
-    j["timeframe"] = message.timeframe;
     j["open_time"] = message.openTime;
     j["close_time"] = message.closeTime;
     j["closed"] = message.closed;
@@ -103,6 +106,36 @@ string toJson(const VisualizationMessage& message) {
     j["taker_buy_quote_volume"] = message.takerBuyQuoteVolume;
     j["indicators"] = indicatorSnapshotToJson(message.indicatorValues);
     j["prediction"] = predictionToJson(message.prediction);
+    return j;
+}
+
+// Serializes an entire timeframe's ring buffer as ONE message instead of
+// one message per candle. At up to 50,000 candles this is the difference
+// between a handful of async_write calls and 50,000 of them, and between
+// one bulk chart.setData() on the frontend and 50,000 individual
+// series.update() calls - both meaningfully slower and, for the frontend,
+// visibly janky if done one at a time.
+string toHistoryJson(const string& symbol, const string& timeframe,
+                     const map<int64_t, VisualizationMessage>& buffer) {
+    json j;
+    j["type"] = "history";
+    j["symbol"] = symbol;
+    j["timeframe"] = timeframe;
+    json candles = json::array();
+    for (const auto& entry : buffer) {
+        candles.push_back(candleFieldsToJson(entry.second));
+    }
+    j["candles"] = move(candles);
+    return j.dump();
+}
+
+}  // namespace
+
+string toJson(const VisualizationMessage& message) {
+    json j = candleFieldsToJson(message);
+    j["type"] = "candle";
+    j["symbol"] = message.symbol;
+    j["timeframe"] = message.timeframe;
     return j.dump();
 }
 
@@ -229,8 +262,7 @@ struct VisualizationServer::Impl {
     // instead of piling up kHistoryDepth's worth of superseded
     // intermediate versions of what is really just one candle. A
     // std::map (not unordered_map) keeps each timeframe's buffer naturally
-    // sorted by time, which sendHistorySnapshot() below relies on to
-    // replay history to a freshly connected browser in chronological order.
+    // sorted by time, which sendHistorySnapshot() below relies on.
     mutex historyMutex;
     unordered_map<string, map<int64_t, VisualizationMessage>> historyByTimeframe;
 
@@ -257,12 +289,31 @@ struct VisualizationServer::Impl {
         });
     }
 
+    // Sends each timeframe's entire ring buffer as one batched "history"
+    // message (see toHistoryJson()). Copies the buffers out from under
+    // historyMutex FIRST, then serializes/sends the copies with the lock
+    // released: at up to 50,000 candles per timeframe, JSON-serializing
+    // the whole thing is no longer a trivially cheap operation, and every
+    // timeframe worker thread's push()/seedHistory() calls (made inline,
+    // as part of processing each live candle) need that same mutex -
+    // holding it across the slow serialization would stall candle
+    // ingestion/CSV writes on every timeframe at once just because a
+    // browser happened to connect.
     void sendHistorySnapshot(const shared_ptr<Session>& session) {
-        lock_guard<mutex> lock(historyMutex);
-        for (const auto& [timeframe, buffer] : historyByTimeframe) {
-            for (const auto& entry : buffer) {
-                session->send(toJson(entry.second));
+        vector<pair<string, map<int64_t, VisualizationMessage>>> snapshot;
+        {
+            lock_guard<mutex> lock(historyMutex);
+            snapshot.reserve(historyByTimeframe.size());
+            for (const auto& entry : historyByTimeframe) {
+                snapshot.emplace_back(entry.first, entry.second);
             }
+        }
+        for (const auto& entry : snapshot) {
+            const auto& timeframe = entry.first;
+            const auto& buffer = entry.second;
+            if (buffer.empty()) continue;
+            const string& symbol = buffer.begin()->second.symbol;
+            session->send(toHistoryJson(symbol, timeframe, buffer));
         }
     }
 

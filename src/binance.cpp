@@ -508,19 +508,20 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
             board.updateLine(task.rowIndex, line);
 
             // Live/forming-candle tap point for the visualization layer.
-            // Unlike writeClosedCandleRow, this must NOT touch `engine` -
-            // IndicatorEngine is a one-shot-per-closed-candle stateful
-            // recursion (EMA/RSI/etc.), and calling update() speculatively
-            // on a still-forming candle would permanently corrupt that
-            // state. The pushed message therefore carries a blank
-            // (all-nullopt) indicator snapshot; the frontend simply leaves
-            // indicator lines untouched until the real, final value
-            // arrives when this candle actually closes. As a useful side
-            // effect, this also keeps the WebSocket link under roughly
-            // constant traffic during active trading (about once per
-            // second per timeframe), rather than only at candle-close
-            // boundaries.
-            vizServer.push(buildVisualizationMessage(symbol, label, candle, indicators::IndicatorSnapshot{}));
+            // Uses engine.peek() - a read-only "what if this candle
+            // closed right now" preview - rather than engine.update(),
+            // so RSI/MACD/Stoch/ATR/VWAP/OBV in the UI track the current,
+            // still-moving price in real time instead of freezing at
+            // whatever they were as of the last CLOSED candle (which
+            // could be up to a full timeframe period stale). peek()
+            // never mutates `engine` itself - see indicators.h - so the
+            // original invariant ("this candle must not permanently
+            // affect the engine's rolling state until it actually
+            // closes") is fully preserved. As a useful side effect, this
+            // also keeps the WebSocket link under roughly constant
+            // traffic during active trading (about once per second per
+            // timeframe), rather than only at candle-close boundaries.
+            vizServer.push(buildVisualizationMessage(symbol, label, candle, engine.peek(candle)));
         };
 
         // Tracks the last candle seen from ANY source so we can detect a
