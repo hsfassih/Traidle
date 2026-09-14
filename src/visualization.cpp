@@ -177,15 +177,35 @@ public:
     // Enqueues one JSON payload for this session and kicks off writing if
     // idle. Never blocks - Beast forbids more than one async_write in
     // flight on the same stream at a time, so a second send() while a
-    // write is already outstanding just queues behind it.
+    // write is already outstanding just queues behind it. A no-op once
+    // the session is already dead_ (see close()) - no point queuing more
+    // writes for a socket that's already gone.
     void send(string payload) {
+        if (dead_) return;
         outgoing_.push_back(move(payload));
         if (!writing_) {
             doWrite();
         }
     }
 
+    // Requests a clean WebSocket close. Safe to call more than once, and
+    // safe to call even after this session's underlying connection has
+    // already failed or begun closing on its own (e.g. the peer sent its
+    // own close frame, which surfaces here as an error on the pending
+    // read - see onRead()). Boost.Beast's close_op asserts that a close
+    // hasn't already been received/processed on this stream before IT
+    // starts a new close sequence (the assertion this guards against:
+    // "Assertion failed: !impl.rd_close" in close.hpp) - calling close()
+    // on a session that's already mid-close on its own trips that
+    // assertion and aborts the entire process. This is exactly the race
+    // that happens on every browser reconnect: the old tab's socket
+    // closes at nearly the same instant the new one connects, so
+    // Impl::startAccept()'s "replace the old session" logic can easily
+    // call close() here after onRead() already saw the old socket die.
+    // Once dead_ is set (from either path), every call here is a no-op.
     void close() {
+        if (dead_) return;
+        dead_ = true;
         beast::error_code ec;
         ws_.close(websocket::close_code::normal, ec);
     }
@@ -207,7 +227,15 @@ private:
     }
 
     void onRead(beast::error_code ec, size_t) {
-        if (ec) return;  // client disconnected - session becomes inert, replaced on next connect
+        if (ec) {
+            // Client disconnected - this is also how a peer-sent close
+            // frame surfaces (Beast completes the pending read with an
+            // error once it's processed one). Mark the session dead so a
+            // later close() call becomes a safe no-op instead of hitting
+            // the assertion described in close()'s comment above.
+            dead_ = true;
+            return;
+        }
         readBuffer_.consume(readBuffer_.size());
         doRead();
     }
@@ -226,8 +254,12 @@ private:
     void onWrite(beast::error_code ec, size_t) {
         outgoing_.pop_front();
         if (ec) {
+            // Same reasoning as onRead()'s error path - a failed write is
+            // just as valid a "this connection is already gone" signal,
+            // and must equally disarm close() below.
+            dead_ = true;
             writing_ = false;
-            return;  // dead session - left in place until the next accepted connection replaces it
+            return;
         }
         doWrite();
     }
@@ -236,6 +268,7 @@ private:
     beast::flat_buffer readBuffer_;
     deque<string> outgoing_;
     bool writing_ = false;
+    bool dead_ = false;
     ReadyHandler onReady_;
 };
 
