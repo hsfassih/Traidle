@@ -30,6 +30,7 @@ build.ninja
 CMakeUserPresets.json
 
 # Others
+scrap-data/
 scripts/
 .github/instructions/
 .github/*.md

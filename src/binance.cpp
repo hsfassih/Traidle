@@ -457,7 +457,8 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
     try {
         net::io_context ioc;
         ssl::context ctx(ssl::context::tlsv12_client);
-        ctx.load_verify_file("C:/certs/cacert.pem");
+        // ctx.load_verify_file("C:/certs/cacert.pem"); // for locally running on windows without docker
+        ctx.set_default_verify_paths();
         ctx.set_verify_mode(ssl::verify_peer);
 
         // One IndicatorEngine for this timeframe's entire lifetime - handed

@@ -1,0 +1,14 @@
+.git
+.gitignore
+.github
+.vscode
+.agents
+.codex
+build
+build-*
+vcpkg_installed
+scrap-data
+*usdt
+*.exe
+*.dll
+*.pdb

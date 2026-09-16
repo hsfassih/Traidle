@@ -3,6 +3,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/asio/socket_base.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/beast/core.hpp>
@@ -11,8 +12,10 @@
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <condition_variable>
 #include <deque>
 #include <exception>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -188,26 +191,31 @@ public:
         }
     }
 
-    // Requests a clean WebSocket close. Safe to call more than once, and
-    // safe to call even after this session's underlying connection has
-    // already failed or begun closing on its own (e.g. the peer sent its
-    // own close frame, which surfaces here as an error on the pending
-    // read - see onRead()). Boost.Beast's close_op asserts that a close
-    // hasn't already been received/processed on this stream before IT
-    // starts a new close sequence (the assertion this guards against:
-    // "Assertion failed: !impl.rd_close" in close.hpp) - calling close()
-    // on a session that's already mid-close on its own trips that
-    // assertion and aborts the entire process. This is exactly the race
-    // that happens on every browser reconnect: the old tab's socket
-    // closes at nearly the same instant the new one connects, so
-    // Impl::startAccept()'s "replace the old session" logic can easily
-    // call close() here after onRead() already saw the old socket die.
-    // Once dead_ is set (from either path), every call here is a no-op.
+    // Forcibly terminates this session's underlying TCP connection. Safe
+    // to call more than once, and safe to call no matter what state the
+    // connection's read/write sides are already in (e.g. mid-way through
+    // processing a close frame the peer already sent, or having already
+    // errored out on its own).
+    //
+    // This deliberately does NOT use Beast's higher-level
+    // websocket::close()/async_close(). That API runs a cooperative
+    // closing handshake with its own internal state machine, and it
+    // asserts if that handshake is invoked while the stream is already
+    // mid-close in some way (the exact crash this was hit by: "Assertion
+    // failed: !impl.rd_close" in close.hpp). This method exists
+    // specifically to FORCIBLY replace a session the instant a new one
+    // takes its place (see Impl::startAccept()), and by definition there
+    // is no guarantee about what state the old connection already found
+    // itself in at that moment - closing the raw socket instead
+    // (beast::close_socket, the documented low-level primitive for
+    // exactly this) has no handshake and therefore nothing to assert
+    // against. The browser still sees a normal disconnect (its
+    // WebSocket's onclose fires either way) and reconnects exactly as it
+    // would after a graceful close.
     void close() {
         if (dead_) return;
         dead_ = true;
-        beast::error_code ec;
-        ws_.close(websocket::close_code::normal, ec);
+        beast::close_socket(beast::get_lowest_layer(ws_));
     }
 
 private:
@@ -228,11 +236,6 @@ private:
 
     void onRead(beast::error_code ec, size_t) {
         if (ec) {
-            // Client disconnected - this is also how a peer-sent close
-            // frame surfaces (Beast completes the pending read with an
-            // error once it's processed one). Mark the session dead so a
-            // later close() call becomes a safe no-op instead of hitting
-            // the assertion described in close()'s comment above.
             dead_ = true;
             return;
         }
@@ -254,9 +257,6 @@ private:
     void onWrite(beast::error_code ec, size_t) {
         outgoing_.pop_front();
         if (ec) {
-            // Same reasoning as onRead()'s error path - a failed write is
-            // just as valid a "this connection is already gone" signal,
-            // and must equally disarm close() below.
             dead_ = true;
             writing_ = false;
             return;
@@ -299,6 +299,17 @@ struct VisualizationServer::Impl {
     mutex historyMutex;
     unordered_map<string, map<int64_t, VisualizationMessage>> historyByTimeframe;
 
+    // Dedicated worker thread that builds the (potentially large) JSON
+    // history-snapshot payloads - see sendHistorySnapshot()'s comment for
+    // why this needs to happen off of ioThread entirely, kept alive for
+    // the server's whole lifetime (started in start(), joined in stop())
+    // rather than spawned fresh per connection.
+    thread historyWorkerThread;
+    mutex historyTaskMutex;
+    condition_variable historyTaskCv;
+    deque<function<void()>> historyTasks;
+    bool historyWorkerRunning = false;
+
     void startAccept() {
         acceptor.async_accept([this](beast::error_code ec, tcp::socket socket) {
             if (!ec) {
@@ -324,14 +335,31 @@ struct VisualizationServer::Impl {
 
     // Sends each timeframe's entire ring buffer as one batched "history"
     // message (see toHistoryJson()). Copies the buffers out from under
-    // historyMutex FIRST, then serializes/sends the copies with the lock
-    // released: at up to 50,000 candles per timeframe, JSON-serializing
-    // the whole thing is no longer a trivially cheap operation, and every
-    // timeframe worker thread's push()/seedHistory() calls (made inline,
-    // as part of processing each live candle) need that same mutex -
-    // holding it across the slow serialization would stall candle
-    // ingestion/CSV writes on every timeframe at once just because a
-    // browser happened to connect.
+    // historyMutex FIRST (cheap - copying already-built structs), then
+    // hands the copies to the dedicated history worker thread to actually
+    // build the JSON.
+    //
+    // This used to serialize directly on ioThread, which was fine back
+    // when each timeframe's buffer capped at 500 candles. Now that the
+    // cap is 50,000 (kHistoryDepth), a symbol with several active
+    // timeframes near that cap can mean several hundred thousand candles
+    // need serializing on every single new connection - tens to hundreds
+    // of milliseconds of solid CPU work. Doing that directly on ioThread
+    // would stall every OTHER pending operation there (the accept loop,
+    // live-candle broadcast, heartbeats) for the whole duration - hurting
+    // responsiveness on its own, and also widening the timing window in
+    // which a rapid browser reconnect's session-replacement logic has to
+    // reason about what state the old connection is already in.
+    //
+    // Only the already-built JSON payload strings get marshaled back onto
+    // ioThread afterward (via net::post) - Session::send() and its
+    // outgoing_ queue are only ever safe to touch from that one thread
+    // (see Session's class comment), so the worker thread never touches
+    // a Session directly, only through the io_context's own posting
+    // mechanism. A weak_ptr is used (not shared_ptr) so that if this
+    // session gets replaced again before its snapshot finishes building,
+    // the now-stale task just quietly skips sending instead of doing
+    // pointless work.
     void sendHistorySnapshot(const shared_ptr<Session>& session) {
         vector<pair<string, map<int64_t, VisualizationMessage>>> snapshot;
         {
@@ -341,12 +369,42 @@ struct VisualizationServer::Impl {
                 snapshot.emplace_back(entry.first, entry.second);
             }
         }
-        for (const auto& entry : snapshot) {
-            const auto& timeframe = entry.first;
-            const auto& buffer = entry.second;
-            if (buffer.empty()) continue;
-            const string& symbol = buffer.begin()->second.symbol;
-            session->send(toHistoryJson(symbol, timeframe, buffer));
+
+        weak_ptr<Session> weakSession = session;
+        net::io_context* iocPtr = &ioc;
+        {
+            lock_guard<mutex> lock(historyTaskMutex);
+            historyTasks.push_back([iocPtr, weakSession, snapshot = move(snapshot)]() mutable {
+                for (auto& entry : snapshot) {
+                    const auto& timeframe = entry.first;
+                    const auto& buffer = entry.second;
+                    if (buffer.empty()) continue;
+                    const string& symbol = buffer.begin()->second.symbol;
+                    string payload = toHistoryJson(symbol, timeframe, buffer);
+                    net::post(*iocPtr, [weakSession, payload = move(payload)]() mutable {
+                        if (auto session = weakSession.lock()) {
+                            session->send(move(payload));
+                        }
+                    });
+                }
+            });
+        }
+        historyTaskCv.notify_one();
+    }
+
+    void historyWorkerLoop() {
+        for (;;) {
+            function<void()> task;
+            {
+                unique_lock<mutex> lock(historyTaskMutex);
+                historyTaskCv.wait(lock, [this] { return !historyTasks.empty() || !historyWorkerRunning; });
+                if (!historyWorkerRunning && historyTasks.empty()) {
+                    return;
+                }
+                task = move(historyTasks.front());
+                historyTasks.pop_front();
+            }
+            task();
         }
     }
 
@@ -411,7 +469,8 @@ void VisualizationServer::start() {
     // Bound to loopback only - this is a strictly single-viewer, local
     // visualization layer, not a service meant to be reachable from
     // anywhere else on the network.
-    tcp::endpoint endpoint(net::ip::make_address("127.0.0.1"), impl_->port);
+    // tcp::endpoint endpoint(net::ip::make_address("127.0.0.1"), impl_->port);
+    tcp::endpoint endpoint(net::ip::make_address("0.0.0.0"), impl_->port);
     impl_->acceptor.open(endpoint.protocol(), ec);
     if (!ec) impl_->acceptor.set_option(net::socket_base::reuse_address(true), ec);
     if (!ec) impl_->acceptor.bind(endpoint, ec);
@@ -423,6 +482,7 @@ void VisualizationServer::start() {
     }
 
     impl_->running = true;
+    impl_->historyWorkerRunning = true;
     impl_->startAccept();
     impl_->scheduleDrain();
 
@@ -433,6 +493,7 @@ void VisualizationServer::start() {
             cerr << "[visualizer] fatal error: " << e.what() << '\n';
         }
     });
+    impl_->historyWorkerThread = thread([this]() { impl_->historyWorkerLoop(); });
 
     cout << "[visualizer] WebSocket server listening on ws://127.0.0.1:" << impl_->port
          << " - open web/visualizer.html in a browser to view live charts.\n";
@@ -446,6 +507,14 @@ void VisualizationServer::stop() {
     impl_->ioc.stop();
     if (impl_->ioThread.joinable()) {
         impl_->ioThread.join();
+    }
+    {
+        lock_guard<mutex> lock(impl_->historyTaskMutex);
+        impl_->historyWorkerRunning = false;
+    }
+    impl_->historyTaskCv.notify_all();
+    if (impl_->historyWorkerThread.joinable()) {
+        impl_->historyWorkerThread.join();
     }
 }
 
