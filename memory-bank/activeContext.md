@@ -2,7 +2,7 @@
 
 ## Current State
 
-The futures console application displays live OHLC candlestick data and builds successfully with Ninja and MSYS2 GCC.
+The futures console application displays live OHLC candlestick data and is distributed as a Docker image from GitHub Container Registry. The runtime is intended to be launched from a dedicated working folder so the container can keep its data volume isolated and consistent.
 
 ## Latest Decision
 

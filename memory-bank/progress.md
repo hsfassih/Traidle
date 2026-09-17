@@ -8,6 +8,7 @@
 - One-second TLS REST polling of Binance USD-M Futures klines.
 - A single in-place Open/High/Low/Close row for the forming candle.
 - One permanent final Open/High/Low/Close row for each closed candle.
+- Docker image publication to GitHub Container Registry for runtime use.
 
 ## Known Constraints
 

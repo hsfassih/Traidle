@@ -23,6 +23,10 @@ cmake -B build-mingw -S . -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER
 cmake --build build-mingw
 ```
 
+## Runtime
+
+The application is packaged as a Docker image and is intended to be run from a dedicated folder, for example with a bind mount at `/app/data`.
+
 ## Runtime Certificate Requirement
 
-The application loads `C:/certs/cacert.pem` for TLS certificate verification. Obtain a trusted PEM CA bundle before running.
+The application loads `C:/certs/cacert.pem` for TLS certificate verification in the native Windows build. The published container image includes the system CA bundle needed for runtime TLS verification.

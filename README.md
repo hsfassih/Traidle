@@ -1,5 +1,5 @@
 # TRAIDLE
-AI powered trading - An integration of live market stream with your custom trading strategy
+Custom chart for trading that allows you to have mutliple tabs, each with indicators, ICT concepts, SMC and AI integration to aid in your analysis.
 
 ## Live Futures Price Console
 
@@ -7,7 +7,7 @@ A C++17 console application that connects to Binance's USD-M Futures WebSocket s
 (`wss://fstream.binance.com/ws/<symbol>@trade`) and prints the latest trade price for one symbol,
 updated roughly once per second.
 
-### Prerequisites
+<!-- ### Prerequisites
 
 - CMake 3.16+
 - A C++17 compiler (MSVC via Visual Studio Build Tools, or another supported Windows toolchain)
@@ -19,13 +19,20 @@ updated roughly once per second.
 ```powershell
 cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="<path-to-vcpkg>/scripts/buildsystems/vcpkg.cmake"
 cmake --build build --config Release
-```
+``` -->
 
 ### Run
 
+Building the project locally would be a headache for you, so just pull the image from GitHub Container Registry and run it from its own dedicated folder:
+
 ```powershell
-./build/Release/traidle.exe
+docker pull ghcr.io/hsfassih/traidle:latest
+mkdir traidle-run
+cd traidle-run
+docker run --rm -it -v ${PWD}:/app/data ghcr.io/hsfassih/traidle:latest
 ```
+
+This keeps the app's working data in a clean, dedicated directory.
 
 You will be prompted for a symbol, e.g.:
 
