@@ -2,6 +2,7 @@
 
 #include "candlesticks.h"
 #include "indicators.h"
+#include "smc-ict/smc_engine.h"
 
 #include <cstdint>
 #include <memory>
@@ -31,6 +32,20 @@ using namespace std;
 // or fan-out logic, since none of that machinery earns its cost with only
 // ever one viewer. If that assumption ever changes, this is the module to
 // revisit first.
+//
+// --- SMC/ICT additions ---
+// smc-ict/'s detected structures (swings, FVGs, Order Blocks, BOS/CHoCH,
+// liquidity, PDH/PDL, Premium/Discount+OTE) are deliberately NOT folded
+// into VisualizationMessage / the existing 50,000-candle history ring
+// buffer (candleFieldsToJson, historyByTimeframe). Two reasons: (1) per
+// smc-ict/'s design, none of this is meant to be persisted or replicated
+// once per candle row - it is computed live, purely for display; bolting
+// it onto every one of 50,000 buffered candle rows would mean re-sending
+// the same still-active zone thousands of times instead of once. (2) an
+// active zone can remain relevant for far longer than one candle, so it
+// needs its own "current state, replaced wholesale" store
+// (smcByTimeframe_) rather than a per-candle ring buffer entry. See
+// updateSmcSnapshot()/pushSmcEvents() below and their .cpp implementation.
 // ---------------------------------------------------------------------------
 namespace visualization {
 
@@ -88,6 +103,13 @@ struct VisualizationMessage {
 // the exact wire format without spinning up a server.
 string toJson(const VisualizationMessage& message);
 
+// Serializes an SmcSnapshot / SmcUpdate to their wire-format JSON strings -
+// exposed publicly for the same reason as toJson() above (inspectable
+// without a server, usable by tests).
+string smcSnapshotToJson(const string& symbol, const string& timeframe,
+                        const smc::SmcSnapshot& snapshot);
+string smcUpdateToJson(const string& symbol, const string& timeframe, const smc::SmcUpdate& update);
+
 class VisualizationServer {
 public:
     explicit VisualizationServer(unsigned short port);
@@ -122,6 +144,32 @@ public:
     // right after startup immediately has recent context to draw. Never
     // broadcast live - these are not "just happened" events.
     void seedHistory(VisualizationMessage message);
+
+    // Thread-safe, non-blocking, never throws. Replaces (wholesale, not
+    // merged) the CURRENT set of active SMC/ICT structures for one
+    // timeframe. Called once after backfill/replay completes, and again
+    // any time smc::SmcEngine::currentSnapshot() meaningfully changes
+    // (binance.cpp calls this after every live update() too - it is cheap:
+    // see smc_engine.h's active-list size discussion). NOT broadcast
+    // directly; sent to a newly-connected session alongside its "history"
+    // message (see sendHistorySnapshot() in the .cpp), and replaces
+    // whatever this timeframe's snapshot previously held so a browser that
+    // connects later never sees stale structures re-sent.
+    void setSmcSnapshot(const string& symbol, const string& timeframe, smc::SmcSnapshot snapshot);
+
+    // Thread-safe, non-blocking, never throws. Broadcasts a live SMC/ICT
+    // delta (new/changed swings, FVGs, Order Blocks, structural events,
+    // equal levels, PDH/PDL, Premium/Discount+OTE) to the active session,
+    // the same way push() broadcasts a live candle - but on its own queue,
+    // since smc::SmcUpdate is a different shape from VisualizationMessage
+    // and most candles produce a non-trivial one here (see smc_engine.h's
+    // SmcUpdate::empty() - this project's real data shows the vast
+    // majority of closed candles produce SOME update, mostly Rejection
+    // Blocks and FVG mitigation-status changes, so this is not a rare-event
+    // queue; the frontend's SMC toggles are what keep the resulting
+    // traffic from being overwhelming to look at, not the wire protocol).
+    // A caller should skip this call entirely when update.empty() is true.
+    void pushSmcEvent(const string& symbol, const string& timeframe, smc::SmcUpdate update);
 
 private:
     struct Impl;

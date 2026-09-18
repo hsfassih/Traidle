@@ -2,6 +2,7 @@
 #include "historical_get.h"
 #include "indicators.h"
 #include "visualization.h"
+#include "smc-ict/smc_engine.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -421,7 +422,15 @@ visualization::VisualizationMessage buildVisualizationMessage(
     return message;
 }
 
-void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle,
+// Writes one closed candle's CSV row (indicators + OHLCV) exactly as
+// before, and additionally returns the IndicatorSnapshot that
+// engine.update(candle) just produced - needed by the caller to feed
+// smc-ict/liquidity.cpp's ATR-scaled Equal-Highs/Lows tolerance (see
+// smc_engine.h). IndicatorEngine::update() must be called exactly once per
+// closed candle (its own documented contract), so this snapshot has to be
+// captured and handed back here rather than the SMC path calling
+// engine.update() a second time itself.
+indicators::IndicatorSnapshot writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle,
                           indicators::IndicatorEngine& engine,
                           visualization::VisualizationServer& vizServer, const string& symbol,
                           const string& timeframeLabel) {
@@ -443,13 +452,14 @@ void writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle
     // non-blocking, and never throws, so it can never delay the CSV write
     // above it or anything else in this function's caller.
     vizServer.push(buildVisualizationMessage(symbol, timeframeLabel, candle, snapshot));
+    return snapshot;
 }
 
 // ---------------------------------------------------------------------------
 // One fully isolated worker per timeframe: own io_context/ssl::context, own
 // CSV file, own REST-priming/WS-reconnect/watchdog/REST-fallback state, and
-// (as of this version) its own IndicatorEngine. A failure or fallback on
-// one timeframe cannot affect any other.
+// its own IndicatorEngine and SmcEngine. A failure or fallback on one
+// timeframe cannot affect any other.
 // ---------------------------------------------------------------------------
 void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::path csvPath,
                         TerminalBoard& board, visualization::VisualizationServer& vizServer) {
@@ -457,7 +467,7 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
     try {
         net::io_context ioc;
         ssl::context ctx(ssl::context::tlsv12_client);
-        // ctx.load_verify_file("C:/certs/cacert.pem"); // for locally running on windows without docker
+         // ctx.load_verify_file("C:/certs/cacert.pem"); // for locally running on windows without docker
         ctx.set_default_verify_paths();
         ctx.set_verify_mode(ssl::verify_peer);
 
@@ -470,6 +480,19 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         // between "history that existed before this run" and "candles
         // this run has actually seen".
         indicators::IndicatorEngine engine;
+
+        // Same one-per-timeframe-lifetime treatment as `engine` above, for
+        // exactly the same reason - except nothing here is ever written to
+        // the CSV (see smc-ict/smc_engine.h). historical_get.cpp has no
+        // knowledge of this and is not touched by any of this: the
+        // seedHistory callback already threaded through
+        // ensureContinuousHistory() below (originally added only for the
+        // visualization ring buffer) is reused as the replay hook instead
+        // - see the accumulation into smcReplayCandles/smcReplayAtrs just
+        // below and the replayHistory() call once backfill completes.
+        smc::SmcEngine smcEngine;
+        vector<candlesticks::Candlestick> smcReplayCandles;
+        vector<optional<double>> smcReplayAtrs;
 
         // Before touching the live path at all: make sure the CSV is a
         // continuous history from 3 years ago up to the candle that's
@@ -491,12 +514,33 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                 // available so a browser connecting right after startup
                 // has recent context to draw immediately.
                 vizServer.seedHistory(buildVisualizationMessage(symbol, label, candle, snapshot));
+                // Same candle, kept for the SmcEngine replay right after
+                // this callback finishes (see below) - this is the only
+                // place a full-history candle list is assembled, so
+                // smc_engine.cpp's replay sees exactly the same OHLCV rows
+                // IndicatorEngine's own replay just saw.
+                smcReplayCandles.push_back(candle);
+                smcReplayAtrs.push_back(snapshot.atr);
             });
         if (!historyOk) {
             board.log("[" + label +
                       "] historical backfill did not fully complete; continuing with live data "
                       "only (some earlier candles may still be missing).");
         }
+
+        // SMC/ICT replay: one ordinary sequential pass over the same
+        // candles just reconstructed above - see smc_engine.h's class
+        // comment for why this is not chunked across threads. Then push
+        // the resulting "currently active structures" snapshot once, so a
+        // browser that connects before the first live candle closes still
+        // sees the full picture immediately rather than an empty one.
+        board.updateLine(task.rowIndex, "computing SMC/ICT structures...");
+        smcEngine.replayHistory(smcReplayCandles, smcReplayAtrs);
+        smcReplayCandles.clear();
+        smcReplayCandles.shrink_to_fit();
+        smcReplayAtrs.clear();
+        smcReplayAtrs.shrink_to_fit();
+        vizServer.setSmcSnapshot(symbol, label, smcEngine.currentSnapshot());
 
         ofstream csv = openCsvAppend(csvPath);
 
@@ -533,7 +577,18 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         auto ingestCandle = [&](const candlesticks::Candlestick& candle) {
             if (candle.closed) {
                 // WebSocket told us directly: this candle just closed.
-                writeClosedCandleRow(csv, candle, engine, vizServer, symbol, label);
+                const auto snapshot = writeClosedCandleRow(csv, candle, engine, vizServer, symbol, label);
+                // SMC/ICT live tap point. Deliberately update()d here, not
+                // peek()d - see every smc-ict/ concept file's own header
+                // comment on why these structures never get a live/forming
+                // preview the way indicators do. Only broadcast (and the
+                // snapshot only rebuilt) when something actually changed -
+                // see SmcUpdate::empty() in smc_engine.h.
+                auto smcUpdate = smcEngine.update(candle, snapshot.atr);
+                if (!smcUpdate.empty()) {
+                    vizServer.pushSmcEvent(symbol, label, smcUpdate);
+                    vizServer.setSmcSnapshot(symbol, label, smcEngine.currentSnapshot());
+                }
                 lastCandle.reset();
                 board.updateLine(task.rowIndex, "last candle saved to CSV");
                 return;
@@ -542,7 +597,12 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                 // Rollover detected between two REST polls / forming ticks.
                 candlesticks::Candlestick finished = *lastCandle;
                 finished.closed = true;
-                writeClosedCandleRow(csv, finished, engine, vizServer, symbol, label);
+                const auto snapshot = writeClosedCandleRow(csv, finished, engine, vizServer, symbol, label);
+                auto smcUpdate = smcEngine.update(finished, snapshot.atr);
+                if (!smcUpdate.empty()) {
+                    vizServer.pushSmcEvent(symbol, label, smcUpdate);
+                    vizServer.setSmcSnapshot(symbol, label, smcEngine.currentSnapshot());
+                }
             }
             lastCandle = candle;
             renderLine(candle, "FORMING");

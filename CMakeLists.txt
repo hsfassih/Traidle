@@ -15,6 +15,18 @@ add_executable(traidle
     src/historical_get.cpp
     src/indicators.cpp
     src/visualization.cpp
+    src/smc-ict/ny_time.cpp
+    src/smc-ict/smc_thread_pool.cpp
+    src/smc-ict/swings.cpp
+    src/smc-ict/fair_value_gaps.cpp
+    src/smc-ict/break_of_structure.cpp
+    src/smc-ict/change_of_character.cpp
+    src/smc-ict/order_blocks.cpp
+    src/smc-ict/liquidity.cpp
+    src/smc-ict/previous_levels.cpp
+    src/smc-ict/kill_zones.cpp
+    src/smc-ict/premium_discount.cpp
+    src/smc-ict/smc_engine.cpp
 )
 
 target_link_libraries(traidle PRIVATE

@@ -34,11 +34,16 @@
   .tab.active { background: #2962ff; border-color: #2962ff; color: white; }
 
   #toolbar2 { display: flex; align-items: center; gap: 6px; padding: 6px 12px;
-              background: #12151d; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
+              background: #12151d; border-bottom: 1px solid #2a2e39; flex-shrink: 0; flex-wrap: wrap; }
   .toolbar-label { color: #868c98; font-size: 12px; margin-right: 2px; }
   .toggle-btn { background: #1e222d; color: #868c98; border: 1px solid #2a2e39;
                 padding: 3px 10px; border-radius: 12px; cursor: pointer; font-size: 11px; }
   .toggle-btn.active { background: rgba(38,166,154,0.18); border-color: #26a69a; color: #26a69a; }
+  .toolbar-divider { width: 1px; height: 16px; background: #2a2e39; margin: 0 4px; }
+  #biasBadge { font-size: 11px; padding: 3px 10px; border-radius: 12px; border: 1px solid #2a2e39;
+               color: #868c98; background: #1e222d; }
+  #biasBadge.bullish { color: #26a69a; border-color: #26a69a; background: rgba(38,166,154,0.12); }
+  #biasBadge.bearish { color: #ef5350; border-color: #ef5350; background: rgba(239,83,80,0.12); }
 
   #main { display: flex; flex: 1; min-height: 0; }
   #chartContainer { flex: 1; position: relative; }
@@ -46,6 +51,38 @@
   .vp-bar { position: absolute; left: 0; }
   .vp-buy { background: rgba(38,166,154,0.45); }
   .vp-sell { background: rgba(239,83,80,0.45); }
+
+  /* SMC/ICT zone overlay (FVGs, Order Blocks, Premium/Discount+OTE band) -
+     same absolutely-positioned-div technique as the volume profile above,
+     just price/time bounded instead of a left-edge histogram. Sits below
+     the volume profile (z-index 1 vs 2) so vp bars stay legible on top. */
+  #smcZonesOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+  .smc-zone { position: absolute; box-sizing: border-box; }
+  .smc-zone-label { position: absolute; font-size: 10px; padding: 1px 4px; border-radius: 2px;
+                     white-space: nowrap; pointer-events: none; }
+  .smc-fvg-bullish { background: rgba(38,166,154,0.16); border-top: 1px dashed rgba(38,166,154,0.5);
+                      border-bottom: 1px dashed rgba(38,166,154,0.5); }
+  .smc-fvg-bearish { background: rgba(239,83,80,0.16); border-top: 1px dashed rgba(239,83,80,0.5);
+                      border-bottom: 1px dashed rgba(239,83,80,0.5); }
+  .smc-ob-bullish { background: rgba(41,98,255,0.12); border: 1px solid rgba(41,98,255,0.45); }
+  .smc-ob-bearish { background: rgba(255,167,38,0.12); border: 1px solid rgba(255,167,38,0.45); }
+  .smc-ob-rejection { opacity: 0.55; border-style: dotted; }
+  .smc-ob-breaker { border-style: dashed; }
+  .smc-ote-band { background: rgba(255,255,255,0.05); border-top: 1px dashed rgba(255,255,255,0.25);
+                  border-bottom: 1px dashed rgba(255,255,255,0.25); }
+
+  /* Kill Zone shading - vertical time bands, full chart height. Computed
+     entirely client-side from wall-clock time (see computeKillZoneBands())
+     rather than sent from the backend - the browser's own Intl timezone
+     support handles America/New_York (DST included) natively, which is
+     simpler and more robust here than porting the backend's hand-rolled NY
+     time math into JS as well. */
+  #killZoneOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .kill-zone-band { position: absolute; top: 0; bottom: 0; }
+  .kz-asian { background: rgba(156,39,176,0.06); border-left: 1px solid rgba(156,39,176,0.25); border-right: 1px solid rgba(156,39,176,0.25); }
+  .kz-london { background: rgba(255,235,59,0.05); border-left: 1px solid rgba(255,235,59,0.2); border-right: 1px solid rgba(255,235,59,0.2); }
+  .kz-new_york_am { background: rgba(38,166,154,0.06); border-left: 1px solid rgba(38,166,154,0.25); border-right: 1px solid rgba(38,166,154,0.25); }
+  .kz-london_close { background: rgba(41,98,255,0.05); border-left: 1px solid rgba(41,98,255,0.2); border-right: 1px solid rgba(41,98,255,0.2); }
 
   #readout { width: 260px; padding: 12px; border-left: 1px solid #2a2e39; overflow-y: auto; }
   #readoutSymbol { margin: 0 0 8px 0; font-size: 15px; }
@@ -81,6 +118,18 @@
     <button class="toggle-btn active" data-target="bb">Bollinger</button>
     <button class="toggle-btn active" data-target="volume">Volume</button>
     <button class="toggle-btn active" data-target="volumeProfile">Vol Profile</button>
+    <span class="toolbar-divider"></span>
+    <span class="toolbar-label">SMC/ICT:</span>
+    <button class="toggle-btn active" data-smc-target="swings">Swings</button>
+    <button class="toggle-btn active" data-smc-target="fvg">FVG</button>
+    <button class="toggle-btn active" data-smc-target="orderBlocks">Order Blocks</button>
+    <button class="toggle-btn active" data-smc-target="structure">BOS/CHoCH</button>
+    <button class="toggle-btn active" data-smc-target="liquidity">Liquidity</button>
+    <button class="toggle-btn active" data-smc-target="pdhpdl">PDH/PDL</button>
+    <button class="toggle-btn active" data-smc-target="premiumDiscount">Premium/OTE</button>
+    <button class="toggle-btn" data-smc-target="killZones">Kill Zones</button>
+    <span class="toolbar-divider"></span>
+    <span id="biasBadge">bias: —</span>
   </div>
   <div id="main">
     <div id="chartContainer"></div>
@@ -162,6 +211,7 @@
   const readoutTable = document.getElementById('readoutTable');
   const predictionBox = document.getElementById('predictionBox');
   const selectedCandleContent = document.getElementById('selectedCandleContent');
+  const biasBadge = document.getElementById('biasBadge');
 
   // ---- chart setup (one instance, reused across timeframe tab switches) ----
   const chart = LightweightCharts.createChart(chartContainer, {
@@ -207,16 +257,46 @@
   // pre-existing child during its own initialization.
   const volumeProfileEl = document.createElement('div');
   volumeProfileEl.id = 'volumeProfileOverlay';
+
+  // SMC/ICT overlays - same technique, two more layers (see the CSS
+  // z-index comments): kill-zone time shading underneath, price/time zones
+  // (FVG/OB/Premium-OTE) above that, volume profile on top of both.
+  const killZoneEl = document.createElement('div');
+  killZoneEl.id = 'killZoneOverlay';
+  const smcZonesEl = document.createElement('div');
+  smcZonesEl.id = 'smcZonesOverlay';
+  chartContainer.appendChild(killZoneEl);
+  chartContainer.appendChild(smcZonesEl);
   chartContainer.appendChild(volumeProfileEl);
+
+  // ---- SMC/ICT state ----
+  // One entry per timeframe, keyed the same way state.dataByTimeframe is.
+  // Snapshots REPLACE an entry wholesale; updates merge into it - see
+  // ingestSmcSnapshot()/ingestSmcUpdate() below. Deliberately NOT part of
+  // `state` above - it has its own lifecycle (bulk replace vs. incremental
+  // merge) that doesn't match how candle/indicator data flows.
+  const smcState = { byTimeframe: new Map() };
+
+  // Kill Zones defaults to off: unlike the other seven, it shades the
+  // whole chart background rather than drawing a specific structure, and
+  // is the one most likely to visually compete with everything else if a
+  // person hasn't asked for it yet.
+  const smcToggleState = {
+    swings: true, fvg: true, orderBlocks: true, structure: true,
+    liquidity: true, pdhpdl: true, premiumDiscount: true, killZones: false,
+  };
+
+  let activeSmcPriceLines = [];  // createPriceLine() handles - see renderLiquidityAndLevels()
 
   function resizeChart() {
     chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
     recomputeVolumeProfile();
+    renderSmcOverlays();
   }
   window.addEventListener('resize', resizeChart);
   resizeChart();
 
-  chart.timeScale().subscribeVisibleLogicalRangeChange(() => recomputeVolumeProfile());
+  chart.timeScale().subscribeVisibleLogicalRangeChange(() => { recomputeVolumeProfile(); renderSmcOverlays(); });
 
   // ---- click-to-inspect: show a clicked candle's OHLC in the side panel ----
   chart.subscribeClick((param) => {
@@ -244,7 +324,7 @@
   }
 
   // ---- indicator/overlay toggles ----
-  document.querySelectorAll('.toggle-btn').forEach((btn) => {
+  document.querySelectorAll('.toggle-btn[data-target]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.target;
       toggleState[key] = !toggleState[key];
@@ -254,6 +334,16 @@
       } else {
         (seriesByToggleKey[key] || []).forEach((s) => s.applyOptions({ visible: toggleState[key] }));
       }
+    });
+  });
+
+  // ---- SMC/ICT toggles ----
+  document.querySelectorAll('.toggle-btn[data-smc-target]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.smcTarget;
+      smcToggleState[key] = !smcToggleState[key];
+      btn.classList.toggle('active', smcToggleState[key]);
+      renderSmcOverlays();
     });
   });
 
@@ -282,6 +372,10 @@
         ingestMessage(msg);
       } else if (msg.type === 'history') {
         ingestHistoryBatch(msg);
+      } else if (msg.type === 'smc_snapshot') {
+        ingestSmcSnapshot(msg);
+      } else if (msg.type === 'smc_update') {
+        ingestSmcUpdate(msg);
       }
       // heartbeat messages need no further handling beyond the lastMessageAt update above
     };
@@ -419,6 +513,7 @@
 
     chart.timeScale().fitContent();
     recomputeVolumeProfile();
+    renderSmcOverlays();
 
     const last = rows[rows.length - 1];
     if (last) {
@@ -429,6 +524,306 @@
       predictionBox.innerHTML = '';
       readoutSymbol.textContent = '—';
     }
+  }
+
+  // =====================================================================
+  // SMC/ICT: ingestion + rendering. Mirrors the candle/indicator pattern
+  // above (a snapshot bulk-replaces state, a live update merges into it),
+  // but SMC data is NOT part of state.dataByTimeframe / the 50,000-candle
+  // history map - see visualization.h's class comment on why the backend
+  // keeps this as its own store, and smcState above.
+  // =====================================================================
+
+  const kMaxSmcListLength = 500;  // client-side cap mirroring the backend's own bounded active-lists
+
+  function emptySmcEntry() {
+    return {
+      swingHighs: [], swingLows: [], fvgs: [], balancedRanges: [], orderBlocks: [],
+      equalLevels: [], structuralEvents: [], pdh: null, pdl: null, premiumDiscount: null,
+      bias: 'undetermined',
+    };
+  }
+
+  function getOrCreateSmcEntry(tf) {
+    if (!smcState.byTimeframe.has(tf)) smcState.byTimeframe.set(tf, emptySmcEntry());
+    return smcState.byTimeframe.get(tf);
+  }
+
+  function capList(list) {
+    while (list.length > kMaxSmcListLength) list.shift();
+    return list;
+  }
+
+  // Replaces one of an entry's arrays by matching on a stable id field
+  // (e.g. "anchor_at" for Order Blocks, "confirmed_at" for FVGs) if
+  // present, otherwise appends. Used for both `_formed` (append-only) and
+  // `_changed` (update-in-place) deltas - formed items simply never match
+  // an existing id, so they fall through to append either way.
+  function mergeById(list, items, idField) {
+    for (const item of items) {
+      const idx = list.findIndex((existing) => existing[idField] === item[idField]);
+      if (idx >= 0) list[idx] = item; else list.push(item);
+    }
+    capList(list);
+  }
+
+  function ingestSmcSnapshot(msg) {
+    const entry = {
+      swingHighs: msg.swing_highs || [], swingLows: msg.swing_lows || [],
+      fvgs: msg.fvgs || [], balancedRanges: msg.balanced_ranges || [],
+      orderBlocks: msg.order_blocks || [], equalLevels: msg.equal_levels || [],
+      structuralEvents: smcState.byTimeframe.has(msg.timeframe)
+        ? smcState.byTimeframe.get(msg.timeframe).structuralEvents : [],
+      pdh: msg.pdh, pdl: msg.pdl, premiumDiscount: msg.premium_discount, bias: msg.bias,
+    };
+    smcState.byTimeframe.set(msg.timeframe, entry);
+    updateBiasBadge(msg.timeframe);
+    if (msg.timeframe === state.activeTimeframe) renderSmcOverlays();
+  }
+
+  function ingestSmcUpdate(msg) {
+    const entry = getOrCreateSmcEntry(msg.timeframe);
+    if (msg.swings) {
+      for (const sp of msg.swings) {
+        capList((sp.is_high ? entry.swingHighs : entry.swingLows)).push(sp);
+      }
+    }
+    if (msg.fvgs_formed) mergeById(entry.fvgs, msg.fvgs_formed, 'confirmed_at');
+    if (msg.fvgs_changed) mergeById(entry.fvgs, msg.fvgs_changed, 'confirmed_at');
+    if (msg.balanced_ranges_formed) { entry.balancedRanges.push(...msg.balanced_ranges_formed); capList(entry.balancedRanges); }
+    if (msg.obs_formed) mergeById(entry.orderBlocks, msg.obs_formed, 'anchor_at');
+    if (msg.obs_changed) mergeById(entry.orderBlocks, msg.obs_changed, 'anchor_at');
+    if (msg.structural_events) { entry.structuralEvents.push(...msg.structural_events); capList(entry.structuralEvents); }
+    if (msg.equal_levels) { entry.equalLevels.push(...msg.equal_levels); capList(entry.equalLevels); }
+    if (msg.previous_day_levels) { entry.pdh = msg.previous_day_levels.pdh; entry.pdl = msg.previous_day_levels.pdl; }
+    if (msg.premium_discount !== undefined) entry.premiumDiscount = msg.premium_discount;
+    if (msg.bias) entry.bias = msg.bias;
+
+    updateBiasBadge(msg.timeframe);
+    if (msg.timeframe === state.activeTimeframe) renderSmcOverlays();
+  }
+
+  function updateBiasBadge(tf) {
+    if (tf !== state.activeTimeframe) return;
+    const entry = smcState.byTimeframe.get(tf);
+    const bias = entry ? entry.bias : 'undetermined';
+    biasBadge.textContent = `bias: ${bias}`;
+    biasBadge.className = bias === 'bullish' ? 'bullish' : bias === 'bearish' ? 'bearish' : '';
+  }
+
+  // ---- master redraw: markers (swings+structure), price lines
+  // (liquidity/PDH-PDL/premium-discount), zones (FVG/OB/OTE band), and
+  // kill-zone time shading. Called on timeframe switch, on every SMC
+  // snapshot/update for the active timeframe, and on pan/zoom (for the
+  // time-bounded overlays). ----
+  function renderSmcOverlays() {
+    const entry = smcState.byTimeframe.get(state.activeTimeframe);
+    renderSmcMarkers(entry);
+    renderLiquidityAndLevels(entry);
+    renderSmcZones(entry);
+    renderKillZoneBands();
+  }
+
+  function lastVisibleTimeSec() {
+    const tfMap = state.dataByTimeframe.get(state.activeTimeframe);
+    if (!tfMap || tfMap.size === 0) return Math.floor(Date.now() / 1000);
+    let last = 0;
+    for (const t of tfMap.keys()) if (t > last) last = t;
+    return last;
+  }
+
+  function renderSmcMarkers(entry) {
+    if (!entry) { candleSeries.setMarkers([]); return; }
+    const markers = [];
+    if (smcToggleState.swings) {
+      for (const sp of entry.swingHighs) {
+        markers.push({ time: Math.floor(sp.open_time / 1000), position: 'aboveBar', color: '#787b86',
+                       shape: 'arrowUp', text: 'SH' });
+      }
+      for (const sp of entry.swingLows) {
+        markers.push({ time: Math.floor(sp.open_time / 1000), position: 'belowBar', color: '#787b86',
+                       shape: 'arrowDown', text: 'SL' });
+      }
+    }
+    if (smcToggleState.structure) {
+      for (const ev of entry.structuralEvents) {
+        const t = Math.floor(ev.open_time / 1000);
+        if (ev.kind === 'bullish_bos') markers.push({ time: t, position: 'belowBar', color: '#26a69a', shape: 'arrowUp', text: 'BOS' });
+        else if (ev.kind === 'bearish_bos') markers.push({ time: t, position: 'aboveBar', color: '#ef5350', shape: 'arrowDown', text: 'BOS' });
+        else if (ev.kind === 'bullish_choch') markers.push({ time: t, position: 'belowBar', color: '#42a5f5', shape: 'arrowUp', text: ev.is_mss ? 'MSS' : 'CHoCH' });
+        else if (ev.kind === 'bearish_choch') markers.push({ time: t, position: 'aboveBar', color: '#ffa726', shape: 'arrowDown', text: ev.is_mss ? 'MSS' : 'CHoCH' });
+        else if (ev.kind === 'liquidity_sweep_high') markers.push({ time: t, position: 'aboveBar', color: '#b71c1c', shape: 'circle', text: 'SWEEP' });
+        else if (ev.kind === 'liquidity_sweep_low') markers.push({ time: t, position: 'belowBar', color: '#b71c1c', shape: 'circle', text: 'SWEEP' });
+      }
+    }
+    markers.sort((a, b) => a.time - b.time);
+    candleSeries.setMarkers(markers);
+  }
+
+  // Horizontal createPriceLine()s: unswept BSL/SSL, Equal-High/Low levels,
+  // PDH/PDL, and Premium/Discount's Equilibrium+OTE levels. All share one
+  // tracked handle list (activeSmcPriceLines) cleared and rebuilt each call
+  // - same pattern applyPredictionLines() already uses for its own lines.
+  function renderLiquidityAndLevels(entry) {
+    activeSmcPriceLines.forEach((line) => candleSeries.removePriceLine(line));
+    activeSmcPriceLines = [];
+    if (!entry) return;
+
+    const addLine = (price, color, title, dashed) => {
+      if (price === null || price === undefined) return;
+      activeSmcPriceLines.push(candleSeries.createPriceLine({
+        price, color, lineWidth: 1,
+        lineStyle: dashed ? LightweightCharts.LineStyle.Dashed : LightweightCharts.LineStyle.Solid,
+        axisLabelVisible: true, title,
+      }));
+    };
+
+    if (smcToggleState.liquidity) {
+      for (const sp of entry.swingHighs) {
+        if (!sp.swept) addLine(sp.price, '#ef5350', 'BSL', true);
+      }
+      for (const sp of entry.swingLows) {
+        if (!sp.swept) addLine(sp.price, '#26a69a', 'SSL', true);
+      }
+      for (const eq of entry.equalLevels) {
+        addLine((eq.price_a + eq.price_b) / 2, '#ba68c8', eq.is_high ? 'EQH' : 'EQL', true);
+      }
+    }
+    if (smcToggleState.pdhpdl) {
+      addLine(entry.pdh, '#787b86', 'PDH', false);
+      addLine(entry.pdl, '#787b86', 'PDL', false);
+    }
+    if (smcToggleState.premiumDiscount && entry.premiumDiscount) {
+      const pd = entry.premiumDiscount;
+      addLine(pd.equilibrium, '#ffffff', 'EQ', true);
+      addLine(pd.ote_705, '#ffd54f', 'OTE 70.5', true);
+    }
+  }
+
+  // Price/time-bounded rectangles (FVG, Order Blocks, Premium/Discount's
+  // OTE band) via the same absolutely-positioned-overlay-div technique as
+  // the volume profile - Lightweight Charts v4 has no native rectangle
+  // primitive, so this reads chart pixel coordinates via
+  // priceToCoordinate()/timeScale().timeToCoordinate() exactly the way
+  // recomputeVolumeProfile() already does below. An unresolved zone (not
+  // yet mitigated/invalidated) is drawn out to the last visible candle, so
+  // it visually reads as "still active."
+  function renderSmcZones(entry) {
+    smcZonesEl.innerHTML = '';
+    if (!entry) return;
+    const frag = document.createDocumentFragment();
+    const rightEdgeSec = lastVisibleTimeSec();
+
+    const addZone = (startSec, endSec, priceLow, priceHigh, className, label) => {
+      const x1 = chart.timeScale().timeToCoordinate(startSec);
+      const x2 = chart.timeScale().timeToCoordinate(endSec);
+      const yTop = candleSeries.priceToCoordinate(priceHigh);
+      const yBottom = candleSeries.priceToCoordinate(priceLow);
+      if (x1 === null || yTop === null || yBottom === null) return;
+      const left = x1;
+      const width = Math.max(1, (x2 === null ? chartContainer.clientWidth : x2) - x1);
+      const div = document.createElement('div');
+      div.className = 'smc-zone ' + className;
+      div.style.left = `${left}px`;
+      div.style.top = `${yTop}px`;
+      div.style.width = `${width}px`;
+      div.style.height = `${Math.max(1, yBottom - yTop)}px`;
+      frag.appendChild(div);
+      if (label) {
+        const lbl = document.createElement('div');
+        lbl.className = 'smc-zone-label';
+        lbl.textContent = label;
+        lbl.style.left = `${left + 2}px`;
+        lbl.style.top = `${yTop + 1}px`;
+        lbl.style.color = className.includes('bearish') ? '#ef5350' : '#26a69a';
+        frag.appendChild(lbl);
+      }
+    };
+
+    if (smcToggleState.fvg) {
+      for (const f of entry.fvgs) {
+        const endSec = f.filled && f.mitigated_at ? Math.floor(f.mitigated_at / 1000) : rightEdgeSec;
+        addZone(Math.floor(f.formed_at / 1000), endSec, f.gap_low, f.gap_high,
+                f.bullish ? 'smc-fvg-bullish' : 'smc-fvg-bearish', f.inverted ? 'IFVG' : 'FVG');
+      }
+    }
+    if (smcToggleState.orderBlocks) {
+      for (const ob of entry.orderBlocks) {
+        const endSec = ob.invalidated && ob.invalidated_at ? Math.floor(ob.invalidated_at / 1000) : rightEdgeSec;
+        let cls = ob.bullish ? 'smc-ob-bullish' : 'smc-ob-bearish';
+        if (ob.subtype === 'rejection') cls += ' smc-ob-rejection';
+        if (ob.subtype === 'breaker') cls += ' smc-ob-breaker';
+        addZone(Math.floor(ob.anchor_at / 1000), endSec, ob.zone_low, ob.zone_high, cls,
+                ob.subtype !== 'standard' ? ob.subtype.toUpperCase() : 'OB');
+      }
+    }
+    if (smcToggleState.premiumDiscount && entry.premiumDiscount) {
+      const pd = entry.premiumDiscount;
+      addZone(Math.floor(pd.terminus_at / 1000), rightEdgeSec, pd.ote_786, pd.ote_618, 'smc-ote-band', 'OTE');
+    }
+
+    smcZonesEl.appendChild(frag);
+  }
+
+  // ---- Kill Zone time shading - computed entirely client-side. ----
+  // Each zone is a fixed NY-local wall-clock window (see
+  // ict_smc_numerical_definitions.md section 8); the browser's own
+  // Intl.DateTimeFormat with timeZone: 'America/New_York' already handles
+  // the DST-aware conversion natively, so there is no need to duplicate
+  // the backend's hand-rolled ny_time.cpp logic here as well.
+  const kKillZoneDefs = [
+    { name: 'asian', startMin: 20 * 60, endMin: 24 * 60 },
+    { name: 'london', startMin: 2 * 60, endMin: 5 * 60 },
+    { name: 'new_york_am', startMin: 7 * 60, endMin: 10 * 60 },
+    { name: 'london_close', startMin: 10 * 60, endMin: 12 * 60 },
+  ];
+  const nyTimeFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+
+  function nyMinuteOfDayAndMidnightMs(epochMs) {
+    const parts = nyTimeFormatter.formatToParts(new Date(epochMs));
+    const get = (type) => parseInt(parts.find((p) => p.type === type).value, 10);
+    const minuteOfDay = get('hour') * 60 + get('minute');
+    // Midnight for this NY-local day, expressed back as a real UTC epoch ms,
+    // found by stepping back from `epochMs` by the minute-of-day and
+    // re-checking (handles the single Intl edge case of "hour24" being
+    // reported as 24 instead of 0 at exact local midnight).
+    const approxMidnight = epochMs - minuteOfDay * 60000;
+    return { minuteOfDay: minuteOfDay % 1440, midnightMs: approxMidnight };
+  }
+
+  function renderKillZoneBands() {
+    killZoneEl.innerHTML = '';
+    if (!smcToggleState.killZones || state.activeTimeframe === null) return;
+    const range = chart.timeScale().getVisibleRange();
+    if (!range) return;
+
+    const frag = document.createDocumentFragment();
+    const startMs = range.from * 1000 - 24 * 3600 * 1000;  // pad a day either side so bands at the edges aren't clipped
+    const endMs = range.to * 1000 + 24 * 3600 * 1000;
+    const dayMs = 24 * 3600 * 1000;
+
+    for (let ms = startMs; ms <= endMs; ms += dayMs) {
+      const { midnightMs } = nyMinuteOfDayAndMidnightMs(ms);
+      for (const zone of kKillZoneDefs) {
+        const zoneStartMs = midnightMs + zone.startMin * 60000;
+        const zoneEndMs = midnightMs + zone.endMin * 60000;
+        const x1 = chart.timeScale().timeToCoordinate(Math.floor(zoneStartMs / 1000));
+        const x2 = chart.timeScale().timeToCoordinate(Math.floor(zoneEndMs / 1000));
+        if (x1 === null && x2 === null) continue;
+        const left = x1 === null ? 0 : x1;
+        const right = x2 === null ? chartContainer.clientWidth : x2;
+        if (right <= left) continue;
+        const div = document.createElement('div');
+        div.className = 'kill-zone-band kz-' + zone.name;
+        div.style.left = `${left}px`;
+        div.style.width = `${right - left}px`;
+        frag.appendChild(div);
+      }
+    }
+    killZoneEl.appendChild(frag);
   }
 
   function setLineData(series, rows, pick) {

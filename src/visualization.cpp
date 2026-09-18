@@ -36,10 +36,15 @@ namespace visualization {
 namespace {
 
 constexpr size_t kMaxQueueSize = 500;      // bounded outbound broadcast queue (drop-oldest when full)
+constexpr size_t kMaxSmcQueueSize = 500;   // same drop-oldest policy, separate queue - see class comment in visualization.h
 constexpr size_t kHistoryDepth = 50000;    // distinct candles retained per timeframe for snapshot-on-connect
 constexpr auto kHeartbeatInterval = seconds(15);  // sent only if nothing real went out in this window
 
 json optionalToJson(const optional<double>& value) {
+    return value.has_value() ? json(*value) : json(nullptr);
+}
+
+json optionalMsToJson(const optional<int64_t>& value) {
     return value.has_value() ? json(*value) : json(nullptr);
 }
 
@@ -132,6 +137,119 @@ string toHistoryJson(const string& symbol, const string& timeframe,
     return j.dump();
 }
 
+// ---------------------------------------------------------------------------
+// SMC/ICT JSON serialization. Every one of these mirrors a plain struct
+// from smc-ict/smc_types.h field-for-field - see that header for what each
+// field means; this is purely a naming transcription (camelCase struct
+// field -> snake_case JSON key, matching indicatorSnapshotToJson()'s
+// existing convention above).
+// ---------------------------------------------------------------------------
+
+json swingPointToJson(const smc::SwingPoint& sp) {
+    json j;
+    j["is_high"] = sp.isHigh;
+    j["price"] = sp.price;
+    j["open_time"] = sp.openTime;
+    j["swept"] = sp.swept;
+    j["swept_at"] = optionalMsToJson(sp.sweptAtOpenTime);
+    return j;
+}
+
+json fvgToJson(const smc::FairValueGap& f) {
+    json j;
+    j["bullish"] = f.bullish;
+    j["gap_low"] = f.gapLow;
+    j["gap_high"] = f.gapHigh;
+    j["ce"] = f.consequentEncroachment;
+    j["formed_at"] = f.formedAtOpenTime;
+    j["displacement_at"] = f.displacementOpenTime;
+    j["confirmed_at"] = f.confirmedAtOpenTime;
+    j["mitigated"] = f.mitigated;
+    j["filled"] = f.filled;
+    j["inverted"] = f.inverted;
+    j["mitigated_at"] = optionalMsToJson(f.mitigatedAtOpenTime);
+    j["inverted_at"] = optionalMsToJson(f.invertedAtOpenTime);
+    return j;
+}
+
+json balancedRangeToJson(const smc::BalancedPriceRange& b) {
+    json j;
+    j["range_low"] = b.rangeLow;
+    j["range_high"] = b.rangeHigh;
+    j["formed_at"] = b.formedAtOpenTime;
+    return j;
+}
+
+json orderBlockToJson(const smc::OrderBlock& ob) {
+    json j;
+    j["bullish"] = ob.bullish;
+    j["subtype"] = smc::orderBlockSubtypeLabel(ob.subtype);
+    j["zone_low"] = ob.zoneLow;
+    j["zone_high"] = ob.zoneHigh;
+    j["refined_low"] = ob.refinedLow;
+    j["refined_high"] = ob.refinedHigh;
+    j["mean_threshold"] = ob.meanThreshold;
+    j["anchor_at"] = ob.anchorOpenTime;
+    j["invalidated"] = ob.invalidated;
+    j["mitigated"] = ob.mitigated;
+    j["invalidated_at"] = optionalMsToJson(ob.invalidatedAtOpenTime);
+    j["mitigated_at"] = optionalMsToJson(ob.mitigatedAtOpenTime);
+    return j;
+}
+
+json structuralEventToJson(const smc::StructuralEvent& ev) {
+    json j;
+    j["kind"] = smc::structuralEventKindLabel(ev.kind);
+    j["reference_price"] = ev.referencePrice;
+    j["candle_close"] = ev.candleClose;
+    j["open_time"] = ev.openTime;
+    j["is_mss"] = ev.isMss;
+    return j;
+}
+
+json equalLevelToJson(const smc::EqualLevel& eq) {
+    json j;
+    j["is_high"] = eq.isHigh;
+    j["price_a"] = eq.priceA;
+    j["price_b"] = eq.priceB;
+    j["open_time_a"] = eq.openTimeA;
+    j["open_time_b"] = eq.openTimeB;
+    return j;
+}
+
+json premiumDiscountToJson(const optional<smc::PremiumDiscountZone>& zone) {
+    if (!zone.has_value()) return json(nullptr);
+    json j;
+    j["swing_low"] = zone->swingLow;
+    j["swing_high"] = zone->swingHigh;
+    j["equilibrium"] = zone->equilibrium;
+    j["ote_618"] = zone->ote618;
+    j["ote_705"] = zone->ote705;
+    j["ote_786"] = zone->ote786;
+    j["bullish_leg"] = zone->bullishLeg;
+    j["origin_at"] = zone->originOpenTime;
+    j["terminus_at"] = zone->terminusOpenTime;
+    return j;
+}
+
+json previousDayLevelsToJson(const optional<smc::PreviousDayLevels>& levels) {
+    if (!levels.has_value()) return json(nullptr);
+    json j;
+    j["pdh"] = optionalToJson(levels->pdh);
+    j["pdl"] = optionalToJson(levels->pdl);
+    j["day_start_at"] = optionalMsToJson(levels->dayStartUtcMs);
+    return j;
+}
+
+template <typename Container, typename ToJsonFn>
+json arrayToJson(const Container& items, ToJsonFn toJsonFn) {
+    json arr = json::array();
+    for (const auto& item : items) {
+        arr.push_back(toJsonFn(item));
+    }
+    return arr;
+}
+
 }  // namespace
 
 string toJson(const VisualizationMessage& message) {
@@ -139,6 +257,45 @@ string toJson(const VisualizationMessage& message) {
     j["type"] = "candle";
     j["symbol"] = message.symbol;
     j["timeframe"] = message.timeframe;
+    return j.dump();
+}
+
+string smcSnapshotToJson(const string& symbol, const string& timeframe,
+                        const smc::SmcSnapshot& snapshot) {
+    json j;
+    j["type"] = "smc_snapshot";
+    j["symbol"] = symbol;
+    j["timeframe"] = timeframe;
+    j["swing_highs"] = arrayToJson(snapshot.swingHighs, swingPointToJson);
+    j["swing_lows"] = arrayToJson(snapshot.swingLows, swingPointToJson);
+    j["fvgs"] = arrayToJson(snapshot.fvgs, fvgToJson);
+    j["balanced_ranges"] = arrayToJson(snapshot.balancedRanges, balancedRangeToJson);
+    j["order_blocks"] = arrayToJson(snapshot.orderBlocks, orderBlockToJson);
+    j["equal_levels"] = arrayToJson(snapshot.equalLevels, equalLevelToJson);
+    j["pdh"] = optionalToJson(snapshot.pdh);
+    j["pdl"] = optionalToJson(snapshot.pdl);
+    j["premium_discount"] = premiumDiscountToJson(snapshot.premiumDiscountZone);
+    j["bias"] = smc::biasLabel(snapshot.bias);
+    return j.dump();
+}
+
+string smcUpdateToJson(const string& symbol, const string& timeframe, const smc::SmcUpdate& update) {
+    json j;
+    j["type"] = "smc_update";
+    j["symbol"] = symbol;
+    j["timeframe"] = timeframe;
+    j["swings"] = arrayToJson(update.swings, swingPointToJson);
+    j["fvgs_formed"] = arrayToJson(update.fvgsFormed, fvgToJson);
+    j["fvgs_changed"] = arrayToJson(update.fvgsChanged, fvgToJson);
+    j["balanced_ranges_formed"] = arrayToJson(update.balancedRangesFormed, balancedRangeToJson);
+    j["obs_formed"] = arrayToJson(update.obsFormed, orderBlockToJson);
+    j["obs_changed"] = arrayToJson(update.obsChanged, orderBlockToJson);
+    j["structural_events"] = arrayToJson(update.structuralEvents, structuralEventToJson);
+    j["equal_levels"] = arrayToJson(update.equalLevels, equalLevelToJson);
+    j["previous_day_levels"] = previousDayLevelsToJson(update.previousDayLevels);
+    j["premium_discount"] = premiumDiscountToJson(update.premiumDiscountZone);
+    j["kill_zone"] = update.killZone.has_value() ? json(smc::killZoneLabel(*update.killZone)) : json(nullptr);
+    j["bias"] = smc::biasLabel(update.bias);
     return j.dump();
 }
 
@@ -299,6 +456,21 @@ struct VisualizationServer::Impl {
     mutex historyMutex;
     unordered_map<string, map<int64_t, VisualizationMessage>> historyByTimeframe;
 
+    // SMC/ICT: current active-structure state, one entry per timeframe,
+    // REPLACED wholesale (never appended/ring-buffered like candle history
+    // above) - see visualization.h's class comment for why this is a
+    // deliberately separate store rather than living inside
+    // historyByTimeframe.
+    mutex smcMutex;
+    unordered_map<string, pair<string, smc::SmcSnapshot>> smcByTimeframe;  // timeframe -> (symbol, snapshot)
+
+    // Live SMC/ICT event queue - same drop-oldest backpressure policy as
+    // outboundQueue above, drained by the same timer (see scheduleDrain/
+    // drainQueue), just kept as its own queue since smc::SmcUpdate is a
+    // different shape from VisualizationMessage.
+    mutex smcQueueMutex;
+    deque<tuple<string, string, smc::SmcUpdate>> smcOutboundQueue;  // (symbol, timeframe, update)
+
     // Dedicated worker thread that builds the (potentially large) JSON
     // history-snapshot payloads - see sendHistorySnapshot()'s comment for
     // why this needs to happen off of ioThread entirely, kept alive for
@@ -334,10 +506,13 @@ struct VisualizationServer::Impl {
     }
 
     // Sends each timeframe's entire ring buffer as one batched "history"
-    // message (see toHistoryJson()). Copies the buffers out from under
-    // historyMutex FIRST (cheap - copying already-built structs), then
-    // hands the copies to the dedicated history worker thread to actually
-    // build the JSON.
+    // message (see toHistoryJson()), and each timeframe's current SMC/ICT
+    // snapshot as one batched "smc_snapshot" message - both built the same
+    // way, off ioThread, for the same reason (see the comment on
+    // sendHistorySnapshot below, unchanged from before the SMC/ICT
+    // additions: at up to 50,000 candles per timeframe, building this
+    // JSON directly on ioThread would stall the accept loop, live-candle
+    // broadcast, and heartbeats for the whole duration).
     //
     // This used to serialize directly on ioThread, which was fine back
     // when each timeframe's buffer capped at 500 candles. Now that the
@@ -370,17 +545,38 @@ struct VisualizationServer::Impl {
             }
         }
 
+        vector<pair<string, pair<string, smc::SmcSnapshot>>> smcSnapshotCopy;
+        {
+            lock_guard<mutex> lock(smcMutex);
+            smcSnapshotCopy.reserve(smcByTimeframe.size());
+            for (const auto& entry : smcByTimeframe) {
+                smcSnapshotCopy.emplace_back(entry.first, entry.second);
+            }
+        }
+
         weak_ptr<Session> weakSession = session;
         net::io_context* iocPtr = &ioc;
         {
             lock_guard<mutex> lock(historyTaskMutex);
-            historyTasks.push_back([iocPtr, weakSession, snapshot = move(snapshot)]() mutable {
+            historyTasks.push_back([iocPtr, weakSession, snapshot = move(snapshot),
+                                    smcSnapshotCopy = move(smcSnapshotCopy)]() mutable {
                 for (auto& entry : snapshot) {
                     const auto& timeframe = entry.first;
                     const auto& buffer = entry.second;
                     if (buffer.empty()) continue;
                     const string& symbol = buffer.begin()->second.symbol;
                     string payload = toHistoryJson(symbol, timeframe, buffer);
+                    net::post(*iocPtr, [weakSession, payload = move(payload)]() mutable {
+                        if (auto session = weakSession.lock()) {
+                            session->send(move(payload));
+                        }
+                    });
+                }
+                for (auto& entry : smcSnapshotCopy) {
+                    const auto& timeframe = entry.first;
+                    const auto& symbol = entry.second.first;
+                    const auto& smcSnapshot = entry.second.second;
+                    string payload = smcSnapshotToJson(symbol, timeframe, smcSnapshot);
                     net::post(*iocPtr, [weakSession, payload = move(payload)]() mutable {
                         if (auto session = weakSession.lock()) {
                             session->send(move(payload));
@@ -413,6 +609,7 @@ struct VisualizationServer::Impl {
         drainTimer.async_wait([this](beast::error_code ec) {
             if (ec) return;
             drainQueue();
+            drainSmcQueue();
             if (running) {
                 scheduleDrain();
             }
@@ -446,6 +643,24 @@ struct VisualizationServer::Impl {
         }
     }
 
+    void drainSmcQueue() {
+        deque<tuple<string, string, smc::SmcUpdate>> batch;
+        {
+            lock_guard<mutex> lock(smcQueueMutex);
+            batch.swap(smcOutboundQueue);
+        }
+        if (!activeSession || batch.empty()) {
+            return;
+        }
+        for (const auto& entry : batch) {
+            const auto& symbol = get<0>(entry);
+            const auto& timeframe = get<1>(entry);
+            const auto& update = get<2>(entry);
+            activeSession->send(smcUpdateToJson(symbol, timeframe, update));
+        }
+        lastSentAt = steady_clock::now();
+    }
+
     void recordHistory(const VisualizationMessage& message) {
         lock_guard<mutex> lock(historyMutex);
         auto& buffer = historyByTimeframe[message.timeframe];
@@ -469,7 +684,6 @@ void VisualizationServer::start() {
     // Bound to loopback only - this is a strictly single-viewer, local
     // visualization layer, not a service meant to be reachable from
     // anywhere else on the network.
-    // tcp::endpoint endpoint(net::ip::make_address("127.0.0.1"), impl_->port);
     tcp::endpoint endpoint(net::ip::make_address("0.0.0.0"), impl_->port);
     impl_->acceptor.open(endpoint.protocol(), ec);
     if (!ec) impl_->acceptor.set_option(net::socket_base::reuse_address(true), ec);
@@ -531,6 +745,21 @@ void VisualizationServer::push(VisualizationMessage message) {
 
 void VisualizationServer::seedHistory(VisualizationMessage message) {
     impl_->recordHistory(message);
+}
+
+void VisualizationServer::setSmcSnapshot(const string& symbol, const string& timeframe,
+                                        smc::SmcSnapshot snapshot) {
+    lock_guard<mutex> lock(impl_->smcMutex);
+    impl_->smcByTimeframe[timeframe] = {symbol, move(snapshot)};
+}
+
+void VisualizationServer::pushSmcEvent(const string& symbol, const string& timeframe,
+                                      smc::SmcUpdate update) {
+    lock_guard<mutex> lock(impl_->smcQueueMutex);
+    impl_->smcOutboundQueue.emplace_back(symbol, timeframe, move(update));
+    if (impl_->smcOutboundQueue.size() > kMaxSmcQueueSize) {
+        impl_->smcOutboundQueue.pop_front();  // drop-oldest backpressure policy, same as outboundQueue
+    }
 }
 
 }  // namespace visualization
