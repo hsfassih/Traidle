@@ -39,6 +39,8 @@
   .toggle-btn { background: #1e222d; color: #868c98; border: 1px solid #2a2e39;
                 padding: 3px 10px; border-radius: 12px; cursor: pointer; font-size: 11px; }
   .toggle-btn.active { background: rgba(38,166,154,0.18); border-color: #26a69a; color: #26a69a; }
+  .toolbar-select { background: #1e222d; color: #d1d4dc; border: 1px solid #2a2e39;
+                    padding: 3px 6px; border-radius: 3px; font-size: 11px; }
   .toolbar-divider { width: 1px; height: 16px; background: #2a2e39; margin: 0 4px; }
   #biasBadge { font-size: 11px; padding: 3px 10px; border-radius: 12px; border: 1px solid #2a2e39;
                color: #868c98; background: #1e222d; }
@@ -79,10 +81,11 @@
      time math into JS as well. */
   #killZoneOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
   .kill-zone-band { position: absolute; top: 0; bottom: 0; }
-  .kz-asian { background: rgba(156,39,176,0.06); border-left: 1px solid rgba(156,39,176,0.25); border-right: 1px solid rgba(156,39,176,0.25); }
-  .kz-london { background: rgba(255,235,59,0.05); border-left: 1px solid rgba(255,235,59,0.2); border-right: 1px solid rgba(255,235,59,0.2); }
-  .kz-new_york_am { background: rgba(38,166,154,0.06); border-left: 1px solid rgba(38,166,154,0.25); border-right: 1px solid rgba(38,166,154,0.25); }
-  .kz-london_close { background: rgba(41,98,255,0.05); border-left: 1px solid rgba(41,98,255,0.2); border-right: 1px solid rgba(41,98,255,0.2); }
+  .kill-zone-label { background: rgba(14,17,23,0.55); top: 2px; }
+  .kz-asian { background: rgba(156,39,176,0.12); border-left: 1px solid rgba(156,39,176,0.5); border-right: 1px solid rgba(156,39,176,0.5); }
+  .kz-london { background: rgba(255,235,59,0.10); border-left: 1px solid rgba(255,235,59,0.45); border-right: 1px solid rgba(255,235,59,0.45); }
+  .kz-new_york_am { background: rgba(38,166,154,0.12); border-left: 1px solid rgba(38,166,154,0.5); border-right: 1px solid rgba(38,166,154,0.5); }
+  .kz-london_close { background: rgba(41,98,255,0.10); border-left: 1px solid rgba(41,98,255,0.45); border-right: 1px solid rgba(41,98,255,0.45); }
 
   #readout { width: 260px; padding: 12px; border-left: 1px solid #2a2e39; overflow-y: auto; }
   #readoutSymbol { margin: 0 0 8px 0; font-size: 15px; }
@@ -127,7 +130,9 @@
     <button class="toggle-btn active" data-smc-target="liquidity">Liquidity</button>
     <button class="toggle-btn active" data-smc-target="pdhpdl">PDH/PDL</button>
     <button class="toggle-btn active" data-smc-target="premiumDiscount">Premium/OTE</button>
-    <button class="toggle-btn" data-smc-target="killZones">Kill Zones</button>
+    <button class="toggle-btn active" data-smc-target="killZones">Kill Zones</button>
+    <span class="toolbar-label">SMC/ICT:</span>
+    <select id="smcTimeframeSelect" class="toolbar-select"></select>
     <span class="toolbar-divider"></span>
     <span id="biasBadge">bias: —</span>
   </div>
@@ -166,6 +171,7 @@
     activeTimeframe: null,
     dataByTimeframe: new Map(),   // timeframe -> Map(openTimeSeconds -> message)
     knownTimeframes: [],         // first-seen order, drives the tab bar
+    smcTimeframe: null,          // decoupled from activeTimeframe - only the SMC/ICT dropdown changes this
   };
 
   const toggleState = { sma: true, ema: true, bb: true, volume: true, volumeProfile: true };
@@ -212,6 +218,7 @@
   const predictionBox = document.getElementById('predictionBox');
   const selectedCandleContent = document.getElementById('selectedCandleContent');
   const biasBadge = document.getElementById('biasBadge');
+  const smcTimeframeSelect = document.getElementById('smcTimeframeSelect');
 
   // ---- chart setup (one instance, reused across timeframe tab switches) ----
   const chart = LightweightCharts.createChart(chartContainer, {
@@ -277,13 +284,12 @@
   // merge) that doesn't match how candle/indicator data flows.
   const smcState = { byTimeframe: new Map() };
 
-  // Kill Zones defaults to off: unlike the other seven, it shades the
-  // whole chart background rather than drawing a specific structure, and
-  // is the one most likely to visually compete with everything else if a
-  // person hasn't asked for it yet.
+  // Kill Zones defaults on like every other SMC/ICT toggle - see the
+  // visibility fixes in the CSS/renderKillZoneBands() for why a faint,
+  // hidden-by-default band was the actual bug, not the concept itself.
   const smcToggleState = {
     swings: true, fvg: true, orderBlocks: true, structure: true,
-    liquidity: true, pdhpdl: true, premiumDiscount: true, killZones: false,
+    liquidity: true, pdhpdl: true, premiumDiscount: true, killZones: true,
   };
 
   let activeSmcPriceLines = [];  // createPriceLine() handles - see renderLiquidityAndLevels()
@@ -345,6 +351,15 @@
       btn.classList.toggle('active', smcToggleState[key]);
       renderSmcOverlays();
     });
+  });
+
+  // ---- SMC/ICT timeframe dropdown - fully decoupled from the chart's own
+  // tabs (state.activeTimeframe): only this listener ever changes
+  // state.smcTimeframe. ----
+  smcTimeframeSelect.addEventListener('change', () => {
+    state.smcTimeframe = smcTimeframeSelect.value;
+    updateBiasBadge(state.smcTimeframe);
+    renderSmcOverlays();
   });
 
   // ---- websocket ----
@@ -425,6 +440,7 @@
     mergeIndicators(tf, msg.indicators);
 
     if (state.activeTimeframe === null) {
+      if (state.smcTimeframe === null) state.smcTimeframe = tf; // first data ever - SMC dropdown starts matching the chart
       switchTimeframe(tf); // first message ever received - adopt its timeframe as the default view
       return;
     }
@@ -467,6 +483,7 @@
     }
 
     if (state.activeTimeframe === null) {
+      if (state.smcTimeframe === null) state.smcTimeframe = tf; // first data ever - SMC dropdown starts matching the chart
       switchTimeframe(tf); // first data ever received - adopt this timeframe as the default view
       return;
     }
@@ -489,6 +506,21 @@
       btn.addEventListener('click', () => switchTimeframe(tf));
       tabsEl.appendChild(btn);
     });
+    renderSmcTimeframeSelect();
+  }
+
+  // Populated from the same source as the candlestick tabs
+  // (state.knownTimeframes), but its selected value tracks state.smcTimeframe
+  // independently - rebuilding the <option>s never changes the selection.
+  function renderSmcTimeframeSelect() {
+    smcTimeframeSelect.innerHTML = '';
+    state.knownTimeframes.forEach((tf) => {
+      const opt = document.createElement('option');
+      opt.value = tf;
+      opt.textContent = tf;
+      smcTimeframeSelect.appendChild(opt);
+    });
+    if (state.smcTimeframe !== null) smcTimeframeSelect.value = state.smcTimeframe;
   }
 
   function switchTimeframe(tf) {
@@ -578,7 +610,7 @@
     };
     smcState.byTimeframe.set(msg.timeframe, entry);
     updateBiasBadge(msg.timeframe);
-    if (msg.timeframe === state.activeTimeframe) renderSmcOverlays();
+    if (msg.timeframe === state.smcTimeframe) renderSmcOverlays();
   }
 
   function ingestSmcUpdate(msg) {
@@ -600,11 +632,11 @@
     if (msg.bias) entry.bias = msg.bias;
 
     updateBiasBadge(msg.timeframe);
-    if (msg.timeframe === state.activeTimeframe) renderSmcOverlays();
+    if (msg.timeframe === state.smcTimeframe) renderSmcOverlays();
   }
 
   function updateBiasBadge(tf) {
-    if (tf !== state.activeTimeframe) return;
+    if (tf !== state.smcTimeframe) return;
     const entry = smcState.byTimeframe.get(tf);
     const bias = entry ? entry.bias : 'undetermined';
     biasBadge.textContent = `bias: ${bias}`;
@@ -617,7 +649,7 @@
   // snapshot/update for the active timeframe, and on pan/zoom (for the
   // time-bounded overlays). ----
   function renderSmcOverlays() {
-    const entry = smcState.byTimeframe.get(state.activeTimeframe);
+    const entry = smcState.byTimeframe.get(state.smcTimeframe);
     renderSmcMarkers(entry);
     renderLiquidityAndLevels(entry);
     renderSmcZones(entry);
@@ -625,6 +657,8 @@
   }
 
   function lastVisibleTimeSec() {
+    const range = chart.timeScale().getVisibleRange();
+    if (range && range.to !== null && range.to !== undefined) return range.to;
     const tfMap = state.dataByTimeframe.get(state.activeTimeframe);
     if (!tfMap || tfMap.size === 0) return Math.floor(Date.now() / 1000);
     let last = 0;
@@ -715,11 +749,24 @@
     const rightEdgeSec = lastVisibleTimeSec();
 
     const addZone = (startSec, endSec, priceLow, priceHigh, className, label) => {
-      const x1 = chart.timeScale().timeToCoordinate(startSec);
+      let x1 = chart.timeScale().timeToCoordinate(startSec);
       const x2 = chart.timeScale().timeToCoordinate(endSec);
       const yTop = candleSeries.priceToCoordinate(priceHigh);
       const yBottom = candleSeries.priceToCoordinate(priceLow);
-      if (x1 === null || yTop === null || yBottom === null) return;
+      if (yTop === null || yBottom === null) return;
+      if (x1 === null) {
+        // Zone starts before the chart's earliest loaded/visible candle -
+        // the main case for higher-timeframe zones viewed on a lower
+        // timeframe. Clamp to the left edge instead of hiding it, unless
+        // it's off-screen for some other reason (e.g. starts after the
+        // visible range, which shouldn't normally happen for a formed zone).
+        const visibleRange = chart.timeScale().getVisibleRange();
+        if (visibleRange && startSec < visibleRange.from) {
+          x1 = 0;
+        } else {
+          return;
+        }
+      }
       const left = x1;
       const width = Math.max(1, (x2 === null ? chartContainer.clientWidth : x2) - x1);
       const div = document.createElement('div');
@@ -772,10 +819,10 @@
   // the DST-aware conversion natively, so there is no need to duplicate
   // the backend's hand-rolled ny_time.cpp logic here as well.
   const kKillZoneDefs = [
-    { name: 'asian', startMin: 20 * 60, endMin: 24 * 60 },
-    { name: 'london', startMin: 2 * 60, endMin: 5 * 60 },
-    { name: 'new_york_am', startMin: 7 * 60, endMin: 10 * 60 },
-    { name: 'london_close', startMin: 10 * 60, endMin: 12 * 60 },
+    { name: 'asian', label: 'Asian', accent: '#ba68c8', startMin: 20 * 60, endMin: 24 * 60 },
+    { name: 'london', label: 'London', accent: '#fff176', startMin: 2 * 60, endMin: 5 * 60 },
+    { name: 'new_york_am', label: 'NY AM', accent: '#26a69a', startMin: 7 * 60, endMin: 10 * 60 },
+    { name: 'london_close', label: 'London Close', accent: '#42a5f5', startMin: 10 * 60, endMin: 12 * 60 },
   ];
   const nyTimeFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -785,20 +832,33 @@
   function nyMinuteOfDayAndMidnightMs(epochMs) {
     const parts = nyTimeFormatter.formatToParts(new Date(epochMs));
     const get = (type) => parseInt(parts.find((p) => p.type === type).value, 10);
-    const minuteOfDay = get('hour') * 60 + get('minute');
-    // Midnight for this NY-local day, expressed back as a real UTC epoch ms,
-    // found by stepping back from `epochMs` by the minute-of-day and
-    // re-checking (handles the single Intl edge case of "hour24" being
-    // reported as 24 instead of 0 at exact local midnight).
-    const approxMidnight = epochMs - minuteOfDay * 60000;
-    return { minuteOfDay: minuteOfDay % 1440, midnightMs: approxMidnight };
+    // Modulo BEFORE computing midnightMs: some engines report "hour24" as 24
+    // instead of 0 at exact local midnight, which would otherwise leave
+    // minuteOfDay >= 1440 for the midnightMs subtraction below and silently
+    // shift the day boundary by 24 hours even though the returned
+    // minuteOfDay itself looked correct.
+    const minuteOfDay = (get('hour') * 60 + get('minute')) % 1440;
+    const midnightMs = epochMs - minuteOfDay * 60000;
+    return { minuteOfDay, midnightMs };
   }
 
   function renderKillZoneBands() {
     killZoneEl.innerHTML = '';
     if (!smcToggleState.killZones || state.activeTimeframe === null) return;
-    const range = chart.timeScale().getVisibleRange();
-    if (!range) return;
+    let range = chart.timeScale().getVisibleRange();
+    if (!range) {
+      // Fallback for when getVisibleRange() hasn't settled yet - derive an
+      // equivalent time range from the logical range + this timeframe's own
+      // candle map, mirroring recomputeVolumeProfile()'s own translation.
+      const logicalRange = chart.timeScale().getVisibleLogicalRange();
+      const tfMap = state.dataByTimeframe.get(state.activeTimeframe);
+      if (!logicalRange || !tfMap || tfMap.size === 0) return;
+      const sortedTimes = Array.from(tfMap.keys()).sort((a, b) => a - b);
+      const from = sortedTimes[Math.max(0, Math.floor(logicalRange.from))];
+      const to = sortedTimes[Math.min(sortedTimes.length - 1, Math.ceil(logicalRange.to))];
+      if (from === undefined || to === undefined) return;
+      range = { from, to };
+    }
 
     const frag = document.createDocumentFragment();
     const startMs = range.from * 1000 - 24 * 3600 * 1000;  // pad a day either side so bands at the edges aren't clipped
@@ -821,6 +881,13 @@
         div.style.left = `${left}px`;
         div.style.width = `${right - left}px`;
         frag.appendChild(div);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'smc-zone-label kill-zone-label';
+        lbl.textContent = zone.label;
+        lbl.style.left = `${left + 2}px`;
+        lbl.style.color = zone.accent;
+        frag.appendChild(lbl);
       }
     }
     killZoneEl.appendChild(frag);
