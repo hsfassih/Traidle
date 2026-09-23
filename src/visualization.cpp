@@ -39,6 +39,7 @@ constexpr size_t kMaxQueueSize = 500;      // bounded outbound broadcast queue (
 constexpr size_t kMaxSmcQueueSize = 500;   // same drop-oldest policy, separate queue - see class comment in visualization.h
 constexpr size_t kHistoryDepth = 50000;    // distinct candles retained per timeframe for snapshot-on-connect
 constexpr auto kHeartbeatInterval = seconds(15);  // sent only if nothing real went out in this window
+constexpr size_t kMaxConcurrentSessions = 64;  // generous safety ceiling against a runaway reconnect loop, not a normal-usage limit
 
 json optionalToJson(const optional<double>& value) {
     return value.has_value() ? json(*value) : json(nullptr);
@@ -302,8 +303,8 @@ string smcUpdateToJson(const string& symbol, const string& timeframe, const smc:
 namespace {
 
 // ---------------------------------------------------------------------------
-// One WebSocket session - the single active viewer in this strictly
-// single-viewer design. All methods here are only ever called from the
+// One WebSocket session - any number of these can be concurrently active
+// (see Impl::sessions below). All methods here are only ever called from the
 // VisualizationServer's one dedicated io_context thread (see Impl below),
 // so - deliberately - there is no internal locking: the outgoing write
 // queue is safe purely because nothing else ever touches it concurrently.
@@ -311,14 +312,15 @@ namespace {
 class Session : public enable_shared_from_this<Session> {
 public:
     using ReadyHandler = function<void(const shared_ptr<Session>&)>;
+    using DisconnectHandler = function<void(const shared_ptr<Session>&)>;
 
-    Session(tcp::socket socket, ReadyHandler onReady)
-        : ws_(move(socket)), onReady_(move(onReady)) {}
+    Session(tcp::socket socket, ReadyHandler onReady, DisconnectHandler onDisconnect)
+        : ws_(move(socket)), onReady_(move(onReady)), onDisconnect_(move(onDisconnect)) {}
 
     void run() {
         // Tightened from Beast's server-role defaults (300s idle / a ping
         // around the ~150s mark, keep_alive_pings already true by
-        // default) to something snappier: this is a local, single-viewer
+        // default) to something snappier: this is a local visualization
         // tool, so a stale session (e.g. a closed browser tab that never
         // sent a clean close frame) should be noticed and cleaned up in
         // seconds, not minutes. A 20s idle window is still far longer
@@ -359,23 +361,34 @@ public:
     // closing handshake with its own internal state machine, and it
     // asserts if that handshake is invoked while the stream is already
     // mid-close in some way (the exact crash this was hit by: "Assertion
-    // failed: !impl.rd_close" in close.hpp). This method exists
-    // specifically to FORCIBLY replace a session the instant a new one
-    // takes its place (see Impl::startAccept()), and by definition there
-    // is no guarantee about what state the old connection already found
-    // itself in at that moment - closing the raw socket instead
-    // (beast::close_socket, the documented low-level primitive for
-    // exactly this) has no handshake and therefore nothing to assert
-    // against. The browser still sees a normal disconnect (its
-    // WebSocket's onclose fires either way) and reconnects exactly as it
-    // would after a graceful close.
+    // failed: !impl.rd_close" in close.hpp). This method exists to
+    // forcibly tear down a session outside of the normal read/write error
+    // paths - e.g. the server's connection-cap safety valve rejecting a
+    // new connection, or server shutdown closing out whatever sessions
+    // are still open - and in both cases there is no guarantee about what
+    // state the connection already found itself in at that moment;
+    // closing the raw socket instead (beast::close_socket, the documented
+    // low-level primitive for exactly this) has no handshake and
+    // therefore nothing to assert against. The browser still sees a
+    // normal disconnect (its WebSocket's onclose fires either way) and
+    // reconnects exactly as it would after a graceful close.
     void close() {
         if (dead_) return;
-        dead_ = true;
+        markDead();
         beast::close_socket(beast::get_lowest_layer(ws_));
     }
 
 private:
+    // Marks this session dead and fires onDisconnect_ exactly once, no
+    // matter which of close()/onRead()/onWrite() detected the failure -
+    // Impl relies on this single choke point to promptly evict the
+    // session from its `sessions` collection (see Impl::removeSession()).
+    void markDead() {
+        if (dead_) return;
+        dead_ = true;
+        if (onDisconnect_) onDisconnect_(shared_from_this());
+    }
+
     void onAccept(beast::error_code ec) {
         if (ec) return;  // handshake failed - this session is simply discarded
         if (onReady_) {
@@ -393,7 +406,7 @@ private:
 
     void onRead(beast::error_code ec, size_t) {
         if (ec) {
-            dead_ = true;
+            markDead();
             return;
         }
         readBuffer_.consume(readBuffer_.size());
@@ -414,7 +427,7 @@ private:
     void onWrite(beast::error_code ec, size_t) {
         outgoing_.pop_front();
         if (ec) {
-            dead_ = true;
+            markDead();
             writing_ = false;
             return;
         }
@@ -427,6 +440,7 @@ private:
     bool writing_ = false;
     bool dead_ = false;
     ReadyHandler onReady_;
+    DisconnectHandler onDisconnect_;
 };
 
 }  // namespace
@@ -441,7 +455,7 @@ struct VisualizationServer::Impl {
     thread ioThread;
     bool running = false;
 
-    shared_ptr<Session> activeSession;  // touched only from ioThread - see Session's class comment
+    vector<shared_ptr<Session>> sessions;  // every concurrently-connected viewer - touched only from ioThread
     steady_clock::time_point lastSentAt = steady_clock::now();  // touched only from ioThread
 
     mutex queueMutex;
@@ -485,24 +499,44 @@ struct VisualizationServer::Impl {
     void startAccept() {
         acceptor.async_accept([this](beast::error_code ec, tcp::socket socket) {
             if (!ec) {
-                auto session = make_shared<Session>(move(socket), [this](const shared_ptr<Session>& ready) {
-                    // Single-viewer: replace whatever was active only once
-                    // the new connection has actually finished its
-                    // handshake, so a failed/incomplete new connection
-                    // never tears down a perfectly good existing one.
-                    if (activeSession && activeSession != ready) {
-                        activeSession->close();
-                    }
-                    activeSession = ready;
-                    sendHistorySnapshot(ready);
-                    lastSentAt = steady_clock::now();
-                });
+                auto onDisconnect = [this](const shared_ptr<Session>& gone) { removeSession(gone); };
+                auto session = make_shared<Session>(
+                    move(socket),
+                    [this](const shared_ptr<Session>& ready) {
+                        if (sessions.size() >= kMaxConcurrentSessions) {
+                            cerr << "[visualizer] refusing new viewer - " << kMaxConcurrentSessions
+                                 << " concurrent sessions already connected\n";
+                            ready->close();
+                            return;
+                        }
+                        sessions.push_back(ready);
+                        sendHistorySnapshot(ready);
+                        lastSentAt = steady_clock::now();
+                        cout << "[visualizer] viewer connected (" << sessions.size() << " active)\n";
+                    },
+                    onDisconnect);
                 session->run();
             }
             if (running) {
                 startAccept();
             }
         });
+    }
+
+    // Called from Session::markDead() (via the onDisconnect handler bound
+    // in startAccept() above) the moment a session dies for any reason -
+    // read error, write error, or the idle_timeout surfacing as one of
+    // those. This is now the only thing that prunes `sessions`, so it
+    // must fire promptly and reliably; a no-op if the session was never
+    // added in the first place (e.g. one rejected by the connection cap).
+    void removeSession(const shared_ptr<Session>& gone) {
+        for (size_t i = 0; i < sessions.size(); ++i) {
+            if (sessions[i] == gone) {
+                sessions.erase(sessions.begin() + i);
+                cout << "[visualizer] viewer disconnected (" << sessions.size() << " active)\n";
+                return;
+            }
+        }
     }
 
     // Sends each timeframe's entire ring buffer as one batched "history"
@@ -512,7 +546,9 @@ struct VisualizationServer::Impl {
     // sendHistorySnapshot below, unchanged from before the SMC/ICT
     // additions: at up to 50,000 candles per timeframe, building this
     // JSON directly on ioThread would stall the accept loop, live-candle
-    // broadcast, and heartbeats for the whole duration).
+    // broadcast, and heartbeats for the whole duration). Each concurrently
+    // connected viewer gets its own independent copy of this work when it
+    // connects - one session's snapshot build never blocks another's.
     //
     // This used to serialize directly on ioThread, which was fine back
     // when each timeframe's buffer capped at 500 candles. Now that the
@@ -523,8 +559,8 @@ struct VisualizationServer::Impl {
     // would stall every OTHER pending operation there (the accept loop,
     // live-candle broadcast, heartbeats) for the whole duration - hurting
     // responsiveness on its own, and also widening the timing window in
-    // which a rapid browser reconnect's session-replacement logic has to
-    // reason about what state the old connection is already in.
+    // which some other concurrently-connecting or disconnecting session
+    // has to be handled.
     //
     // Only the already-built JSON payload strings get marshaled back onto
     // ioThread afterward (via net::post) - Session::send() and its
@@ -532,9 +568,9 @@ struct VisualizationServer::Impl {
     // (see Session's class comment), so the worker thread never touches
     // a Session directly, only through the io_context's own posting
     // mechanism. A weak_ptr is used (not shared_ptr) so that if this
-    // session gets replaced again before its snapshot finishes building,
-    // the now-stale task just quietly skips sending instead of doing
-    // pointless work.
+    // particular session disconnects before its snapshot finishes
+    // building, the now-stale task just quietly skips sending instead of
+    // doing pointless work - it has no bearing on any other session.
     void sendHistorySnapshot(const shared_ptr<Session>& session) {
         vector<pair<string, map<int64_t, VisualizationMessage>>> snapshot;
         {
@@ -622,12 +658,15 @@ struct VisualizationServer::Impl {
             lock_guard<mutex> lock(queueMutex);
             batch.swap(outboundQueue);
         }
-        if (!activeSession) {
+        if (sessions.empty()) {
             return;
         }
         if (!batch.empty()) {
             for (const auto& message : batch) {
-                activeSession->send(toJson(message));
+                string payload = toJson(message);
+                for (const auto& session : sessions) {
+                    session->send(payload);  // send() copies its argument per-session, cheap at this message size
+                }
             }
             lastSentAt = steady_clock::now();
             return;
@@ -638,7 +677,9 @@ struct VisualizationServer::Impl {
         // pings: this also gives the frontend an explicit, low-latency
         // liveness signal independent of how often candles actually close.
         if (steady_clock::now() - lastSentAt > kHeartbeatInterval) {
-            activeSession->send(R"({"type":"heartbeat"})");
+            for (const auto& session : sessions) {
+                session->send(R"({"type":"heartbeat"})");
+            }
             lastSentAt = steady_clock::now();
         }
     }
@@ -649,14 +690,17 @@ struct VisualizationServer::Impl {
             lock_guard<mutex> lock(smcQueueMutex);
             batch.swap(smcOutboundQueue);
         }
-        if (!activeSession || batch.empty()) {
+        if (sessions.empty() || batch.empty()) {
             return;
         }
         for (const auto& entry : batch) {
             const auto& symbol = get<0>(entry);
             const auto& timeframe = get<1>(entry);
             const auto& update = get<2>(entry);
-            activeSession->send(smcUpdateToJson(symbol, timeframe, update));
+            string payload = smcUpdateToJson(symbol, timeframe, update);
+            for (const auto& session : sessions) {
+                session->send(payload);
+            }
         }
         lastSentAt = steady_clock::now();
     }
@@ -681,9 +725,10 @@ void VisualizationServer::start() {
     }
 
     beast::error_code ec;
-    // Bound to loopback only - this is a strictly single-viewer, local
-    // visualization layer, not a service meant to be reachable from
-    // anywhere else on the network.
+    // This is a local visualization layer, not a service meant to be
+    // reachable from anywhere else on the network - any number of
+    // browser tabs/windows on this machine can connect concurrently
+    // (see Impl::sessions), each as its own independent viewer.
     tcp::endpoint endpoint(net::ip::make_address("0.0.0.0"), impl_->port);
     impl_->acceptor.open(endpoint.protocol(), ec);
     if (!ec) impl_->acceptor.set_option(net::socket_base::reuse_address(true), ec);

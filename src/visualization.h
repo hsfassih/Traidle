@@ -25,13 +25,14 @@ using namespace std;
 // never delay or break Binance ingestion, CSV writes, or indicator
 // computation. See visualization.cpp for the full threading design.
 //
-// Single-viewer design: this project is strictly single-viewer/local, so
-// the server tracks at most one active browser session at a time. A new
-// connection simply replaces whatever was active before it (see
-// visualization.cpp) - there is no session registry, per-session strand,
-// or fan-out logic, since none of that machinery earns its cost with only
-// ever one viewer. If that assumption ever changes, this is the module to
-// revisit first.
+// Multi-viewer design: any number of browser tabs/windows can connect
+// concurrently, each getting its own session, its own initial history/SMC
+// snapshot, and every subsequent live broadcast independently (see
+// visualization.cpp's `sessions` collection and drainQueue()/
+// drainSmcQueue()). There is still no per-session strand or locking
+// needed: every Session is only ever touched from the server's one
+// dedicated io_context thread, so fan-out is just a loop over the current
+// session list on that same thread.
 //
 // --- SMC/ICT additions ---
 // smc-ict/'s detected structures (swings, FVGs, Order Blocks, BOS/CHoCH,
@@ -132,10 +133,11 @@ public:
 
     // Thread-safe, non-blocking, never throws. Called by a timeframe
     // worker with EVERY candle it sees - both still-forming ticks and the
-    // final closed candle: enqueues it for broadcast to the active session
-    // (if any) AND records/overwrites it in that timeframe's in-memory
-    // history ring buffer, keyed by open time (see seedHistory() for the
-    // backfill-time equivalent that skips the broadcast step).
+    // final closed candle: enqueues it for broadcast to every currently
+    // connected session (if any) AND records/overwrites it in that
+    // timeframe's in-memory history ring buffer, keyed by open time (see
+    // seedHistory() for the backfill-time equivalent that skips the
+    // broadcast step).
     void push(VisualizationMessage message);
 
     // Thread-safe, non-blocking, never throws. Called during startup
@@ -159,8 +161,8 @@ public:
 
     // Thread-safe, non-blocking, never throws. Broadcasts a live SMC/ICT
     // delta (new/changed swings, FVGs, Order Blocks, structural events,
-    // equal levels, PDH/PDL, Premium/Discount+OTE) to the active session,
-    // the same way push() broadcasts a live candle - but on its own queue,
+    // equal levels, PDH/PDL, Premium/Discount+OTE) to every currently
+    // connected session, the same way push() broadcasts a live candle - but on its own queue,
     // since smc::SmcUpdate is a different shape from VisualizationMessage
     // and most candles produce a non-trivial one here (see smc_engine.h's
     // SmcUpdate::empty() - this project's real data shows the vast
