@@ -15,9 +15,9 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #0e1117; color: #d1d4dc;
                font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
-  #app { display: flex; flex-direction: column; height: 100vh; }
+  #app { display: flex; flex-direction: column; height: 100vh; overflow-x: hidden; }
 
-  #topbar { display: flex; align-items: center; gap: 16px; padding: 8px 12px;
+  #topbar { display: flex; align-items: center; gap: 8px 16px; padding: 8px 12px; flex-wrap: wrap;
             background: #161a25; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
   #status { display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
   #statusDot { width: 9px; height: 9px; border-radius: 50%; background: #888; display: inline-block; }
@@ -48,8 +48,10 @@
   #biasBadge.bearish { color: #ef5350; border-color: #ef5350; background: rgba(239,83,80,0.12); }
 
   #main { display: flex; flex: 1; min-height: 0; }
-  #chartContainer { flex: 1; position: relative; }
-  #volumeProfileOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  #chartContainer { flex: 1; position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+  /* LWC's pane canvases are position:absolute with z-index 1 (opaque background) and 2
+     (crosshair), so every overlay must sit at z-index >= 3 to be visible at all. */
+  #volumeProfileOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
   .vp-bar { position: absolute; left: 0; }
   .vp-buy { background: rgba(38,166,154,0.45); }
   .vp-sell { background: rgba(239,83,80,0.45); }
@@ -58,7 +60,7 @@
      same absolutely-positioned-div technique as the volume profile above,
      just price/time bounded instead of a left-edge histogram. Sits below
      the volume profile (z-index 1 vs 2) so vp bars stay legible on top. */
-  #smcZonesOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+  #smcZonesOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
   .smc-zone { position: absolute; box-sizing: border-box; }
   .smc-zone-label { position: absolute; font-size: 10px; padding: 1px 4px; border-radius: 2px;
                      white-space: nowrap; pointer-events: none; }
@@ -79,15 +81,22 @@
      support handles America/New_York (DST included) natively, which is
      simpler and more robust here than porting the backend's hand-rolled NY
      time math into JS as well. */
-  #killZoneOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  #killZoneOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
   .kill-zone-band { position: absolute; top: 0; bottom: 0; }
-  .kill-zone-label { background: rgba(14,17,23,0.55); top: 2px; }
-  .kz-asian { background: rgba(156,39,176,0.12); border-left: 1px solid rgba(156,39,176,0.5); border-right: 1px solid rgba(156,39,176,0.5); }
-  .kz-london { background: rgba(255,235,59,0.10); border-left: 1px solid rgba(255,235,59,0.45); border-right: 1px solid rgba(255,235,59,0.45); }
-  .kz-new_york_am { background: rgba(38,166,154,0.12); border-left: 1px solid rgba(38,166,154,0.5); border-right: 1px solid rgba(38,166,154,0.5); }
-  .kz-london_close { background: rgba(41,98,255,0.10); border-left: 1px solid rgba(41,98,255,0.45); border-right: 1px solid rgba(41,98,255,0.45); }
+  .kz-asian { background: rgba(156,39,176,0.2); border-left: 1px solid rgba(156,39,176,0.85); border-right: 1px solid rgba(156,39,176,0.85); }
+  .kz-london { background: rgba(255,235,59,0.16); border-left: 1px solid rgba(255,235,59,0.8); border-right: 1px solid rgba(255,235,59,0.8); }
+  .kz-new_york_am { background: rgba(38,166,154,0.2); border-left: 1px solid rgba(38,166,154,0.85); border-right: 1px solid rgba(38,166,154,0.85); }
+  .kz-london_close { background: rgba(41,98,255,0.18); border-left: 1px solid rgba(41,98,255,0.8); border-right: 1px solid rgba(41,98,255,0.8); }
 
-  #readout { width: 260px; padding: 12px; border-left: 1px solid #2a2e39; overflow-y: auto; }
+  /* Top-of-chart time-window marker strip (Kill Zones lane 0, Sessions lane 1). */
+  #sessionMarkersOverlay { position: absolute; top: 0; left: 0; height: 28px; pointer-events: none; z-index: 10;
+                           background: rgba(14,17,23,0.78); border-bottom: 1px solid #2a2e39; overflow: hidden; }
+  .tm-span { position: absolute; height: 2px; opacity: 0.6; }
+  .tm-start { position: absolute; width: 2px; height: 12px; }
+  .tm-end { position: absolute; width: 0; height: 12px; border-left: 2px dotted; opacity: 0.85; }
+  .tm-label { position: absolute; font-size: 9px; line-height: 11px; font-weight: 600; white-space: nowrap; }
+
+  #readout { width: 260px; flex-shrink: 0; padding: 12px; border-left: 1px solid #2a2e39; overflow-y: auto; }
   #readoutSymbol { margin: 0 0 8px 0; font-size: 15px; }
   .liveBadge { color: #ef5350; font-size: 11px; font-weight: bold; margin-left: 6px; }
   #readoutTable { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -104,6 +113,13 @@
   #selectedCandleContent td:first-child { color: #868c98; }
   #selectedCandleContent td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
   #selectedCandleContent .placeholder { color: #5c6270; font-style: italic; font-size: 12px; }
+
+  /* Responsive breakpoint (900px): readout panel moves below the chart. */
+  @media (max-width: 900px) {
+    #main { flex-direction: column; }
+    #chartContainer { min-height: 280px; }
+    #readout { width: auto; max-height: 38vh; border-left: none; border-top: 1px solid #2a2e39; }
+  }
 </style>
 </head>
 <body>
@@ -131,6 +147,7 @@
     <button class="toggle-btn active" data-smc-target="pdhpdl">PDH/PDL</button>
     <button class="toggle-btn active" data-smc-target="premiumDiscount">Premium/OTE</button>
     <button class="toggle-btn active" data-smc-target="killZones">Kill Zones</button>
+    <button class="toggle-btn active" data-smc-target="sessions">Sessions</button>
     <span class="toolbar-label">SMC/ICT:</span>
     <select id="smcTimeframeSelect" class="toolbar-select"></select>
     <span class="toolbar-divider"></span>
@@ -275,6 +292,9 @@
   chartContainer.appendChild(killZoneEl);
   chartContainer.appendChild(smcZonesEl);
   chartContainer.appendChild(volumeProfileEl);
+  const timeMarkersEl = document.createElement('div');
+  timeMarkersEl.id = 'sessionMarkersOverlay';
+  chartContainer.appendChild(timeMarkersEl);
 
   // ---- SMC/ICT state ----
   // One entry per timeframe, keyed the same way state.dataByTimeframe is.
@@ -289,7 +309,7 @@
   // hidden-by-default band was the actual bug, not the concept itself.
   const smcToggleState = {
     swings: true, fvg: true, orderBlocks: true, structure: true,
-    liquidity: true, pdhpdl: true, premiumDiscount: true, killZones: true,
+    liquidity: true, pdhpdl: true, premiumDiscount: true, killZones: true, sessions: true,
   };
 
   let activeSmcPriceLines = [];  // createPriceLine() handles - see renderLiquidityAndLevels()
@@ -299,7 +319,8 @@
     recomputeVolumeProfile();
     renderSmcOverlays();
   }
-  window.addEventListener('resize', resizeChart);
+  // Observe the container itself: breakpoint flex-direction changes resize it without a window 'resize'.
+  new ResizeObserver(() => resizeChart()).observe(chartContainer);
   resizeChart();
 
   chart.timeScale().subscribeVisibleLogicalRangeChange(() => { recomputeVolumeProfile(); renderSmcOverlays(); });
@@ -654,6 +675,7 @@
     renderLiquidityAndLevels(entry);
     renderSmcZones(entry);
     renderKillZoneBands();
+    renderTimeWindowMarkers();
   }
 
   function lastVisibleTimeSec() {
@@ -845,52 +867,160 @@
   function renderKillZoneBands() {
     killZoneEl.innerHTML = '';
     if (!smcToggleState.killZones || state.activeTimeframe === null) return;
-    let range = chart.timeScale().getVisibleRange();
-    if (!range) {
-      // Fallback for when getVisibleRange() hasn't settled yet - derive an
-      // equivalent time range from the logical range + this timeframe's own
-      // candle map, mirroring recomputeVolumeProfile()'s own translation.
-      const logicalRange = chart.timeScale().getVisibleLogicalRange();
-      const tfMap = state.dataByTimeframe.get(state.activeTimeframe);
-      if (!logicalRange || !tfMap || tfMap.size === 0) return;
-      const sortedTimes = Array.from(tfMap.keys()).sort((a, b) => a - b);
-      const from = sortedTimes[Math.max(0, Math.floor(logicalRange.from))];
-      const to = sortedTimes[Math.min(sortedTimes.length - 1, Math.ceil(logicalRange.to))];
-      if (from === undefined || to === undefined) return;
-      range = { from, to };
-    }
-
+    const plotWidth = plotAreaWidth();
     const frag = document.createDocumentFragment();
-    const startMs = range.from * 1000 - 24 * 3600 * 1000;  // pad a day either side so bands at the edges aren't clipped
-    const endMs = range.to * 1000 + 24 * 3600 * 1000;
-    const dayMs = 24 * 3600 * 1000;
+    forEachTimeWindowInView(kKillZoneDefs, (zone, startSec, endSec) => {
+      const x1 = timeToX(startSec);
+      const x2 = timeToX(endSec);
+      if (x1 === null || x2 === null || x2 < 0 || x1 > plotWidth) return;
+      const left = Math.max(0, x1);
+      const right = Math.min(plotWidth, x2);
+      if (right <= left) return;
+      const div = document.createElement('div');
+      div.className = 'kill-zone-band kz-' + zone.name;
+      div.style.left = `${left}px`;
+      div.style.width = `${right - left}px`;
+      frag.appendChild(div);
+    });
+    killZoneEl.appendChild(frag);
+  }
 
+  // Market Sessions - distinct from Kill Zones. Fixed NY-local windows (intentional simplification:
+  // each city's own DST calendar is not re-derived). Sydney/Tokyo wrap past NY midnight.
+  const kSessionDefs = [
+    { name: 'sydney', label: 'SYD', accent: '#ff7043', startMin: 17 * 60, endMin: 2 * 60 },
+    { name: 'tokyo', label: 'TOK', accent: '#ec407a', startMin: 19 * 60, endMin: 4 * 60 },
+    { name: 'london', label: 'LON', accent: '#66bb6a', startMin: 3 * 60, endMin: 12 * 60 },
+    { name: 'new_york', label: 'NY', accent: '#29b6f6', startMin: 8 * 60, endMin: 17 * 60 },
+  ];
+  const kMinPxPerDayForTimeWindows = 4;  // below this, daily windows are sub-pixel noise - skip drawing
+
+  function plotAreaWidth() {
+    const scaleWidth = chart.priceScale('right').width() || 0;
+    return Math.max(0, chartContainer.clientWidth - scaleWidth);
+  }
+
+  let sortedTimesCache = { tf: null, size: -1, times: [] };
+  function activeSortedTimes() {
+    const tfMap = state.dataByTimeframe.get(state.activeTimeframe);
+    if (!tfMap) return [];
+    if (sortedTimesCache.tf !== state.activeTimeframe || sortedTimesCache.size !== tfMap.size) {
+      sortedTimesCache = { tf: state.activeTimeframe, size: tfMap.size,
+                           times: Array.from(tfMap.keys()).sort((a, b) => a - b) };
+    }
+    return sortedTimesCache.times;
+  }
+
+  // timeToCoordinate() only resolves exact bar times and logicalToCoordinate() snaps to whole bars,
+  // so wall-clock instants are interpolated between (or extrapolated past) real bar coordinates.
+  function timeToX(sec) {
+    const times = activeSortedTimes();
+    const n = times.length;
+    if (n === 0) return null;
+    const ts = chart.timeScale();
+    if (n === 1) return ts.logicalToCoordinate(0);
+    let i, frac;
+    if (sec <= times[0]) {
+      i = 0; frac = (sec - times[0]) / (times[1] - times[0]);
+    } else if (sec >= times[n - 1]) {
+      i = n - 2; frac = 1 + (sec - times[n - 1]) / (times[n - 1] - times[n - 2]);
+    } else {
+      let lo = 0, hi = n - 1;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (times[mid] <= sec) lo = mid; else hi = mid;
+      }
+      i = lo; frac = (sec - times[lo]) / (times[hi] - times[lo]);
+    }
+    const x0 = ts.logicalToCoordinate(i);
+    const x1 = ts.logicalToCoordinate(i + 1);
+    if (x0 === null || x1 === null) return null;
+    return x0 + frac * (x1 - x0);
+  }
+
+  function visibleTimeRangeSec() {
+    const range = chart.timeScale().getVisibleRange();
+    if (range) return range;
+    const logicalRange = chart.timeScale().getVisibleLogicalRange();
+    const times = activeSortedTimes();
+    if (!logicalRange || times.length === 0) return null;
+    const from = times[Math.min(times.length - 1, Math.max(0, Math.floor(logicalRange.from)))];
+    const to = times[Math.max(0, Math.min(times.length - 1, Math.ceil(logicalRange.to)))];
+    return { from, to };
+  }
+
+  // Calls cb(def, startSec, endSec) for every window of every def on each NY day in the padded view.
+  function forEachTimeWindowInView(defs, cb) {
+    if (state.activeTimeframe === null) return;
+    const range = visibleTimeRangeSec();
+    if (!range) return;
+    const dayMs = 24 * 3600 * 1000;
+    const spanDays = Math.max(1 / 24, (range.to - range.from) / 86400);
+    if (plotAreaWidth() / spanDays < kMinPxPerDayForTimeWindows) return;
+    const startMs = range.from * 1000 - dayMs;
+    const endMs = range.to * 1000 + dayMs;
+    const seenMidnights = new Set();
     for (let ms = startMs; ms <= endMs; ms += dayMs) {
       const { midnightMs } = nyMinuteOfDayAndMidnightMs(ms);
-      for (const zone of kKillZoneDefs) {
-        const zoneStartMs = midnightMs + zone.startMin * 60000;
-        const zoneEndMs = midnightMs + zone.endMin * 60000;
-        const x1 = chart.timeScale().timeToCoordinate(Math.floor(zoneStartMs / 1000));
-        const x2 = chart.timeScale().timeToCoordinate(Math.floor(zoneEndMs / 1000));
-        if (x1 === null && x2 === null) continue;
-        const left = x1 === null ? 0 : x1;
-        const right = x2 === null ? chartContainer.clientWidth : x2;
-        if (right <= left) continue;
-        const div = document.createElement('div');
-        div.className = 'kill-zone-band kz-' + zone.name;
-        div.style.left = `${left}px`;
-        div.style.width = `${right - left}px`;
-        frag.appendChild(div);
-
-        const lbl = document.createElement('div');
-        lbl.className = 'smc-zone-label kill-zone-label';
-        lbl.textContent = zone.label;
-        lbl.style.left = `${left + 2}px`;
-        lbl.style.color = zone.accent;
-        frag.appendChild(lbl);
+      if (seenMidnights.has(midnightMs)) continue;  // DST days are 23h/25h long
+      seenMidnights.add(midnightMs);
+      for (const def of defs) {
+        const endMin = def.endMin < def.startMin ? def.endMin + 1440 : def.endMin;
+        const startSec = Math.floor((midnightMs + def.startMin * 60000) / 1000);
+        const endSec = Math.floor((midnightMs + endMin * 60000) / 1000);
+        cb(def, startSec, endSec);
       }
     }
-    killZoneEl.appendChild(frag);
+  }
+
+  // Shared top-strip start/end marker renderer for Kill Zones (lane 0) and Sessions (lane 1).
+  function renderTimeWindowMarkers() {
+    timeMarkersEl.innerHTML = '';
+    // Early return also avoids touching the def consts below before their declaration runs.
+    if (state.activeTimeframe === null) { timeMarkersEl.style.display = 'none'; return; }
+    const lanes = [];
+    if (smcToggleState.killZones) lanes.push(kKillZoneDefs);
+    if (smcToggleState.sessions) lanes.push(kSessionDefs);
+    timeMarkersEl.style.display = lanes.length ? '' : 'none';
+    if (!lanes.length) return;
+    const plotWidth = plotAreaWidth();
+    const laneHeight = 14;
+    timeMarkersEl.style.width = `${plotWidth}px`;
+    timeMarkersEl.style.height = `${lanes.length * laneHeight}px`;
+    const frag = document.createDocumentFragment();
+    const add = (cls, styles, text) => {
+      const el = document.createElement('div');
+      el.className = cls;
+      Object.assign(el.style, styles);
+      if (text) el.textContent = text;
+      frag.appendChild(el);
+    };
+
+    lanes.forEach((defs, laneIdx) => {
+      const top = laneIdx * laneHeight + 1;
+      const labels = [];
+      forEachTimeWindowInView(defs, (def, startSec, endSec) => {
+        const xs = timeToX(startSec);
+        const xe = timeToX(endSec);
+        if (xs === null || xe === null || xe < 0 || xs > plotWidth) return;
+        const left = Math.max(0, xs);
+        const right = Math.min(plotWidth, xe);
+        add('tm-span', { left: `${left}px`, width: `${Math.max(1, right - left)}px`,
+                         top: `${top + 10}px`, background: def.accent });
+        if (xs >= 0) add('tm-start', { left: `${xs}px`, top: `${top}px`, background: def.accent });
+        if (xe <= plotWidth) add('tm-end', { left: `${xe - 1}px`, top: `${top}px`, borderColor: def.accent });
+        if (right - left >= 22) labels.push({ x: left + 4, def, text: xs < 0 ? '\u25C2' + def.label : def.label });
+      });
+      // Windows overlap in time, so drop any label that would collide with the one before it.
+      labels.sort((a, b) => a.x - b.x);
+      let lastRight = -Infinity;
+      for (const l of labels) {
+        if (l.x < lastRight + 3) continue;
+        add('tm-label', { left: `${l.x}px`, top: `${top - 1}px`, color: l.def.accent }, l.text);
+        lastRight = l.x + l.text.length * 6;
+      }
+    });
+    timeMarkersEl.appendChild(frag);
   }
 
   function setLineData(series, rows, pick) {

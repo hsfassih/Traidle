@@ -9,6 +9,7 @@
 - A single in-place Open/High/Low/Close row for the forming candle.
 - One permanent final Open/High/Low/Close row for each closed candle.
 - Docker image publication to GitHub Container Registry for runtime use.
+- Web visualizer: visible Kill Zone bands + top-strip markers, Sessions toggle, responsive layout (700-1920px).
 
 ## Known Constraints
 
