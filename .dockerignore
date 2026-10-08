@@ -8,7 +8,9 @@ build
 build-*
 vcpkg_installed
 scrap-data
+tools
 *usdt
 *.exe
 *.dll
 *.pdb
+*.md

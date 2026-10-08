@@ -32,6 +32,10 @@ CMakeUserPresets.json
 # Others
 scrap-data/
 scripts/
+strategies/
 .github/instructions/
 .github/*.md
 *usdt/
+docs/
+tasks/
+tools/
