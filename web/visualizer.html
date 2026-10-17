@@ -275,6 +275,61 @@
 
   let activePriceLines = [];
 
+  // ---- price precision (Forex) ----
+  // Lightweight Charts formats prices with 2 decimals unless told otherwise,
+  // which flattens a Forex quote like EURUSD 1.08342 to "1.08". The backend
+  // sends plain numbers, so the precision is derived here from the data itself:
+  // the most decimals seen in the latest history closes and in live candles,
+  // clamped to [kMinPricePrecision, kMaxPricePrecision]. A crypto symbol whose
+  // prices have <= 2 decimals therefore keeps exactly the old 2-decimal axis.
+  // Frontend only: no change to the wire protocol.
+  const kMinPricePrecision = 2;
+  const kMaxPricePrecision = 8;
+  const kPrecisionSampleCandles = 200;  // how many of the newest history closes are inspected
+  let pricePrecision = kMinPricePrecision;
+  let precisionSymbol = null;
+
+  function decimalsOf(v) {
+    if (typeof v !== 'number' || !isFinite(v)) return 0;
+    // Two digits beyond the maximum we would ever show: rounds away binary
+    // noise (0.1 + 0.2) without hiding a genuine 8th decimal.
+    const text = Math.abs(v).toFixed(kMaxPricePrecision + 2).replace(/0+$/, '');
+    const dot = text.indexOf('.');
+    return dot === -1 ? 0 : text.length - dot - 1;
+  }
+
+  // Only ever widens within one symbol (a live tick of 1.1 must not narrow an
+  // axis that history already showed needs 5 decimals); a different symbol -
+  // the page can be pointed at another backend run - starts over.
+  function observePrices(symbol, values) {
+    let changed = false;
+    if (symbol !== precisionSymbol) {
+      precisionSymbol = symbol;
+      pricePrecision = kMinPricePrecision;
+      changed = true;
+    }
+    let detected = 0;
+    for (const v of values) detected = Math.max(detected, decimalsOf(v));
+    const next = Math.max(pricePrecision, Math.min(kMaxPricePrecision, detected));
+    if (next !== pricePrecision) {
+      pricePrecision = next;
+      changed = true;
+    }
+    if (changed) applyPricePrecision();
+  }
+
+  function applyPricePrecision() {
+    const priceFormat = { type: 'price', precision: pricePrecision, minMove: Math.pow(10, -pricePrecision) };
+    // The series that live on the price scale: candles and the overlays that share it.
+    [candleSeries, smaSeries, emaSeries, bbUpperSeries, bbLowerSeries].forEach((s) => s.applyOptions({ priceFormat }));
+  }
+
+  // Readout-panel formatting for price-scaled numbers (OHLC, MACD, ATR, VWAP):
+  // the long-standing 4 decimals, or more when the symbol needs them.
+  function fmtPrice(v) {
+    return fmt(v, Math.max(4, pricePrecision));
+  }
+
   // Volume-profile overlay: a plain absolutely-positioned div, appended
   // AFTER createChart() has already run its own DOM setup on
   // chartContainer, so there's no risk of the library clobbering a
@@ -339,10 +394,10 @@
     const liveTag = row.closed === false ? ' <span class="liveBadge">● LIVE</span>' : '';
     const rows = [
       ['Time', dt.toLocaleString() + liveTag],
-      ['Open', fmt(row.open, 4)],
-      ['High', fmt(row.high, 4)],
-      ['Low', fmt(row.low, 4)],
-      ['Close', fmt(row.close, 4)],
+      ['Open', fmtPrice(row.open)],
+      ['High', fmtPrice(row.high)],
+      ['Low', fmtPrice(row.low)],
+      ['Close', fmtPrice(row.close)],
       ['Base Vol', fmt(row.base_volume, 2)],
       ['Taker Buy Vol', fmt(row.taker_buy_base_volume, 2)],
     ];
@@ -448,6 +503,7 @@
   // ---- message ingestion (single live/forming/closed candle) ----
   function ingestMessage(msg) {
     const tf = msg.timeframe;
+    observePrices(msg.symbol, [msg.close]);  // before anything is drawn, so the axis is right from the first tick
     const isNewTimeframe = !state.dataByTimeframe.has(tf);
     if (isNewTimeframe) {
       state.dataByTimeframe.set(tf, new Map());
@@ -499,6 +555,7 @@
       lastRow = row;
     }
     trimHistoryMap(tfMap);
+    observePrices(msg.symbol, msg.candles.slice(-kPrecisionSampleCandles).map((c) => c.close));
     if (lastRow) {
       mergeIndicators(tf, lastRow.indicators);
     }
@@ -1072,13 +1129,13 @@
     // mergeIndicators() above.
     const ind = lastIndicatorsByTf.get(msg.timeframe) || msg.indicators;
     const rows = [
-      ['Close', fmt(msg.close, 4)],
+      ['Close', fmtPrice(msg.close)],
       ['Base Vol', fmt(msg.base_volume, 2)],
       ['RSI(14)', fmt(ind.rsi, 2)],
-      ['MACD', `${fmt(ind.macd_line, 4)} / ${fmt(ind.macd_signal, 4)} / ${fmt(ind.macd_histogram, 4)}`],
+      ['MACD', `${fmtPrice(ind.macd_line)} / ${fmtPrice(ind.macd_signal)} / ${fmtPrice(ind.macd_histogram)}`],
       ['Stoch %K/%D', `${fmt(ind.stoch_k, 2)} / ${fmt(ind.stoch_d, 2)}`],
-      ['ATR(14)', fmt(ind.atr, 4)],
-      ['VWAP', fmt(ind.vwap, 4)],
+      ['ATR(14)', fmtPrice(ind.atr)],
+      ['VWAP', fmtPrice(ind.vwap)],
       ['OBV', fmt(ind.obv, 0)],
     ];
     readoutTable.innerHTML = rows.map(([label, value]) => `<tr><td>${label}</td><td>${value}</td></tr>`).join('');

@@ -1,8 +1,10 @@
+#include "binance.h"
 #include "candlesticks.h"
 #include "historical_get.h"
 #include "indicators.h"
 #include "visualization.h"
 #include "smc-ict/smc_engine.h"
+#include "pipeline_common.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -53,38 +55,19 @@ using tcp = boost::asio::ip::tcp;
 using json = nlohmann::json;
 using namespace std;
 
+// The console/CSV/visualizer glue that used to be defined right here in an
+// anonymous namespace (TerminalBoard, TimeframeTask, formatPrice,
+// writeClosedCandleRow, ...) now lives in pipeline_common.{h,cpp} so the
+// Capital.com feed can share it. Pulling the namespace in keeps every line of
+// runTimeframeStream() below byte-for-byte identical to what it was.
+using namespace pipeline;
+
 namespace {
 
 constexpr auto kHost = "fapi.binance.com";
 constexpr auto kPort = "443";
 constexpr auto kWsHost = "fstream.binance.com";
 constexpr auto kWsPort = "443";
-
-// Port the local (loopback-only) visualization WebSocket server listens
-// on. Change here and in web/visualizer.html's port field if it conflicts
-// with something else on your machine.
-constexpr unsigned short kVisualizationPort = 8765;
-
-string trim(const string& value) {
-    const auto first = value.find_first_not_of(" \t\r\n");
-    if (first == string::npos) {
-        return {};
-    }
-    const auto last = value.find_last_not_of(" \t\r\n");
-    return value.substr(first, last - first + 1);
-}
-
-string toUpper(string value) {
-    transform(value.begin(), value.end(), value.begin(),
-              [](unsigned char c) { return static_cast<char>(toupper(c)); });
-    return value;
-}
-
-string toLower(string value) {
-    transform(value.begin(), value.end(), value.begin(),
-              [](unsigned char c) { return static_cast<char>(tolower(c)); });
-    return value;
-}
 
 // ---------------------------------------------------------------------------
 // REST fetch (byte-for-byte the original, validated implementation)
@@ -234,226 +217,9 @@ private:
     LogHandler onLog_;
 };
 
-// ---------------------------------------------------------------------------
-// TerminalBoard: replaces CandlestickDisplay. The old class committed each
-// closed candle as a permanent scrollback line; that model no longer applies
-// now that closed candles live in CSV files instead. This board instead
-// reserves one fixed, in-place-updating line per timeframe (top to bottom,
-// in the order the user typed them) using ANSI cursor movement, guarded by a
-// single mutex so multiple stream threads can never interleave writes.
-//
-// `log()` is the only other thing allowed to touch stdout/stderr after
-// construction; it tracks how many extra lines have scrolled below the
-// board so the cursor math for updateLine() stays correct indefinitely.
-// candlesticks.h / candlesticks.cpp are not touched by any of this.
-// ---------------------------------------------------------------------------
-class TerminalBoard {
-public:
-    explicit TerminalBoard(vector<string> labels)
-        : labels_(move(labels)), ansiEnabled_(enableAnsi()) {
-        lock_guard<mutex> lock(mutex_);
-        for (const auto& label : labels_) {
-            cout << "[" << label << "] waiting for data...\n";
-        }
-        cout << flush;
-    }
+}  // namespace
 
-    void updateLine(size_t index, const string& text) {
-        lock_guard<mutex> lock(mutex_);
-        const string full = "[" + labels_[index] + "] " + text;
-        if (!ansiEnabled_) {
-            cout << full << '\n' << flush;
-            return;
-        }
-        const size_t upCount = (labels_.size() - index) + extraLines_;
-        cout << "\x1b[" << upCount << "A\r\x1b[2K" << full
-             << "\x1b[" << upCount << "B\r" << flush;
-    }
-
-    void log(const string& text) {
-        lock_guard<mutex> lock(mutex_);
-        cerr << text << '\n' << flush;
-        if (ansiEnabled_) {
-            ++extraLines_;
-        }
-    }
-
-private:
-    static bool enableAnsi() {
-#if defined(_WIN32)
-        const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD mode = 0;
-        if (output == INVALID_HANDLE_VALUE || !GetConsoleMode(output, &mode)) {
-            return false;
-        }
-        return (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0 ||
-               SetConsoleMode(output, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0;
-#else
-        return true;
-#endif
-    }
-
-    vector<string> labels_;
-    bool ansiEnabled_;
-    size_t extraLines_ = 0;
-    mutex mutex_;
-};
-
-size_t terminalColumns() {
-#if defined(_WIN32)
-    const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO bufferInfo{};
-    if (output != INVALID_HANDLE_VALUE && GetConsoleScreenBufferInfo(output, &bufferInfo)) {
-        return static_cast<size_t>(bufferInfo.srWindow.Right - bufferInfo.srWindow.Left + 1);
-    }
-#endif
-    return 0;
-}
-
-string formatPrice(double price) {
-    ostringstream oss;
-    oss << setprecision(10) << defaultfloat << price;
-    return oss.str();
-}
-
-string formatUtcTimestamp(int64_t epochMs) {
-    const time_t epochSeconds = static_cast<time_t>(epochMs / 1000);
-    tm utcTm{};
-#if defined(_WIN32)
-    gmtime_s(&utcTm, &epochSeconds);
-#else
-    gmtime_r(&epochSeconds, &utcTm);
-#endif
-    ostringstream oss;
-    oss << put_time(&utcTm, "%Y-%m-%d %H:%M:%S");
-    return oss.str();
-}
-
-string formatCandleLine(const string& symbol, const candlesticks::Candlestick& candle,
-                        const char* stateTag, bool compact) {
-    const string open = formatPrice(candle.open);
-    const string high = formatPrice(candle.high);
-    const string low = formatPrice(candle.low);
-    const string close = formatPrice(candle.close);
-    const auto trend = candlesticks::trendOf(candle);
-    if (!compact) {
-        return symbol + " O:" + open + " H:" + high + " L:" + low + " C:" + close + " " +
-               candlesticks::trendLabel(trend) + " " + stateTag;
-    }
-    const char* code = trend == candlesticks::Trend::Bullish ? "B" :
-                        trend == candlesticks::Trend::Bearish ? "S" : "N";
-    return "O:" + open + " H:" + high + " L:" + low + " C:" + close + " " + code + " " +
-           stateTag;
-}
-
-// ---------------------------------------------------------------------------
-// Timeframe -> English CSV filename mapping
-// ---------------------------------------------------------------------------
-optional<string> englishNameForInterval(const string& binanceInterval) {
-    static const unordered_map<string, string> kNames = {
-        {"1m", "one_minute"},   {"3m", "three_minutes"}, {"5m", "five_minutes"},
-        {"15m", "fifteen_minutes"}, {"30m", "thirty_minutes"}, {"1h", "one_hour"},
-        {"2h", "two_hours"},    {"4h", "four_hours"},    {"6h", "six_hours"},
-        {"8h", "eight_hours"},  {"12h", "twelve_hours"}, {"1d", "one_day"},
-        {"3d", "three_days"},   {"1w", "one_week"},      {"1M", "one_month"},
-    };
-    const auto it = kNames.find(binanceInterval);
-    if (it == kNames.end()) {
-        return nullopt;
-    }
-    return it->second;
-}
-
-vector<string> splitByComma(const string& raw) {
-    vector<string> parts;
-    stringstream ss(raw);
-    string item;
-    while (getline(ss, item, ',')) {
-        parts.push_back(item);
-    }
-    return parts;
-}
-
-struct TimeframeTask {
-    string rawTimeframe;
-    string binanceInterval;
-    string englishName;
-    size_t rowIndex = 0;
-};
-
-ofstream openCsvAppend(const filesystem::path& path) {
-    const bool needsHeader = !filesystem::exists(path) || filesystem::file_size(path) == 0;
-    ofstream csv(path, ios::app);
-    if (!csv.is_open()) {
-        throw runtime_error("Failed to open CSV file: " + path.string());
-    }
-    if (needsHeader) {
-        csv << "timestamp,base_volume,quote_volume,taker_buy_base_volume,taker_buy_quote_volume,"
-            << indicators::indicatorHeader() << "open,high,low,close\n";
-        csv.flush();
-    }
-    return csv;
-}
-
-// Builds the flat wire-format message the visualization layer broadcasts,
-// out of whatever candle + indicator snapshot we've already computed for
-// the CSV row. Shared by the live-write path (writeClosedCandleRow below),
-// the live-forming-candle path (renderLine, inside runTimeframeStream),
-// and the backfill/replay seed-history hook (also inside runTimeframeStream),
-// so all three never drift out of sync on field mapping.
-visualization::VisualizationMessage buildVisualizationMessage(
-    const string& symbol, const string& timeframeLabel, const candlesticks::Candlestick& candle,
-    const indicators::IndicatorSnapshot& snapshot) {
-    visualization::VisualizationMessage message;
-    message.symbol = symbol;
-    message.timeframe = timeframeLabel;
-    message.openTime = candle.openTime;
-    message.closeTime = candle.closeTime;
-    message.closed = candle.closed;
-    message.open = candle.open;
-    message.high = candle.high;
-    message.low = candle.low;
-    message.close = candle.close;
-    message.baseVolume = candle.baseVolume;
-    message.quoteVolume = candle.quoteVolume;
-    message.takerBuyBaseVolume = candle.takerBuyBaseVolume;
-    message.takerBuyQuoteVolume = candle.takerBuyQuoteVolume;
-    message.indicatorValues = snapshot;
-    return message;
-}
-
-// Writes one closed candle's CSV row (indicators + OHLCV) exactly as
-// before, and additionally returns the IndicatorSnapshot that
-// engine.update(candle) just produced - needed by the caller to feed
-// smc-ict/liquidity.cpp's ATR-scaled Equal-Highs/Lows tolerance (see
-// smc_engine.h). IndicatorEngine::update() must be called exactly once per
-// closed candle (its own documented contract), so this snapshot has to be
-// captured and handed back here rather than the SMC path calling
-// engine.update() a second time itself.
-indicators::IndicatorSnapshot writeClosedCandleRow(ofstream& csv, const candlesticks::Candlestick& candle,
-                          indicators::IndicatorEngine& engine,
-                          visualization::VisualizationServer& vizServer, const string& symbol,
-                          const string& timeframeLabel) {
-    const auto snapshot = engine.update(candle);
-    csv << formatUtcTimestamp(candle.openTime) << ','
-        << formatPrice(candle.baseVolume) << ','
-        << formatPrice(candle.quoteVolume) << ','
-        << formatPrice(candle.takerBuyBaseVolume) << ','
-        << formatPrice(candle.takerBuyQuoteVolume) << ','
-        << indicators::formatIndicatorRow(snapshot)
-        << formatPrice(candle.open) << ','
-        << formatPrice(candle.high) << ','
-        << formatPrice(candle.low) << ','
-        << formatPrice(candle.close) << '\n';
-    csv.flush();
-
-    // Tap point for the visualization layer: same snapshot just computed
-    // above, handed off as a plain data copy. push() is thread-safe,
-    // non-blocking, and never throws, so it can never delay the CSV write
-    // above it or anything else in this function's caller.
-    vizServer.push(buildVisualizationMessage(symbol, timeframeLabel, candle, snapshot));
-    return snapshot;
-}
+namespace binance {
 
 // ---------------------------------------------------------------------------
 // One fully isolated worker per timeframe: own io_context/ssl::context, own
@@ -708,101 +474,4 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
     }
 }
 
-}  // namespace
-
-int main() {
-    cout << "Enter a Binance USD-M Futures symbol (e.g. BTCUSDT): ";
-    string rawSymbol;
-    if (!getline(cin, rawSymbol)) {
-        cerr << "No input provided." << endl;
-        return 1;
-    }
-    const string symbol = toUpper(trim(rawSymbol));
-    if (symbol.empty()) {
-        cerr << "Symbol must not be empty." << endl;
-        return 1;
-    }
-
-    cout << "Enter candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): ";
-    string rawTimeframes;
-    if (!getline(cin, rawTimeframes)) {
-        cerr << "No timeframe input provided." << endl;
-        return 1;
-    }
-
-    vector<TimeframeTask> tasks;
-    set<string> seenIntervals;
-    for (const auto& piece : splitByComma(rawTimeframes)) {
-        const string timeframe = trim(piece);
-        if (timeframe.empty()) {
-            continue;
-        }
-        const auto binanceInterval = candlesticks::toBinanceInterval(timeframe);
-        if (!binanceInterval.has_value()) {
-            cerr << "Skipping unsupported timeframe '" << timeframe << "'. Choose from: "
-                 << candlesticks::supportedTimeframes() << endl;
-            continue;
-        }
-        if (!seenIntervals.insert(*binanceInterval).second) {
-            cerr << "Skipping duplicate timeframe '" << timeframe << "'." << endl;
-            continue;
-        }
-        const auto englishName = englishNameForInterval(*binanceInterval);
-        if (!englishName.has_value()) {
-            cerr << "No CSV filename mapping for interval '" << *binanceInterval
-                 << "'; skipping." << endl;
-            continue;
-        }
-
-        TimeframeTask task;
-        task.rawTimeframe = timeframe;
-        task.binanceInterval = *binanceInterval;
-        task.englishName = *englishName;
-        task.rowIndex = tasks.size();
-        tasks.push_back(move(task));
-    }
-
-    if (tasks.empty()) {
-        cerr << "No valid timeframes provided. Exiting." << endl;
-        return 1;
-    }
-
-    const string symbolFolder = toLower(symbol);
-    error_code dirError;
-    filesystem::create_directories(symbolFolder, dirError);
-    if (dirError) {
-        cerr << "Failed to create folder '" << symbolFolder << "': " << dirError.message()
-             << endl;
-        return 1;
-    }
-
-    cout << "Streaming " << symbol << " across " << tasks.size()
-         << " timeframe(s). Closed candles are appended to CSVs under '" << symbolFolder
-         << "/'. Press Ctrl+C to exit.\n";
-
-    vector<string> labels;
-    labels.reserve(tasks.size());
-    for (const auto& task : tasks) {
-        labels.push_back(task.rawTimeframe);
-    }
-    TerminalBoard board(labels);
-
-    // Started once, shared by every timeframe worker below (single-viewer/
-    // local by design - see visualization.h). A bind failure here only
-    // disables live charting; it never stops candle streaming, CSV
-    // writes, or indicator computation.
-    visualization::VisualizationServer vizServer(kVisualizationPort);
-    vizServer.start();
-
-    vector<thread> workers;
-    workers.reserve(tasks.size());
-    for (const auto& task : tasks) {
-        filesystem::path csvPath = filesystem::path(symbolFolder) / (task.englishName + ".csv");
-        workers.emplace_back(runTimeframeStream, symbol, task, move(csvPath), ref(board),
-                             ref(vizServer));
-    }
-
-    for (auto& worker : workers) {
-        worker.join();
-    }
-}
+}  // namespace binance

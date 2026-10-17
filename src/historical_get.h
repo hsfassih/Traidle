@@ -5,8 +5,10 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
 
+#include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <optional>
 #include <string>
 
 // ---------------------------------------------------------------------------
@@ -100,5 +102,24 @@ bool ensureContinuousHistory(boost::asio::io_context& ioc, boost::asio::ssl::con
                               const std::filesystem::path& csvPath, const StatusHandler& status,
                               const LogHandler& log, indicators::IndicatorEngine& engine,
                               const HistorySeedHandler& seedHistory = HistorySeedHandler{});
+
+// Two thin public wrappers around helpers that were already in this file (in
+// the anonymous namespace), added so the Capital.com backfill
+// (capital_history.cpp) can reuse the exact same CSV resume-point scan and
+// CSV replay instead of duplicating them. They change nothing about
+// ensureContinuousHistory() or Binance behavior.
+//
+// Open time (epoch ms) of the last fully-formed row in csvPath, or nullopt if
+// the file is missing/has no valid data row. Named lastStoredCsvOpenTimeMs
+// rather than lastStoredOpenTimeMs on purpose: the private helper it wraps
+// already has that exact name and signature in this namespace, and declaring
+// a second one would make the unmodified call inside ensureContinuousHistory()
+// ambiguous.
+std::optional<int64_t> lastStoredCsvOpenTimeMs(const std::filesystem::path& csvPath);
+
+// Replays every existing data row of csvPath through `engine` (restoring its
+// rolling state) and hands each (candle, snapshot) pair to `seedHistory`.
+void replayCsvIntoEngine(const std::filesystem::path& csvPath, indicators::IndicatorEngine& engine,
+                         const HistorySeedHandler& seedHistory);
 
 }  // namespace historical

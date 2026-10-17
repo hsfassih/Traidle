@@ -517,6 +517,16 @@ int64_t nowMs() {
 
 }  // namespace
 
+// Public wrappers declared in historical_get.h - see the comment there.
+optional<int64_t> lastStoredCsvOpenTimeMs(const filesystem::path& csvPath) {
+    return lastStoredOpenTimeMs(csvPath);
+}
+
+void replayCsvIntoEngine(const filesystem::path& csvPath, indicators::IndicatorEngine& engine,
+                         const HistorySeedHandler& seedHistory) {
+    replayExistingRowsIntoEngine(csvPath, engine, seedHistory);
+}
+
 bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const string& symbol,
                               const string& binanceInterval, const filesystem::path& csvPath,
                               const StatusHandler& status, const LogHandler& log,

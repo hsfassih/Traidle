@@ -4,8 +4,10 @@
 .vscode
 .agents
 .codex
+.env
 build
 build-*
+fx_*
 vcpkg_installed
 scrap-data
 tools

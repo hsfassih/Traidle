@@ -30,12 +30,14 @@ build.ninja
 CMakeUserPresets.json
 
 # Others
+.env
 scrap-data/
 scripts/
 strategies/
 .github/instructions/
 .github/*.md
 *usdt/
+fx_*/
 docs/
 tasks/
 tools/
