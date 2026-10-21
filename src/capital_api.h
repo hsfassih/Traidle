@@ -239,10 +239,12 @@ public:
 
     // GET /api/v1/prices/{epic}?resolution=R&max=N[&to=T]  ->  ascending bid bars.
     // `to` is passed through verbatim ("YYYY-MM-DDTHH:MM:SS"). `skipped`, if
-    // given, receives how many malformed bars were dropped.
+    // given, receives how many malformed bars were dropped. `endOfHistory`, if
+    // given, is set only when a `to` request returns error.prices.not-found.
     vector<candle_builder::Bar> fetchPriceBars(const string& epic, const string& resolution,
                                                int maxBars, const optional<string>& to,
-                                               size_t* skipped = nullptr);
+                                               size_t* skipped = nullptr,
+                                               bool* endOfHistory = nullptr);
 
     Session& session() { return *session_; }
 

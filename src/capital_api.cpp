@@ -83,6 +83,18 @@ string safeErrorCode(const string& body) {
     return code;
 }
 
+string getErrorMessage(const string& target, const HttpResult& result) {
+    const string path = target.substr(0, target.find('?'));
+    string message = "Capital.com GET " + path + " failed with HTTP " + to_string(result.status);
+    if (result.body.is_object()) {
+        const string code = safeErrorCode(result.body.dump());
+        if (!code.empty()) {
+            message += " (" + code + ")";
+        }
+    }
+    return message;
+}
+
 // Turns a failed POST /session into something a person can act on. Never
 // includes the API key, e-mail, password or any token (the key appears only in
 // its masked form, which is allowed).
@@ -570,20 +582,15 @@ json RestClient::getJson(const string& target) {
     if (result.status >= 200 && result.status < 300) {
         return move(result.body);
     }
-    string path = target.substr(0, target.find('?'));
-    string message = "Capital.com GET " + path + " failed with HTTP " + to_string(result.status);
-    if (result.body.is_object()) {
-        const string code = safeErrorCode(result.body.dump());
-        if (!code.empty()) {
-            message += " (" + code + ")";
-        }
-    }
-    throw runtime_error(message);
+    throw runtime_error(getErrorMessage(target, result));
 }
 
 vector<candle_builder::Bar> RestClient::fetchPriceBars(const string& epic, const string& resolution,
                                                        int maxBars, const optional<string>& to,
-                                                       size_t* skipped) {
+                                                       size_t* skipped, bool* endOfHistory) {
+    if (endOfHistory != nullptr) {
+        *endOfHistory = false;
+    }
     if (!isValidEpic(epic)) {
         throw runtime_error("invalid epic '" + epic + "'");
     }
@@ -592,7 +599,21 @@ vector<candle_builder::Bar> RestClient::fetchPriceBars(const string& epic, const
     if (to) {
         target += "&to=" + *to;
     }
-    return parsePriceBars(getJson(target), skipped);
+    const HttpResult result = get(target);
+    if (result.status >= 200 && result.status < 300) {
+        return parsePriceBars(result.body, skipped);
+    }
+    if (to && result.status == 404 &&
+        safeErrorCode(result.body.dump()) == "error.prices.not-found") {
+        if (skipped != nullptr) {
+            *skipped = 0;
+        }
+        if (endOfHistory != nullptr) {
+            *endOfHistory = true;
+        }
+        return {};
+    }
+    throw runtime_error(getErrorMessage(target, result));
 }
 
 // ---------------------------------------------------------------------------

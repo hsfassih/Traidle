@@ -839,6 +839,131 @@ static void testHistoryBackfill() {
         CHECK(fineRun.ok);
         CHECK(!readCsvRows(fine, headerColumns).empty());
     }
+
+    {
+        mockcap::MockCapitalServer::Config config;
+        config.misalignedOldestWeeklyBars = 3;
+        auto server = startMock(config);
+        auto session = loggedInSession(*server);
+
+        const filesystem::path partialWeekly = filesystem::path(gDir) / "partial_oldest_week.csv";
+        filesystem::remove(partialWeekly);
+        const auto week = *candle_builder::intervalFromBinance("1w");
+        const int64_t storedOpen = candle_builder::bucketOpen(week, mockcap::realNowMs() - 90 * kDayMs);
+        candle_builder::Bar storedBar;
+        storedBar.openMs = storedOpen;
+        storedBar.o = storedBar.h = storedBar.l = storedBar.c = 1.0;
+        indicators::IndicatorEngine storedEngine;
+        ofstream seededCsv = pipeline::openCsvAppend(partialWeekly);
+        pipeline::writeCsvRow(seededCsv, candle_builder::toCandlestick(storedBar, week, "EURUSD", true),
+                              storedEngine);
+        seededCsv.close();
+
+        const HistoryRun run = runHistory(*server, session, "1w", partialWeekly);
+        string all;
+        for (const auto& line : run.logs) all += line + "\n";
+        CHECK_MSG(run.ok, all);
+        CHECK_MSG(all.find("do not open on UTC boundaries") == string::npos, all);
+        size_t headerColumns = 0;
+        const vector<CsvRow> rows = readCsvRows(partialWeekly, headerColumns);
+        CHECK(rows.size() > 1);
+        CHECK(rows.front().openMs == storedOpen);
+        for (const CsvRow& row : rows) {
+            CHECK(oracleBucket("1w", row.openMs).open == row.openMs);
+        }
+    }
+
+    {
+        mockcap::MockCapitalServer::Config config;
+        config.alignShiftMs["WEEK"] = 3600 * 1000;
+        auto server = startMock(config);
+        auto session = loggedInSession(*server);
+
+        const filesystem::path shiftedWeekly = filesystem::path(gDir) / "shifted_weekly.csv";
+        filesystem::remove(shiftedWeekly);
+        const HistoryRun run = runHistory(*server, session, "1w", shiftedWeekly);
+        string all;
+        for (const auto& line : run.logs) all += line + "\n";
+        CHECK_MSG(!run.ok, "a consistently shifted weekly series must still be refused");
+        CHECK_MSG(all.find("do not open on UTC boundaries") != string::npos, all);
+        size_t headerColumns = 0;
+        CHECK(readCsvRows(shiftedWeekly, headerColumns).empty());
+    }
+
+    {
+        mockcap::MockCapitalServer::Config config;
+        config.priceFailures.push_back({"MINUTE_15", true, mockcap::http::status::not_found,
+                                        "error.prices.not-found"});
+        auto server = startMock(config);
+        auto session = loggedInSession(*server);
+
+        const filesystem::path csv = filesystem::path(gDir) / "history_end_15m.csv";
+        filesystem::remove(csv);
+        const HistoryRun run = runHistory(*server, session, "15m", csv);
+        string all;
+        for (const auto& line : run.logs) all += line + "\n";
+        CHECK_MSG(run.ok, all);
+        CHECK_MSG(all.find("no earlier MINUTE_15 history available") != string::npos, all);
+        size_t headerColumns = 0;
+        const vector<CsvRow> rows = readCsvRows(csv, headerColumns);
+        CHECK(rows.size() >= 250);
+        for (const CsvRow& row : rows) {
+            CHECK(oracleBucket("15m", row.openMs).open == row.openMs);
+        }
+        VerifyContext ctx;
+        ctx.truth = &server->truth();
+        ctx.runStartNowMs = run.startNowMs;
+        ctx.finalNowMs = server->serverNowMs();
+        ctx.liveStartMs = INT64_MAX;
+        verifyCsv("15m", csv, ctx);
+    }
+
+    {
+        mockcap::MockCapitalServer::Config config;
+        config.priceFailures.push_back({"MINUTE_15", false, mockcap::http::status::not_found,
+                                        "error.prices.not-found"});
+        auto server = startMock(config);
+        auto session = loggedInSession(*server);
+        const filesystem::path csv = filesystem::path(gDir) / "initial_404_15m.csv";
+        filesystem::remove(csv);
+        const HistoryRun run = runHistory(*server, session, "15m", csv);
+        string all;
+        for (const auto& line : run.logs) all += line + "\n";
+        CHECK(!run.ok);
+        CHECK_MSG(all.find("HTTP 404 (error.prices.not-found)") != string::npos, all);
+        size_t headerColumns = 0;
+        CHECK(readCsvRows(csv, headerColumns).empty());
+    }
+
+    {
+        mockcap::MockCapitalServer::Config config;
+        config.priceFailures.push_back({"MINUTE_15", true, mockcap::http::status::not_found,
+                                        "error.prices.invalid-epic"});
+        auto server = startMock(config);
+        auto session = loggedInSession(*server);
+        const filesystem::path csv = filesystem::path(gDir) / "wrong_404_15m.csv";
+        filesystem::remove(csv);
+        const HistoryRun run = runHistory(*server, session, "15m", csv);
+        string all;
+        for (const auto& line : run.logs) all += line + "\n";
+        CHECK(!run.ok);
+        CHECK_MSG(all.find("HTTP 404 (error.prices.invalid-epic)") != string::npos, all);
+    }
+
+    {
+        mockcap::MockCapitalServer::Config config;
+        config.priceFailures.push_back({"MINUTE_15", true, mockcap::http::status::bad_request,
+                                        "error.invalid.resolution"});
+        auto server = startMock(config);
+        auto session = loggedInSession(*server);
+        const filesystem::path csv = filesystem::path(gDir) / "other_status_15m.csv";
+        filesystem::remove(csv);
+        const HistoryRun run = runHistory(*server, session, "15m", csv);
+        string all;
+        for (const auto& line : run.logs) all += line + "\n";
+        CHECK(!run.ok);
+        CHECK_MSG(all.find("HTTP 400 (error.invalid.resolution)") != string::npos, all);
+    }
     sectionDone();
 }
 

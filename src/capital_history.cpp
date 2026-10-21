@@ -388,16 +388,32 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
             }
             // One second before the oldest bar we hold: whether `to` is inclusive or
             // exclusive, the page then ends strictly before it.
+            bool endOfHistory = false;
             page = rest.fetchPriceBars(epic, base.capitalResolution, kPageBars,
-                                       formatToParam(params, earliest - 1000), &malformed);
+                                       formatToParam(params, earliest - 1000), &malformed,
+                                       &endOfHistory);
+            if (endOfHistory) {
+                log("Capital.com has no earlier " + base.capitalResolution +
+                    " history available; continuing with " + to_string(collected.size()) +
+                    " fetched base candle(s)");
+                break;
+            }
         }
 
         if (collected.empty()) {
             return true;
         }
         reverse(collected.begin(), collected.end());  // ascending
+        if (spec.kind == IntervalSpec::Kind::Week) {
+            const int64_t firstRelevantOpen = candle_builder::bucketOpen(spec, lowerBound);
+            const auto firstRelevant = lower_bound(
+                collected.begin(), collected.end(), firstRelevantOpen,
+                [](const Bar& bar, int64_t openMs) { return bar.openMs < openMs; });
+            collected.erase(collected.begin(), firstRelevant);
+        }
         if (const auto misaligned = firstMisalignedBar(collected, base.capitalResolution)) {
-            log("Capital.com's " + base.capitalResolution + " candles do not open on UTC boundaries (e.g. " +
+            log("Capital.com's " + base.capitalResolution +
+                " candles do not open on UTC boundaries (e.g. " +
                 candle_builder::formatUtcIso(misaligned->openMs) + " UTC); " + task.rawTimeframe +
                 " history was skipped instead of writing misaligned candles");
             return false;

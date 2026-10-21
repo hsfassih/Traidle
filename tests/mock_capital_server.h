@@ -250,6 +250,13 @@ inline const vector<ResolutionInfo>& resolutions() {
 
 class MockCapitalServer {
 public:
+    struct PriceFailure {
+        string resolution;
+        optional<bool> hasTo;
+        http::status status = http::status::not_found;
+        string errorCode = "error.prices.not-found";
+    };
+
     struct Config {
         string apiKey = "mockKEY-abcdef0123456789-zyx";
         string identifier = "trader@example.com";
@@ -261,6 +268,8 @@ public:
         int toShiftHours = 0;
         vector<ClosedWindow> closedWindows;
         map<string, int64_t> alignShiftMs;  // resolution -> bar-boundary shift (alignment self-check test)
+        size_t misalignedOldestWeeklyBars = 0;
+        vector<PriceFailure> priceFailures;
         bool refuseSubscribe = false;
         double sentinelBalance = 98765.43;  // appears in the login body; must never be printed
     };
@@ -876,6 +885,12 @@ private:
         if (res == nullptr) {
             return jsonResponse(http::status::bad_request, {{"errorCode", "error.invalid.resolution"}});
         }
+        const bool hasTo = query.count("to") != 0;
+        for (const PriceFailure& failure : cfg_.priceFailures) {
+            if (failure.resolution == res->name && (!failure.hasTo || *failure.hasTo == hasTo)) {
+                return jsonResponse(failure.status, {{"errorCode", failure.errorCode}});
+            }
+        }
         int maxBars = 10;  // the real default
         if (const auto it = query.find("max"); it != query.end()) {
             maxBars = max(1, min(1000, atoi(it->second.c_str())));
@@ -918,6 +933,12 @@ private:
             }
         }
         reverse(bars.begin(), bars.end());
+        if (cfg_.misalignedOldestWeeklyBars > 0 && res->weekly && maxBars == 1000 &&
+            query.count("to") == 0) {
+            for (size_t i = 0; i < min(cfg_.misalignedOldestWeeklyBars, bars.size()); ++i) {
+                bars[i].openMs += 3 * kDayMs;
+            }
+        }
 
         json prices = json::array();
         for (const OBar& bar : bars) {
