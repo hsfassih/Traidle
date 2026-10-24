@@ -852,50 +852,20 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// StopControl: lets run() (tests, the probe) stop every worker's io_context.
-// In normal operation nothing ever calls stopAll() and workers run until Ctrl+C.
-// ---------------------------------------------------------------------------
-class StopControl {
-public:
-    bool isStopped() {
-        lock_guard<mutex> lock(m_);
-        return stopped_;
-    }
-    void add(net::io_context* ioc) {
-        lock_guard<mutex> lock(m_);
-        if (stopped_) {
-            ioc->stop();  // a stopped context makes run() return immediately
-        } else {
-            contexts_.push_back(ioc);
-        }
-    }
-    void remove(net::io_context* ioc) {
-        lock_guard<mutex> lock(m_);
-        contexts_.erase(std::remove(contexts_.begin(), contexts_.end(), ioc), contexts_.end());
-    }
-    void stopAll() {
-        lock_guard<mutex> lock(m_);
-        stopped_ = true;
-        for (auto* ioc : contexts_) {
-            ioc->stop();
-        }
-    }
-
-private:
-    mutex m_;
-    bool stopped_ = false;
-    vector<net::io_context*> contexts_;
-};
-
-// ---------------------------------------------------------------------------
 // One fully isolated worker per timeframe, mirroring binance::runTimeframeStream
 // step for step: own io_context, IndicatorEngine, SmcEngine, CSV handle, REST
 // client and backfill. A failure on one timeframe cannot affect another.
 // ---------------------------------------------------------------------------
-void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, StopControl& stopControl,
-                        const string& epic, pipeline::TimeframeTask task,
-                        filesystem::path csvPath, pipeline::TerminalBoard& board,
-                        visualization::VisualizationServer& vizServer) {
+// `backfillCancel` governs ONLY the historical backfill (ensureContinuousHistory); it is
+// separate from `stopControl` (which governs the live io_context and gates the startup
+// steps after backfill). The two coincide for a real external stop - see run() below - so
+// Disconnect still cuts a slow backfill short. They differ only for options.runFor, a
+// test-only bound on the LIVE phase: it must not truncate a resume backfill that happens to
+// take longer than the bound (ensureContinuousHistory would otherwise leave gaps in the CSV).
+void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, app::StopSignal& stopControl,
+                        const atomic<bool>* backfillCancel, const string& epic,
+                        pipeline::TimeframeTask task, filesystem::path csvPath,
+                        pipeline::TerminalBoard& board, visualization::VisualizationServer& vizServer) {
     const string label = task.rawTimeframe;
     const string& symbol = epic;
     try {
@@ -909,7 +879,7 @@ void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, StopCont
         // Declared first so it is destroyed last: every guard below that touches
         // the io_context (sink close, helper-thread join) runs before it dies.
         net::io_context ioc;
-        stopControl.add(&ioc);
+        stopControl.add(&ioc);  // request() stops this context, so ioc.run() below returns
         auto stopGuard = onScopeExit([&] { stopControl.remove(&ioc); });
 
         // One IndicatorEngine / SmcEngine for this timeframe's whole lifetime,
@@ -1116,8 +1086,11 @@ void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, StopCont
             const int64_t passStartMs = session->serverNowMs();
             const bool historyOk = capital_history::ensureContinuousHistory(
                 *session, rest, epic, task, csvPath, statusLine, logLine, engine, seedHistory,
-                /*replayExisting=*/!replayed);
+                /*replayExisting=*/!replayed, backfillCancel);
             replayed = true;
+            if (backfillCancel != nullptr && backfillCancel->load()) {
+                return;  // Disconnect pressed during the backfill: nothing more to do for this timeframe
+            }
             if (!historyOk && pass == 0) {
                 board.log("[" + label +
                           "] historical backfill did not fully complete; continuing with live data "
@@ -1137,6 +1110,9 @@ void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, StopCont
             }
         }
 
+        if (stopControl.stopped()) {
+            return;
+        }
         board.updateLine(task.rowIndex, "computing SMC/ICT structures...");
         smcEngine.replayHistory(smcReplayCandles, smcReplayAtrs);
         smcReplayCandles.clear();
@@ -1144,6 +1120,10 @@ void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, StopCont
         smcReplayAtrs.clear();
         smcReplayAtrs.shrink_to_fit();
         vizServer.setSmcSnapshot(symbol, label, smcEngine.currentSnapshot());
+        // The history and SMC structures are now complete: hand this timeframe's
+        // snapshot to a browser that is already connected (one that connects later
+        // gets it on connect instead). See VisualizationServer::publishTimeframe.
+        vizServer.publishTimeframe(label);
 
         csv = pipeline::openCsvAppend(csvPath);
         if (const auto stored = historical::lastStoredCsvOpenTimeMs(csvPath)) {
@@ -1189,7 +1169,7 @@ void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, StopCont
         flushTimer.async_wait(flushTick);
 
         liveSinceNs = steadyNowNs();
-        if (!stopControl.isStopped()) {
+        if (!stopControl.stopped()) {
             ioc.run();
         }
     } catch (const exception& e) {
@@ -1283,21 +1263,26 @@ void run(shared_ptr<Session> session, const string& epic,
          const vector<pipeline::TimeframeTask>& tasks, const filesystem::path& folder,
          pipeline::TerminalBoard& board, visualization::VisualizationServer& vizServer,
          const RunOptions& options) {
-    StopControl stopControl;
+    app::StopSignal ownStop;  // used when the caller did not bring one (tests, the probe)
+    app::StopSignal& stopControl = options.stop != nullptr ? *options.stop : ownStop;
+    // Only a caller-supplied stop signal (the real Disconnect/cancel path) may cut a backfill
+    // short. options.runFor alone (no options.stop) must let every worker's backfill run to
+    // completion, exactly as before this file gained cancellation - see runTimeframeWorker.
+    const atomic<bool>* backfillCancel = options.stop != nullptr ? options.stop->flag() : nullptr;
     CapitalFeed feed(session, upperEpic(epic), board);
 
     vector<thread> workers;
     workers.reserve(tasks.size());
     for (const auto& task : tasks) {
         filesystem::path csvPath = folder / (task.englishName + ".csv");
-        workers.emplace_back(runTimeframeWorker, session, ref(feed), ref(stopControl), upperEpic(epic),
-                             task, move(csvPath), ref(board), ref(vizServer));
+        workers.emplace_back(runTimeframeWorker, session, ref(feed), ref(stopControl), backfillCancel,
+                             upperEpic(epic), task, move(csvPath), ref(board), ref(vizServer));
     }
     feed.start();
 
     if (options.runFor) {
-        this_thread::sleep_for(*options.runFor);
-        stopControl.stopAll();
+        stopControl.waitFor(*options.runFor);  // returns early if the caller stops us first
+        stopControl.request();
     }
     for (auto& worker : workers) {
         worker.join();

@@ -5,6 +5,7 @@
 #include "smc-ict/smc_engine.h"
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -24,6 +25,16 @@ using namespace std;
 // throw - a stalled browser, a closed tab, or even a failed server bind can
 // never delay or break Binance ingestion, CSV writes, or indicator
 // computation. See visualization.cpp for the full threading design.
+//
+// --- Control channel (market picker / Disconnect) ---
+// The only thing that flows the other way is a small control channel: a
+// browser may send text frames (see setCommandHandler()), and the application
+// tells every viewer which phase the session is in (setSessionState()). The
+// server itself knows nothing about markets, symbols or what a command means -
+// it just hands the text to whoever registered the handler (session_manager.h)
+// and relays the state string it is given. Between two sessions the buffered
+// chart data is wiped (resetSessionData()), so a new symbol never inherits the
+// previous one's candles.
 //
 // Multi-viewer design: any number of browser tabs/windows can connect
 // concurrently, each getting its own session, its own initial history/SMC
@@ -111,6 +122,14 @@ string smcSnapshotToJson(const string& symbol, const string& timeframe,
                         const smc::SmcSnapshot& snapshot);
 string smcUpdateToJson(const string& symbol, const string& timeframe, const smc::SmcUpdate& update);
 
+// Whether a WebSocket page with this `Origin` header may send control commands.
+// Anything can still CONNECT and watch, exactly as before; only commands are
+// restricted, because they can start a session. Allowed: no Origin at all (a
+// non-browser client), the literal "null" (a page opened from disk, file://),
+// and localhost / 127.0.0.1 / [::1] on any scheme and port. A web page on some
+// other site - which a browser lets open ws://localhost:8765 - is refused.
+bool originAllowsCommands(const string& origin);
+
 class VisualizationServer {
 public:
     explicit VisualizationServer(unsigned short port);
@@ -158,6 +177,39 @@ public:
     // whatever this timeframe's snapshot previously held so a browser that
     // connects later never sees stale structures re-sent.
     void setSmcSnapshot(const string& symbol, const string& timeframe, smc::SmcSnapshot snapshot);
+
+    // Called with the text of every control message a viewer sends (a JSON
+    // document; this class neither parses nor validates it). Runs on the
+    // server's own I/O thread, so it MUST NOT block - hand the text to another
+    // thread and return. Set it before start(); pass an empty function to
+    // detach (when it returns, no call is in flight and none will start).
+    // Messages from a page whose Origin is not allowed (see
+    // originAllowsCommands()) are dropped before they get here.
+    using CommandHandler = function<void(const string& messageText)>;
+    void setCommandHandler(CommandHandler handler);
+
+    // Thread-safe, never throws. Stores `stateJson` (an opaque, ready-to-send
+    // JSON document - the application builds it, see session_manager.cpp),
+    // broadcasts it to every connected viewer, and makes it the FIRST message
+    // any viewer connecting later receives (before its history snapshot).
+    void setSessionState(const string& stateJson);
+
+    // Thread-safe, never throws. Sends one timeframe's current history and SMC
+    // snapshot to every viewer that is ALREADY connected - the same two
+    // messages a newly connecting viewer gets for it. Workers call this once
+    // their startup backfill/replay is done: with the browser now connecting
+    // BEFORE a session starts (instead of after), history seeded during backfill
+    // would otherwise never reach it. No-op without viewers.
+    void publishTimeframe(const string& timeframe);
+
+    // Thread-safe, never throws. Forgets every buffered candle, SMC snapshot
+    // and queued-but-unsent message. Called between two sessions, after all of
+    // the previous session's workers have stopped, so the next symbol starts
+    // from nothing. Viewers stay connected.
+    void resetSessionData();
+
+    // True once start() has bound the port and the server thread is serving.
+    bool isRunning() const;
 
     // Thread-safe, non-blocking, never throws. Broadcasts a live SMC/ICT
     // delta (new/changed swings, FVGs, Order Blocks, structural events,

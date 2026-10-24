@@ -5,6 +5,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
 
+#include <atomic>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -97,11 +98,19 @@ using HistorySeedHandler =
 // `seedHistory`, if provided, is called for every one of those same
 // candles (both replayed and freshly backfilled) alongside the snapshot
 // this function already computed for it - see HistorySeedHandler above.
+//
+// `cancel`, if provided, is polled between steps (per replayed row, per
+// backfilled candle, and during every rate-limit / 429 wait). Once it reads
+// true the function stops as soon as it can, quietly (no `log` line), and
+// returns false. Every CSV row written before that point is complete, so the
+// file stays valid and the next run simply resumes from it. This is what lets
+// the browser's Disconnect button interrupt a long first-time backfill.
 bool ensureContinuousHistory(boost::asio::io_context& ioc, boost::asio::ssl::context& ctx,
                               const std::string& symbol, const std::string& binanceInterval,
                               const std::filesystem::path& csvPath, const StatusHandler& status,
                               const LogHandler& log, indicators::IndicatorEngine& engine,
-                              const HistorySeedHandler& seedHistory = HistorySeedHandler{});
+                              const HistorySeedHandler& seedHistory = HistorySeedHandler{},
+                              const std::atomic<bool>* cancel = nullptr);
 
 // Two thin public wrappers around helpers that were already in this file (in
 // the anonymous namespace), added so the Capital.com backfill
@@ -119,7 +128,10 @@ std::optional<int64_t> lastStoredCsvOpenTimeMs(const std::filesystem::path& csvP
 
 // Replays every existing data row of csvPath through `engine` (restoring its
 // rolling state) and hands each (candle, snapshot) pair to `seedHistory`.
+// Stops early (leaving the engine part-way replayed - the caller must then
+// discard it) once `cancel` reads true.
 void replayCsvIntoEngine(const std::filesystem::path& csvPath, indicators::IndicatorEngine& engine,
-                         const HistorySeedHandler& seedHistory);
+                         const HistorySeedHandler& seedHistory,
+                         const std::atomic<bool>* cancel = nullptr);
 
 }  // namespace historical

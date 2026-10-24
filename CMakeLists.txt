@@ -20,6 +20,7 @@ add_executable(traidle
     src/capital.cpp
     src/historical_get.cpp
     src/indicators.cpp
+    src/session_manager.cpp
     src/visualization.cpp
     src/smc-ict/ny_time.cpp
     src/smc-ict/smc_thread_pool.cpp
@@ -50,7 +51,7 @@ endif()
 # Optional developer targets (OFF by default; never built by the Docker image,
 # whose build only runs `--target traidle`).
 # ---------------------------------------------------------------------------
-option(TRAIDLE_BUILD_TESTS "Build the standalone tests (candle_builder_test, capital_mock_test)" OFF)
+option(TRAIDLE_BUILD_TESTS "Build the standalone tests (candle_builder_test, capital_mock_test, session_manager_test)" OFF)
 if(TRAIDLE_BUILD_TESTS)
     add_executable(candle_builder_test
         tests/candle_builder_test.cpp
@@ -88,6 +89,42 @@ if(TRAIDLE_BUILD_TESTS)
             src/smc-ict/smc_engine.cpp
         )
         target_link_libraries(capital_mock_test PRIVATE
+            Boost::system
+            OpenSSL::SSL
+            OpenSSL::Crypto
+            nlohmann_json::nlohmann_json
+            Threads::Threads
+        )
+
+        # Offline test of the browser-driven market picker / symbol switching: the real
+        # VisualizationServer and SessionManager with FAKE market backends, driven by a real
+        # WebSocket client that plays the browser (start, Disconnect, bad input, foreign
+        # origins, rapid cycles). `session_manager_test --serve [port]` keeps the fake-backed
+        # app running so web/visualizer.html can be tried without any exchange or credentials.
+        # No Binance/Capital adapter is compiled in. See tests/session_manager_test.cpp.
+        add_executable(session_manager_test
+            tests/session_manager_test.cpp
+            src/session_manager.cpp
+            src/pipeline_common.cpp
+            src/candlesticks.cpp
+            src/candle_builder.cpp
+            src/capital_api.cpp
+            src/indicators.cpp
+            src/visualization.cpp
+            src/smc-ict/ny_time.cpp
+            src/smc-ict/smc_thread_pool.cpp
+            src/smc-ict/swings.cpp
+            src/smc-ict/fair_value_gaps.cpp
+            src/smc-ict/break_of_structure.cpp
+            src/smc-ict/change_of_character.cpp
+            src/smc-ict/order_blocks.cpp
+            src/smc-ict/liquidity.cpp
+            src/smc-ict/previous_levels.cpp
+            src/smc-ict/kill_zones.cpp
+            src/smc-ict/premium_discount.cpp
+            src/smc-ict/smc_engine.cpp
+        )
+        target_link_libraries(session_manager_test PRIVATE
             Boost::system
             OpenSSL::SSL
             OpenSSL::Crypto

@@ -114,6 +114,61 @@
   #selectedCandleContent td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
   #selectedCandleContent .placeholder { color: #5c6270; font-style: italic; font-size: 12px; }
 
+
+  /* ---- session screens: market picker / symbol form / busy / waiting ---- */
+  #sessionBar { display: none; align-items: center; gap: 10px; margin-left: auto; }
+  #sessionLabel { font-size: 13px; color: #868c98; white-space: nowrap; }
+  #sessionLabel b { color: #d1d4dc; font-weight: 600; }
+  #disconnectBtn { background: rgba(239,83,80,0.12); color: #ef5350; border: 1px solid #ef5350;
+                   padding: 4px 12px; border-radius: 3px; cursor: pointer; font-size: 13px; }
+  #disconnectBtn:hover:not(:disabled) { background: rgba(239,83,80,0.28); }
+  #disconnectBtn:disabled { opacity: 0.45; cursor: default; }
+
+  #stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #noticeBar { display: none; align-items: flex-start; gap: 10px; padding: 6px 12px; font-size: 12px;
+               background: rgba(255,167,38,0.10); color: #ffa726; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
+  #noticeText { flex: 1; white-space: pre-line; }
+  #noticeClose { background: none; border: none; color: #ffa726; cursor: pointer; font-size: 14px; line-height: 1; }
+  #loadingNote { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 6;
+                 max-width: 420px; text-align: center; font-size: 13px; line-height: 1.5; color: #868c98;
+                 pointer-events: none; display: none; }
+  #loadingNote b { color: #d1d4dc; }
+
+  #launcher { position: absolute; inset: 0; z-index: 100; background: #0e1117; overflow: auto; padding: 24px 16px;
+              display: flex; align-items: flex-start; justify-content: center; }
+  #launcher[hidden] { display: none; }
+  .panel { width: 100%; max-width: 460px; margin: auto 0; padding: 24px; background: #161a25;
+           border: 1px solid #2a2e39; border-radius: 8px; display: none; }
+  .panel.active { display: block; }
+  .panel h2 { margin: 0 0 16px 0; font-size: 18px; font-weight: 600; }
+  .panel p { margin: 0 0 10px 0; font-size: 13px; line-height: 1.5; color: #868c98; }
+  .panel p b { color: #d1d4dc; }
+  .market-btn { display: flex; align-items: center; gap: 14px; width: 100%; margin-bottom: 10px; padding: 14px 16px;
+                background: #1e222d; color: #d1d4dc; border: 1px solid #2a2e39; border-radius: 6px;
+                cursor: pointer; font-size: 15px; text-align: left; }
+  .market-btn:hover, .market-btn:focus-visible { border-color: #2962ff; background: #232838; outline: none; }
+  .market-btn .key { flex-shrink: 0; width: 26px; height: 26px; line-height: 24px; text-align: center; font-size: 13px;
+                     border: 1px solid #3a3f4d; border-radius: 4px; color: #868c98; }
+  .field { display: block; margin-bottom: 14px; }
+  .field > span { display: block; margin-bottom: 5px; font-size: 12px; color: #868c98; }
+  .field input { width: 100%; padding: 9px 10px; font-size: 14px; background: #0e1117; color: #d1d4dc;
+                 border: 1px solid #2a2e39; border-radius: 4px; }
+  .field input:focus { outline: none; border-color: #2962ff; }
+  .field small { display: block; margin-top: 4px; font-size: 11px; color: #5c6270; }
+  .form-error { margin: 0 0 12px 0; padding: 8px 10px; font-size: 12px; line-height: 1.4; display: none;
+                color: #ef5350; background: rgba(239,83,80,0.10); border: 1px solid rgba(239,83,80,0.4);
+                border-radius: 4px; white-space: pre-line; }
+  .form-error.shown { display: block; }
+  .actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .actions button { padding: 8px 18px; font-size: 14px; border-radius: 4px; cursor: pointer;
+                    border: 1px solid #2a2e39; background: #1e222d; color: #d1d4dc; }
+  .actions button.primary { background: #2962ff; border-color: #2962ff; color: #fff; }
+  .actions button:disabled { opacity: 0.5; cursor: default; }
+  .spinner { width: 26px; height: 26px; margin: 0 auto 14px auto; border: 3px solid #2a2e39;
+             border-top-color: #2962ff; border-radius: 50%; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #viewBusy, #viewWaiting { text-align: center; }
+
   /* Responsive breakpoint (900px): readout panel moves below the chart. */
   @media (max-width: 900px) {
     #main { flex-direction: column; }
@@ -129,7 +184,45 @@
     <label>Port: <input id="portInput" value="8765" size="6" /></label>
     <button id="reconnectBtn">Reconnect</button>
     <div id="tabs"></div>
+    <div id="sessionBar">
+      <span id="sessionLabel"></span>
+      <button id="disconnectBtn" type="button" title="Stop this symbol and go back to the market selection">Disconnect</button>
+    </div>
   </div>
+  <div id="stage">
+  <div id="launcher">
+    <div class="panel" id="viewWaiting">
+      <h2>Traidle</h2>
+      <p>Waiting for the Traidle app on port <b id="waitPort">8765</b>&hellip;</p>
+      <p>Start the app, then this page connects by itself. If you changed the port in <code>src/main.cpp</code>, enter the same one in the Port box above.</p>
+    </div>
+    <div class="panel" id="viewPicker">
+      <h2>Select market</h2>
+      <button class="market-btn" type="button" data-market="binance"><span class="key">1</span><span>Binance USD-M Futures</span></button>
+      <button class="market-btn" type="button" data-market="capital"><span class="key">2</span><span>Forex/CFD via Capital.com</span></button>
+      <div class="form-error" id="pickerError" role="alert"></div>
+    </div>
+    <form class="panel" id="viewForm" autocomplete="off">
+      <h2 id="formTitle">Binance USD-M Futures</h2>
+      <label class="field"><span id="symbolLabel">Symbol</span>
+        <input id="symbolInput" type="text" maxlength="40" spellcheck="false" autocapitalize="characters" />
+      </label>
+      <label class="field"><span>Candlestick timeframes, comma-separated</span>
+        <input id="timeframesInput" type="text" maxlength="200" spellcheck="false" placeholder="e.g. 1m,15m,1h,1d" />
+        <small>Supported: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M</small>
+      </label>
+      <div class="form-error" id="formError" role="alert"></div>
+      <div class="actions">
+        <button type="button" id="backBtn">Back</button>
+        <button type="submit" id="startBtn" class="primary">Start</button>
+      </div>
+    </form>
+    <div class="panel" id="viewBusy">
+      <div class="spinner"></div>
+      <p id="busyText">Working&hellip;</p>
+    </div>
+  </div>
+  <div id="noticeBar"><span id="noticeText"></span><button id="noticeClose" type="button" title="Dismiss">&times;</button></div>
   <div id="toolbar2">
     <span class="toolbar-label">Show:</span>
     <button class="toggle-btn active" data-target="sma">SMA</button>
@@ -164,6 +257,7 @@
         <div id="selectedCandleContent"><span class="placeholder">Click a candlestick to inspect it.</span></div>
       </div>
     </div>
+  </div>
   </div>
 </div>
 
@@ -236,6 +330,7 @@
   const selectedCandleContent = document.getElementById('selectedCandleContent');
   const biasBadge = document.getElementById('biasBadge');
   const smcTimeframeSelect = document.getElementById('smcTimeframeSelect');
+  const waitPort = document.getElementById('waitPort');
 
   // ---- chart setup (one instance, reused across timeframe tab switches) ----
   const chart = LightweightCharts.createChart(chartContainer, {
@@ -441,24 +536,39 @@
   // ---- websocket ----
   function connect() {
     const port = portInput.value.trim() || '8765';
+    waitPort.textContent = port;
     setStatus('connecting', `connecting to ws://localhost:${port} ...`);
     const ws = new WebSocket(`ws://localhost:${port}`);
     state.ws = ws;
 
     ws.onopen = () => {
+      if (state.ws !== ws) return; // a superseded socket (Reconnect / port change) must not drive the UI
       state.reconnectDelayMs = 500; // reset backoff after a successful connect
       state.lastMessageAt = Date.now();
       setStatus('connected', `connected on port ${port}`);
+      // The app answers with its session state as the very first message; until then
+      // the screen stays as it was (the waiting screen on a fresh page).
+      renderPhase();
     };
     ws.onclose = () => {
+      if (state.ws !== ws) return;
       setStatus('disconnected', 'disconnected — reconnecting...');
+      renderPhase();
       scheduleReconnect();
     };
     ws.onerror = () => { /* onclose fires right after in every browser tested; let that path retry */ };
     ws.onmessage = (event) => {
+      if (state.ws !== ws) return;
       state.lastMessageAt = Date.now();
       let msg;
       try { msg = JSON.parse(event.data); } catch (e) { return; } // ignore malformed frames
+      if (msg.type === 'session_state') {
+        applySessionState(msg);
+        return;
+      }
+      // Chart data is only meaningful for the session the app says is running. This also
+      // makes a message that was already in flight when Disconnect was pressed harmless.
+      if (session.phase !== 'running' || msg.symbol !== session.symbol) return;
       if (msg.type === 'candle') {
         ingestMessage(msg);
       } else if (msg.type === 'history') {
@@ -496,7 +606,10 @@
   }
 
   reconnectBtn.addEventListener('click', () => {
-    if (state.ws) state.ws.close();
+    const old = state.ws;
+    state.ws = null;  // detaches the old socket's handlers (see the `state.ws !== ws` guards in connect())
+    if (old) old.close();
+    if (state.reconnectTimer) { clearTimeout(state.reconnectTimer); state.reconnectTimer = null; }
     connect();
   });
 
@@ -634,6 +747,7 @@
       predictionBox.innerHTML = '';
       readoutSymbol.textContent = '—';
     }
+    updateLoadingNote();
   }
 
   // =====================================================================
@@ -1271,6 +1385,304 @@
     }
     volumeProfileEl.appendChild(frag);
   }
+
+
+  // =====================================================================
+  // Session screens: market picker -> symbol/timeframes form -> chart, and
+  // the Disconnect button that goes back to the picker. The page never
+  // decides on its own which phase the app is in: the app announces it in a
+  // "session_state" message (first thing on every connect, and again on every
+  // change) and this section only renders it. The page sends two commands:
+  //   {"type":"start","market","symbol","timeframes"}   and   {"type":"disconnect"}
+  // =====================================================================
+  const kResponseTimeoutMs = 15000;   // no session_state this long after a command -> tell the user
+
+  const kMarkets = {
+    binance: { name: 'Binance USD-M Futures', symbolLabel: 'Symbol', placeholder: 'e.g. BTCUSDT' },
+    capital: { name: 'Forex/CFD via Capital.com', symbolLabel: 'Epic', placeholder: 'e.g. EURUSD, GBPUSD, USDJPY, XAUUSD' },
+  };
+
+  // Mirrors the app's last session_state (null phase = no state received yet).
+  const session = { phase: null, market: null, symbol: null, timeframes: [], error: null, warnings: [] };
+  // Which screen is up while the app is idle (local navigation: picker <-> form).
+  const ui = { view: 'waiting', formMarket: null, formError: '', busyText: '', prevPhase: null };
+  // What was last typed per market, so Back / an error / the next switch starts from it.
+  const formValues = { binance: { symbol: '', timeframes: '' }, capital: { symbol: '', timeframes: '' } };
+  let lastRunningKey = null;
+  let responseTimer = null;
+
+  const launcherEl = document.getElementById('launcher');
+  const toolbar2El = document.getElementById('toolbar2');
+  const mainEl = document.getElementById('main');
+  const views = {
+    waiting: document.getElementById('viewWaiting'),
+    picker: document.getElementById('viewPicker'),
+    form: document.getElementById('viewForm'),
+    busy: document.getElementById('viewBusy'),
+  };
+  const pickerError = document.getElementById('pickerError');
+  const formTitle = document.getElementById('formTitle');
+  const symbolLabel = document.getElementById('symbolLabel');
+  const symbolInput = document.getElementById('symbolInput');
+  const timeframesInput = document.getElementById('timeframesInput');
+  const formError = document.getElementById('formError');
+  const startBtn = document.getElementById('startBtn');
+  const backBtn = document.getElementById('backBtn');
+  const busyText = document.getElementById('busyText');
+  const sessionBar = document.getElementById('sessionBar');
+  const sessionLabel = document.getElementById('sessionLabel');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const noticeBar = document.getElementById('noticeBar');
+  const noticeText = document.getElementById('noticeText');
+  const noticeClose = document.getElementById('noticeClose');
+
+  const loadingNoteEl = document.createElement('div');
+  loadingNoteEl.id = 'loadingNote';
+  chartContainer.appendChild(loadingNoteEl);
+
+  function isConnected() {
+    return !!state.ws && state.ws.readyState === WebSocket.OPEN;
+  }
+
+  function sendCommand(command) {
+    if (!isConnected()) return false;
+    state.ws.send(JSON.stringify(command));
+    return true;
+  }
+
+  function clearResponseTimer() {
+    if (responseTimer) { clearTimeout(responseTimer); responseTimer = null; }
+  }
+  function armResponseTimer(onTimeout) {
+    clearResponseTimer();
+    responseTimer = setTimeout(() => { responseTimer = null; onTimeout(); }, kResponseTimeoutMs);
+  }
+
+  // ---- everything that belongs to one session is dropped when the next one begins ----
+  function resetChartData() {
+    state.dataByTimeframe.clear();
+    state.knownTimeframes = [];
+    state.activeTimeframe = null;
+    state.smcTimeframe = null;
+    lastIndicatorsByTf.clear();
+    smcState.byTimeframe.clear();
+
+    candleSeries.setData([]);
+    volumeSeries.setData([]);
+    [smaSeries, emaSeries, bbUpperSeries, bbLowerSeries].forEach((series) => series.setData([]));
+    candleSeries.setMarkers([]);
+    activePriceLines.forEach((line) => candleSeries.removePriceLine(line));
+    activePriceLines = [];
+    activeSmcPriceLines.forEach((line) => candleSeries.removePriceLine(line));
+    activeSmcPriceLines = [];
+
+    smcZonesEl.innerHTML = '';
+    killZoneEl.innerHTML = '';
+    volumeProfileEl.innerHTML = '';
+    timeMarkersEl.innerHTML = '';
+    timeMarkersEl.style.display = 'none';
+    tabsEl.innerHTML = '';
+    smcTimeframeSelect.innerHTML = '';
+    readoutTable.innerHTML = '';
+    predictionBox.innerHTML = '';
+    readoutSymbol.textContent = '—';
+    selectedCandleContent.innerHTML = '<span class="placeholder">Click a candlestick to inspect it.</span>';
+    biasBadge.textContent = 'bias: —';
+    biasBadge.className = '';
+    sortedTimesCache = { tf: null, size: -1, times: [] };
+
+    precisionSymbol = null;       // the next symbol starts from the default axis precision again
+    pricePrecision = kMinPricePrecision;
+    applyPricePrecision();
+    updateLoadingNote();
+  }
+
+  function updateLoadingNote() {
+    const waiting = session.phase === 'running' && state.activeTimeframe === null;
+    loadingNoteEl.style.display = waiting ? 'block' : 'none';
+    if (!waiting) return;
+    loadingNoteEl.innerHTML = `<b></b> — loading history and computing indicators.<br>` +
+      `Each timeframe appears here as soon as it is ready. The first run for a symbol can take ` +
+      `several minutes; progress is shown in the terminal.`;
+    loadingNoteEl.firstChild.textContent = `${session.symbol} (${session.timeframes.join(', ')})`;
+  }
+
+  // ---- the app's phase -> what is on screen ----
+  function applySessionState(msg) {
+    clearResponseTimer();
+    ui.prevPhase = session.phase;
+    session.phase = msg.state;
+    session.market = msg.market || null;
+    session.symbol = msg.symbol || null;
+    session.timeframes = Array.isArray(msg.timeframes) ? msg.timeframes : [];
+    session.error = msg.error || null;
+    session.warnings = Array.isArray(msg.warnings) ? msg.warnings : [];
+
+    if (session.phase === 'running') {
+      // A different session (or the very first one) starts from an empty chart. The same
+      // one again - this page merely reconnected - keeps what it has and merges the snapshot.
+      const key = [session.market, session.symbol, session.timeframes.join(',')].join('|');
+      if (key !== lastRunningKey) {
+        resetChartData();
+        lastRunningKey = key;
+      }
+    } else if (session.phase === 'idle') {
+      resetChartData();
+      lastRunningKey = null;
+      // Entering idle (from anywhere else, or after a failed start) decides the screen; an
+      // idle message that merely re-syncs a page already on the picker/form leaves it alone.
+      if (session.error && session.market) {
+        showForm(session.market, session.error);
+      } else if (ui.prevPhase !== 'idle' || session.error) {
+        ui.view = 'picker';
+        ui.formError = session.error || '';
+      }
+    }
+    renderPhase();
+  }
+
+  function renderPhase() {
+    const phase = session.phase;
+    const connected = isConnected();
+    const live = phase === 'running' || phase === 'stopping';
+
+    // While the link is down the chart of a running session stays on screen, frozen, exactly
+    // as before the picker existed; every other phase falls back to the waiting screen.
+    let view;
+    if (phase === null || (!connected && phase !== 'running')) {
+      view = 'waiting';
+    } else if (phase === 'starting') {
+      view = 'busy';
+      busyText.textContent = `Connecting to ${kMarkets[session.market] ? kMarkets[session.market].name : 'the market'}` +
+        (session.symbol ? ` and checking ${session.symbol}` : '') + '…';
+    } else if (phase === 'stopping') {
+      view = 'busy';
+      busyText.textContent = `Disconnecting${session.symbol ? ' ' + session.symbol : ''}…`;
+    } else if (phase === 'running') {
+      view = null;
+    } else {
+      view = ui.view === 'form' || ui.view === 'busy' ? ui.view : 'picker';
+      if (view === 'busy') busyText.textContent = ui.busyText;
+    }
+
+    launcherEl.hidden = view === null;
+    Object.keys(views).forEach((name) => views[name].classList.toggle('active', name === view));
+    // Whatever is behind the launcher must not be reachable with the keyboard either.
+    const covered = !launcherEl.hidden;
+    toolbar2El.inert = covered;
+    mainEl.inert = covered;
+    toolbar2El.setAttribute('aria-hidden', covered ? 'true' : 'false');
+    mainEl.setAttribute('aria-hidden', covered ? 'true' : 'false');
+
+    if (view === 'picker') {
+      pickerError.textContent = ui.formError;
+      pickerError.classList.toggle('shown', !!ui.formError);
+    }
+
+    sessionBar.style.display = live ? 'flex' : 'none';
+    if (live) {
+      const market = kMarkets[session.market] ? kMarkets[session.market].name : '';
+      sessionLabel.innerHTML = '<b></b> · ' + '<span></span>';
+      sessionLabel.querySelector('b').textContent = session.symbol || '';
+      sessionLabel.querySelector('span').textContent = market;
+    }
+    disconnectBtn.disabled = !(phase === 'running' && connected);
+
+    if (phase === 'running' && session.warnings.length) {
+      noticeText.textContent = session.warnings.join('\n');
+      noticeBar.style.display = 'flex';
+    } else {
+      noticeBar.style.display = 'none';
+    }
+    updateLoadingNote();
+  }
+
+  function showPicker() {
+    ui.view = 'picker';
+    ui.formError = '';
+    renderPhase();
+  }
+
+  function showForm(market, errorText) {
+    if (!kMarkets[market]) return;
+    const info = kMarkets[market];
+    ui.view = 'form';
+    ui.formMarket = market;
+    formTitle.textContent = info.name;
+    symbolLabel.textContent = `${info.symbolLabel} (${info.placeholder})`;
+    symbolInput.placeholder = info.placeholder;
+    symbolInput.value = formValues[market].symbol;
+    timeframesInput.value = formValues[market].timeframes;
+    formError.textContent = errorText || '';
+    formError.classList.toggle('shown', !!errorText);
+    startBtn.disabled = false;
+    renderPhase();
+    // Cursor where the next keystroke is needed.
+    (symbolInput.value && !errorText ? timeframesInput : symbolInput).focus();
+  }
+
+  // ---- user actions ----
+  document.querySelectorAll('.market-btn').forEach((btn) => {
+    btn.addEventListener('click', () => showForm(btn.dataset.market));
+  });
+
+  // "1" / "2" pick a market, like the old terminal prompt - but only while the picker is
+  // showing and no text box has the focus.
+  document.addEventListener('keydown', (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (!views.picker.classList.contains('active')) return;
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (event.key === '1') showForm('binance');
+    else if (event.key === '2') showForm('capital');
+  });
+
+  backBtn.addEventListener('click', () => {
+    formValues[ui.formMarket] = { symbol: symbolInput.value, timeframes: timeframesInput.value };
+    showPicker();
+  });
+
+  document.getElementById('viewForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const market = ui.formMarket;
+    if (!kMarkets[market]) return;
+    const symbol = symbolInput.value.trim();
+    const timeframes = timeframesInput.value.trim();
+    formValues[market] = { symbol: symbolInput.value, timeframes: timeframesInput.value };
+
+    const problem = !symbol ? `${kMarkets[market].symbolLabel} must not be empty.`
+                  : !timeframes ? 'Enter at least one timeframe, e.g. 1m,15m,1h,1d.' : '';
+    if (problem) {
+      formError.textContent = problem;
+      formError.classList.add('shown');
+      return;
+    }
+    if (!sendCommand({ type: 'start', market, symbol, timeframes })) {
+      formError.textContent = 'Not connected to the Traidle app.';
+      formError.classList.add('shown');
+      return;
+    }
+    // Immediate feedback; the app's own "starting" / "running" / "idle + error" replaces it.
+    formError.classList.remove('shown');
+    ui.view = 'busy';
+    ui.busyText = `Starting ${symbol.toUpperCase()}…`;
+    renderPhase();
+    armResponseTimer(() => {
+      showForm(market, 'The Traidle app did not answer. If this page is not opened from disk or ' +
+                       'from localhost, the app ignores its commands - open web/visualizer.html directly.');
+    });
+  });
+
+  disconnectBtn.addEventListener('click', () => {
+    if (session.phase !== 'running') return;
+    if (!sendCommand({ type: 'disconnect' })) return;
+    disconnectBtn.disabled = true;
+    armResponseTimer(() => { renderPhase(); });  // re-enables the button if the app never answered
+  });
+
+  noticeClose.addEventListener('click', () => { noticeBar.style.display = 'none'; });
+
+  renderPhase();
 
   connect();
 })();

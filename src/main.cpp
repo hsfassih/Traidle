@@ -2,13 +2,14 @@
 #include "candlesticks.h"
 #include "capital.h"
 #include "pipeline_common.h"
+#include "session_manager.h"
 #include "visualization.h"
 
+#include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -16,198 +17,88 @@ using namespace std;
 
 namespace {
 
-// Port the local (loopback-only) visualization WebSocket server listens
-// on. Change here and in web/visualizer.html's port field if it conflicts
-// with something else on your machine.
+// Port the visualization WebSocket server listens on. Change here and in
+// web/visualizer.html's port field if it conflicts with something else on your
+// machine.
 constexpr unsigned short kVisualizationPort = 8765;
 
-// Capital.com data lives in fx_<epic>/ (fx_eurusd, fx_xauusd, ...), never next
-// to the Binance symbol folders: a Binance symbol such as "eurusdt" could
-// otherwise collide with a Forex epic of the same lower-cased name.
-constexpr const char* kCapitalFolderPrefix = "fx_";
+// The real market adapters, handed to the SessionManager. (The manager itself
+// does not link against binance.cpp, so tests can substitute fakes.)
+app::Backends productionBackends() {
+    app::Backends backends;
 
-enum class Market { Binance, Capital };
+    // ---- Binance USD-M Futures -------------------------------------------
+    backends.checkBinanceSymbol = binance::checkSymbol;
 
-// argv[1] ("binance" / "capital") skips the prompt, which makes the app
-// scriptable (docker run ... traidle capital). Otherwise ask; an empty answer
-// means Binance so the old "just press Enter" muscle memory keeps working.
-bool chooseMarket(int argc, char** argv, Market& market) {
-    string choice;
-    if (argc > 1) {
-        choice = pipeline::toLower(pipeline::trim(argv[1]));
-    } else {
-        cout << "Select market: [1] Binance USD-M Futures  [2] Forex/CFD via Capital.com : ";
-        if (!getline(cin, choice)) {
-            cerr << "No input provided." << endl;
-            return false;
+    // The original Binance flow: one worker thread per timeframe, each writing its
+    // own CSV under the symbol's folder. Returns once every worker has ended,
+    // which happens when `stop` fires.
+    backends.runBinance = [](const string& symbol, const vector<pipeline::TimeframeTask>& tasks,
+                             const filesystem::path& folder, pipeline::TerminalBoard& board,
+                             visualization::VisualizationServer& viz, app::StopSignal& stop) {
+        vector<thread> workers;
+        workers.reserve(tasks.size());
+        for (const auto& task : tasks) {
+            filesystem::path csvPath = folder / (task.englishName + ".csv");
+            workers.emplace_back(binance::runTimeframeStream, symbol, task, move(csvPath),
+                                 ref(board), ref(viz), &stop);
         }
-        choice = pipeline::toLower(pipeline::trim(choice));
-    }
+        for (auto& worker : workers) {
+            worker.join();
+        }
+    };
 
-    if (choice.empty() || choice == "1" || choice == "binance") {
-        market = Market::Binance;
-        return true;
-    }
-    if (choice == "2" || choice == "capital") {
-        market = Market::Capital;
-        return true;
-    }
-    cerr << "Unknown market '" << choice << "'. Choose 1 (Binance) or 2 (Capital.com)." << endl;
-    return false;
-}
+    // ---- Forex/CFD via Capital.com ---------------------------------------
+    backends.capitalPreflight = [](const string& epic, string& errorText) {
+        // Credentials come from the environment (docker --env-file, or a local .env
+        // next to the binary). loadDotEnv never overrides a variable that is already
+        // set, so the real environment always wins over the file. (It is read when a
+        // Capital.com session starts; edit .env and restart the app to change it.)
+        pipeline::loadDotEnv("./.env");
+        return capital::preflight(epic, errorText);
+    };
+    backends.runCapital = [](shared_ptr<capital::Session> session, const string& epic,
+                             const vector<pipeline::TimeframeTask>& tasks,
+                             const filesystem::path& folder, pipeline::TerminalBoard& board,
+                             visualization::VisualizationServer& viz, app::StopSignal& stop) {
+        capital::RunOptions options;
+        options.stop = &stop;
+        capital::run(move(session), epic, tasks, folder, board, viz, options);
+    };
 
-// The original Binance flow from the old main(), unchanged: symbol ->
-// timeframes -> folder lower(symbol) -> board -> visualizer -> one thread per
-// timeframe.
-int runBinance() {
-    cout << "Enter a Binance USD-M Futures symbol (e.g. BTCUSDT): ";
-    string rawSymbol;
-    if (!getline(cin, rawSymbol)) {
-        cerr << "No input provided." << endl;
-        return 1;
-    }
-    const string symbol = pipeline::toUpper(pipeline::trim(rawSymbol));
-    if (symbol.empty()) {
-        cerr << "Symbol must not be empty." << endl;
-        return 1;
-    }
-
-    cout << "Enter candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): ";
-    string rawTimeframes;
-    if (!getline(cin, rawTimeframes)) {
-        cerr << "No timeframe input provided." << endl;
-        return 1;
-    }
-
-    vector<pipeline::TimeframeTask> tasks = pipeline::buildTasks(rawTimeframes);
-    if (tasks.empty()) {
-        cerr << "No valid timeframes provided. Exiting." << endl;
-        return 1;
-    }
-
-    const string symbolFolder = pipeline::toLower(symbol);
-    error_code dirError;
-    filesystem::create_directories(symbolFolder, dirError);
-    if (dirError) {
-        cerr << "Failed to create folder '" << symbolFolder << "': " << dirError.message()
-             << endl;
-        return 1;
-    }
-
-    cout << "Streaming " << symbol << " across " << tasks.size()
-         << " timeframe(s). Closed candles are appended to CSVs under '" << symbolFolder
-         << "/'. Press Ctrl+C to exit.\n";
-
-    vector<string> labels;
-    labels.reserve(tasks.size());
-    for (const auto& task : tasks) {
-        labels.push_back(task.rawTimeframe);
-    }
-    pipeline::TerminalBoard board(labels);
-
-    // Started once, shared by every timeframe worker below (single-viewer/
-    // local by design - see visualization.h). A bind failure here only
-    // disables live charting; it never stops candle streaming, CSV
-    // writes, or indicator computation.
-    visualization::VisualizationServer vizServer(kVisualizationPort);
-    vizServer.start();
-
-    vector<thread> workers;
-    workers.reserve(tasks.size());
-    for (const auto& task : tasks) {
-        filesystem::path csvPath = filesystem::path(symbolFolder) / (task.englishName + ".csv");
-        workers.emplace_back(binance::runTimeframeStream, symbol, task, move(csvPath),
-                             ref(board), ref(vizServer));
-    }
-
-    for (auto& worker : workers) {
-        worker.join();
-    }
-    return 0;
-}
-
-// Forex/CFD via Capital.com: epic -> timeframes -> credentials -> login and
-// epic check -> folder fx_<epic> -> board -> visualizer -> feed + one worker per
-// timeframe. The pre-flight runs BEFORE the TerminalBoard exists so a missing
-// credential or a mistyped epic prints as plain text instead of fighting the
-// board's cursor control.
-int runCapital() {
-    cout << "Enter a Capital.com epic (e.g. EURUSD, GBPUSD, USDJPY, XAUUSD): ";
-    string rawEpic;
-    if (!getline(cin, rawEpic)) {
-        cerr << "No input provided." << endl;
-        return 1;
-    }
-    const string epic = pipeline::toUpper(pipeline::trim(rawEpic));
-    if (epic.empty()) {
-        cerr << "Epic must not be empty." << endl;
-        return 1;
-    }
-
-    cout << "Enter candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): ";
-    string rawTimeframes;
-    if (!getline(cin, rawTimeframes)) {
-        cerr << "No timeframe input provided." << endl;
-        return 1;
-    }
-
-    vector<pipeline::TimeframeTask> tasks = pipeline::buildTasks(rawTimeframes);
-    if (tasks.empty()) {
-        cerr << "No valid timeframes provided. Exiting." << endl;
-        return 1;
-    }
-
-    // Credentials come from the environment (docker --env-file, or a local .env
-    // next to the binary). loadDotEnv never overrides a variable that is already
-    // set, so the real environment always wins over the file.
-    pipeline::loadDotEnv("./.env");
-
-    string errorText;
-    shared_ptr<capital::Session> session = capital::preflight(epic, errorText);
-    if (!session) {
-        cerr << errorText << endl;
-        return 1;
-    }
-
-    const string folder = string(kCapitalFolderPrefix) + pipeline::toLower(epic);
-    error_code dirError;
-    filesystem::create_directories(folder, dirError);
-    if (dirError) {
-        cerr << "Failed to create folder '" << folder << "': " << dirError.message() << endl;
-        return 1;
-    }
-
-    cout << "Streaming " << epic << " across " << tasks.size()
-         << " timeframe(s). Closed candles are appended to CSVs under '" << folder
-         << "/'. Press Ctrl+C to exit.\n";
-
-    vector<string> labels;
-    labels.reserve(tasks.size());
-    for (const auto& task : tasks) {
-        labels.push_back(task.rawTimeframe);
-    }
-    pipeline::TerminalBoard board(labels);
-
-    visualization::VisualizationServer vizServer(kVisualizationPort);
-    vizServer.start();
-
-    capital::run(session, epic, tasks, filesystem::path(folder), board, vizServer);
-    return 0;
+    return backends;
 }
 
 }  // namespace
 
+// The market, symbol and timeframes are no longer asked for on the terminal:
+// the browser page (web/visualizer.html) offers the market picker, takes the
+// symbol and timeframes, and has the Disconnect button that returns to the
+// picker - all without restarting this process. See session_manager.h.
 int main(int argc, char** argv) {
-    Market market = Market::Binance;
-    if (!chooseMarket(argc, argv, market)) {
-        return 1;
+    (void)argv;
+    if (argc > 1) {
+        cerr << "Note: command-line arguments are no longer used; choose the market in the browser.\n";
     }
 
-    switch (market) {
-        case Market::Binance:
-            return runBinance();
-        case Market::Capital:
-            return runCapital();
+    // Started once for the whole process and shared by every session (single-viewer/
+    // local by design - see visualization.h). The manager registers itself with the
+    // server, so it is created first.
+    visualization::VisualizationServer vizServer(kVisualizationPort);
+    app::SessionManager manager(vizServer, productionBackends());
+    vizServer.start();
+    if (!vizServer.isRunning()) {
+        // The browser is the only way to drive the app now, so unlike before there is
+        // nothing useful to do without the server. (start() already printed the reason.)
+        cerr << "Cannot continue without the browser interface on port " << kVisualizationPort
+             << ". Free that port, or change kVisualizationPort in src/main.cpp (and the port "
+                "field in web/visualizer.html).\n";
+        return 1;
     }
-    return 1;
+    cout << "Open web/visualizer.html in your browser to choose a market, symbol and timeframes. "
+            "Press Ctrl+C to exit.\n";
+
+    for (;;) {
+        this_thread::sleep_for(chrono::hours(24));  // everything happens on the manager's and server's threads
+    }
 }

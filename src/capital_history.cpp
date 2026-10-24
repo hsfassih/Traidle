@@ -225,32 +225,49 @@ RangeParams calibrateRangeParams(capital::RestClient& rest, const string& epic) 
 }
 
 RangeParams sharedRangeParams(capital::RestClient& rest, const string& epic, const LogHandler& log) {
-    // One answer per API endpoint (host:port): `to=` is a property of the API, not of
-    // an epic or a timeframe. Keyed rather than a single global so a process that talks
-    // to more than one endpoint (the offline test runs several mock servers) never
-    // reuses one server's answer for another; in production there is exactly one key.
+    // `to=` is a property of the API, not of an epic or a timeframe, so a USABLE answer is
+    // kept per API endpoint (host:port) and shared by every worker of every session. Keyed
+    // rather than a single global so a process that talks to more than one endpoint (the
+    // offline test runs several mock servers) never reuses one server's answer for another;
+    // in production there is exactly one key.
+    //
+    // An UNUSABLE answer is different: it can merely mean that THIS epic has too little
+    // 5-minute history to calibrate against ("too little 5-minute history to calibrate"). The
+    // app now serves several epics one after another in one process (the browser's
+    // Disconnect/Start cycle), so such an answer is remembered per endpoint AND epic and
+    // never blocks deep backfill for a different epic. (Before that cycle existed a process
+    // saw exactly one epic, so the two caches were the same thing.)
     static mutex cacheMutex;
-    static map<string, RangeParams> cached;
+    static map<string, RangeParams> usable;    // endpoint -> answer
+    static map<string, RangeParams> unusable;  // endpoint + epic -> answer
     const capital::Endpoints& endpoints = rest.session().endpoints();
-    const string key = endpoints.restHost + ":" + endpoints.restPort;
+    const string endpointKey = endpoints.restHost + ":" + endpoints.restPort;
+    const string epicKey = endpointKey + "/" + epic;
 
     lock_guard<mutex> lock(cacheMutex);  // later callers wait here for the first caller's answer
-    if (const auto found = cached.find(key); found != cached.end()) {
+    if (const auto found = usable.find(endpointKey); found != usable.end()) {
+        return found->second;
+    }
+    if (const auto found = unusable.find(epicKey); found != unusable.end()) {
         return found->second;
     }
     try {
         RangeParams measured = calibrateRangeParams(rest, epic);
-        cached[key] = measured;
-        if (!measured.usable && log) {
-            log(kUnusableLogLine);
+        if (measured.usable) {
+            usable[endpointKey] = measured;
+        } else {
+            unusable[epicKey] = measured;
+            if (log) {
+                log(kUnusableLogLine);
+            }
         }
         return measured;
     } catch (const exception&) {
         // A network hiccup is not an answer about the API: do not cache it, let the
         // next caller try again, and make this caller fall back to one page.
-        RangeParams unusable;
-        unusable.note = "calibration failed";
-        return unusable;
+        RangeParams unusableNow;
+        unusableNow.note = "calibration failed";
+        return unusableNow;
     }
 }
 
@@ -305,7 +322,8 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
                              const filesystem::path& csvPath, const StatusHandler& status,
                              const LogHandler& log, indicators::IndicatorEngine& engine,
                              const historical::HistorySeedHandler& seedHistory,
-                             bool replayExisting) {
+                             bool replayExisting, const atomic<bool>* cancel) {
+    const auto cancelled = [cancel] { return cancel != nullptr && cancel->load(memory_order_relaxed); };
     try {
         // Restore indicator state and seed the visualizer from whatever is on
         // disk. Always first on the first call - even if nothing needs fetching
@@ -314,7 +332,10 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
         // the engine already holds those rows, and feeding them twice would
         // corrupt every rolling window, EMA, VWAP and OBV.
         if (replayExisting) {
-            historical::replayCsvIntoEngine(csvPath, engine, seedHistory);
+            historical::replayCsvIntoEngine(csvPath, engine, seedHistory, cancel);
+        }
+        if (cancelled()) {
+            return false;
         }
 
         const auto specOptional = candle_builder::intervalFromBinance(task.binanceInterval);
@@ -359,6 +380,9 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
 
         vector<Bar> page = rest.fetchPriceBars(epic, base.capitalResolution, kPageBars, nullopt, &malformed);
         for (;;) {
+            if (cancelled()) {
+                return false;  // nothing is written until the whole walk-back finishes, so no partial state
+            }
             // Add this page's bars, newest to oldest, that are older than everything held so far.
             size_t added = 0;
             for (size_t i = page.size(); i-- > 0;) {
@@ -449,6 +473,9 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
         ofstream csv = pipeline::openCsvAppend(csvPath);
         int64_t written = 0;
         for (const Bar& bar : toWrite) {
+            if (cancelled()) {
+                return false;  // rows written so far are complete; the next run resumes after them
+            }
             const candlesticks::Candlestick candle = candle_builder::toCandlestick(bar, spec, epic, true);
             const auto snapshot = pipeline::writeCsvRow(csv, candle, engine);
             if (seedHistory) {

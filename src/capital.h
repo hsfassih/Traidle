@@ -3,6 +3,7 @@
 #include "candle_builder.h"
 #include "capital_api.h"
 #include "pipeline_common.h"
+#include "stop_signal.h"
 #include "visualization.h"
 
 #include <boost/asio/io_context.hpp>
@@ -69,12 +70,18 @@ shared_ptr<Session> preflightWith(Credentials credentials, Endpoints endpoints, 
                                   string& errorText);
 
 struct RunOptions {
-    // Normally empty: run for the life of the process (Ctrl+C). Tests and the
-    // probe set it so run() stops the feed and workers and returns.
+    // Normally empty: run until `stop` fires (or, with neither set, for the life
+    // of the process). Tests and the probe set it so run() stops the feed and
+    // workers after that long and returns.
     optional<chrono::milliseconds> runFor;
+    // When set, run() ends as soon as stop->request() is called: the browser's
+    // Disconnect button uses this to switch symbol without restarting the app.
+    // Owned by the caller, who must keep it alive until run() returns.
+    app::StopSignal* stop = nullptr;
 };
 
-// Starts the feed thread and one worker per task, then blocks (joins them).
+// Starts the feed thread and one worker per task, then blocks (joins them) -
+// until the workers end, which is when options.stop / options.runFor fire.
 void run(shared_ptr<Session> session, const string& epic,
          const vector<pipeline::TimeframeTask>& tasks, const filesystem::path& folder,
          pipeline::TerminalBoard& board, visualization::VisualizationServer& vizServer,

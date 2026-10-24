@@ -11,6 +11,8 @@
 #include <boost/beast/websocket.hpp>
 #include <nlohmann/json.hpp>
 
+#include <atomic>
+#include <cctype>
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -40,6 +42,7 @@ constexpr size_t kMaxSmcQueueSize = 500;   // same drop-oldest policy, separate 
 constexpr size_t kHistoryDepth = 50000;    // distinct candles retained per timeframe for snapshot-on-connect
 constexpr auto kHeartbeatInterval = seconds(15);  // sent only if nothing real went out in this window
 constexpr size_t kMaxConcurrentSessions = 64;  // generous safety ceiling against a runaway reconnect loop, not a normal-usage limit
+constexpr size_t kMaxCommandBytes = 64 * 1024;  // a control message is a few hundred bytes; anything bigger is refused (read error)
 
 json optionalToJson(const optional<double>& value) {
     return value.has_value() ? json(*value) : json(nullptr);
@@ -300,6 +303,31 @@ string smcUpdateToJson(const string& symbol, const string& timeframe, const smc:
     return j.dump();
 }
 
+bool originAllowsCommands(const string& origin) {
+    if (origin.empty() || origin == "null") {
+        return true;  // a non-browser client, or a page opened straight from disk (file://)
+    }
+    const auto schemeEnd = origin.find("://");
+    if (schemeEnd == string::npos) {
+        return false;
+    }
+    const string authority = origin.substr(schemeEnd + 3);
+    string host;
+    if (!authority.empty() && authority[0] == '[') {
+        const auto close = authority.find(']');
+        if (close == string::npos) {
+            return false;
+        }
+        host = authority.substr(0, close + 1);  // "[::1]", brackets included
+    } else {
+        host = authority.substr(0, authority.find_first_of(":/"));
+    }
+    for (auto& c : host) {
+        c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+    }
+    return host == "localhost" || host == "127.0.0.1" || host == "[::1]";
+}
+
 namespace {
 
 // ---------------------------------------------------------------------------
@@ -313,9 +341,14 @@ class Session : public enable_shared_from_this<Session> {
 public:
     using ReadyHandler = function<void(const shared_ptr<Session>&)>;
     using DisconnectHandler = function<void(const shared_ptr<Session>&)>;
+    using CommandHandler = function<void(const shared_ptr<Session>&, string)>;
 
-    Session(tcp::socket socket, ReadyHandler onReady, DisconnectHandler onDisconnect)
-        : ws_(move(socket)), onReady_(move(onReady)), onDisconnect_(move(onDisconnect)) {}
+    Session(tcp::socket socket, ReadyHandler onReady, DisconnectHandler onDisconnect,
+            CommandHandler onCommand)
+        : ws_(move(socket)),
+          onReady_(move(onReady)),
+          onDisconnect_(move(onDisconnect)),
+          onCommand_(move(onCommand)) {}
 
     void run() {
         // Tightened from Beast's server-role defaults (300s idle / a ping
@@ -333,7 +366,21 @@ public:
         ws_.set_option(websocket::stream_base::decorator([](websocket::response_type& res) {
             res.set(http::field::server, "Traidle-Visualizer");
         }));
-        ws_.async_accept(beast::bind_front_handler(&Session::onAccept, shared_from_this()));
+        // The browser can now send control commands, so a single frame is capped
+        // far below anything a chart message needs (a read beyond it is an error
+        // and ends the session).
+        ws_.read_message_max(kMaxCommandBytes);
+
+        // Read the HTTP upgrade request ourselves, instead of letting
+        // ws_.async_accept() do it, purely to see its Origin header (which
+        // decides whether this viewer may send commands - see
+        // originAllowsCommands()). Everything after that is the same handshake.
+        // The raw TCP timeout covers this one read; the websocket timeouts
+        // configured above take over once the handshake starts.
+        parser_.header_limit(16 * 1024);
+        beast::get_lowest_layer(ws_).expires_after(seconds(15));
+        http::async_read_header(ws_.next_layer(), readBuffer_, parser_,
+                                beast::bind_front_handler(&Session::onRequest, shared_from_this()));
     }
 
     // Enqueues one JSON payload for this session and kicks off writing if
@@ -389,6 +436,16 @@ private:
         if (onDisconnect_) onDisconnect_(shared_from_this());
     }
 
+    void onRequest(beast::error_code ec, size_t) {
+        if (ec) return;  // no (complete) HTTP request arrived - this session is simply discarded
+        const auto& request = parser_.get();
+        if (!websocket::is_upgrade(request)) return;  // plain HTTP is not served here
+        origin_ = string(request[http::field::origin]);
+        commandsAllowed_ = originAllowsCommands(origin_);
+        beast::get_lowest_layer(ws_).expires_never();  // from here the websocket's own timeouts apply
+        ws_.async_accept(request, beast::bind_front_handler(&Session::onAccept, shared_from_this()));
+    }
+
     void onAccept(beast::error_code ec) {
         if (ec) return;  // handshake failed - this session is simply discarded
         if (onReady_) {
@@ -398,9 +455,10 @@ private:
     }
 
     void doRead() {
-        // We don't expect anything meaningful from the browser; reading is
-        // only here to detect a closed/broken connection promptly instead
-        // of writing into a dead socket until a write eventually errors.
+        // The browser's only legitimate messages are the small control commands
+        // (market/symbol/timeframes, Disconnect - see onRead); reading is also
+        // how a closed/broken connection is detected promptly instead of
+        // writing into a dead socket until a write eventually errors.
         ws_.async_read(readBuffer_, beast::bind_front_handler(&Session::onRead, shared_from_this()));
     }
 
@@ -408,6 +466,15 @@ private:
         if (ec) {
             markDead();
             return;
+        }
+        if (ws_.got_text() && onCommand_) {
+            if (commandsAllowed_) {
+                onCommand_(shared_from_this(), beast::buffers_to_string(readBuffer_.data()));
+            } else if (!warnedOrigin_) {
+                warnedOrigin_ = true;
+                cerr << "[visualizer] ignoring control commands from a page with origin '" << origin_
+                     << "' (only localhost / file:// pages may start or stop a session)\n";
+            }
         }
         readBuffer_.consume(readBuffer_.size());
         doRead();
@@ -436,11 +503,16 @@ private:
 
     websocket::stream<beast::tcp_stream> ws_;
     beast::flat_buffer readBuffer_;
+    http::request_parser<http::empty_body> parser_;  // the upgrade request, kept alive for async_accept
     deque<string> outgoing_;
     bool writing_ = false;
     bool dead_ = false;
+    string origin_;
+    bool commandsAllowed_ = false;
+    bool warnedOrigin_ = false;
     ReadyHandler onReady_;
     DisconnectHandler onDisconnect_;
+    CommandHandler onCommand_;
 };
 
 }  // namespace
@@ -453,10 +525,27 @@ struct VisualizationServer::Impl {
     tcp::acceptor acceptor;
     net::steady_timer drainTimer;
     thread ioThread;
-    bool running = false;
+    atomic<bool> running{false};
 
     vector<shared_ptr<Session>> sessions;  // every concurrently-connected viewer - touched only from ioThread
+    atomic<size_t> viewerCount{0};         // == sessions.size(), readable from any thread (see publishTimeframe)
     steady_clock::time_point lastSentAt = steady_clock::now();  // touched only from ioThread
+
+    // The application's current session-state document (see setSessionState()),
+    // sent first to every new viewer. Touched only from ioThread - or from the
+    // setting thread while the server is not running, when no ioThread exists.
+    string sessionStateJson;
+
+    // Control channel. Guarded by commandMutex, which is HELD while the handler
+    // runs: that is what lets setCommandHandler({}) guarantee that no call is
+    // still in flight once it returns. The handler only enqueues, so it is quick.
+    mutex commandMutex;
+    CommandHandler commandHandler;
+
+    // Bumped by resetSessionData(). Snapshot work queued before a reset carries
+    // the old value and is discarded instead of sending the previous session's
+    // data to viewers.
+    atomic<uint64_t> generation{0};
 
     mutex queueMutex;
     deque<VisualizationMessage> outboundQueue;
@@ -510,11 +599,23 @@ struct VisualizationServer::Impl {
                             return;
                         }
                         sessions.push_back(ready);
+                        viewerCount = sessions.size();
+                        // The session state goes first, so the page knows which screen to
+                        // show (picker / loading / chart) before any chart data arrives.
+                        if (!sessionStateJson.empty()) {
+                            ready->send(sessionStateJson);
+                        }
                         sendHistorySnapshot(ready);
                         lastSentAt = steady_clock::now();
                         cout << "[visualizer] viewer connected (" << sessions.size() << " active)\n";
                     },
-                    onDisconnect);
+                    onDisconnect,
+                    [this](const shared_ptr<Session>&, string text) {
+                        lock_guard<mutex> lock(commandMutex);
+                        if (commandHandler) {
+                            commandHandler(text);
+                        }
+                    });
                 session->run();
             }
             if (running) {
@@ -533,6 +634,7 @@ struct VisualizationServer::Impl {
         for (size_t i = 0; i < sessions.size(); ++i) {
             if (sessions[i] == gone) {
                 sessions.erase(sessions.begin() + i);
+                viewerCount = sessions.size();
                 cout << "[visualizer] viewer disconnected (" << sessions.size() << " active)\n";
                 return;
             }
@@ -572,52 +674,92 @@ struct VisualizationServer::Impl {
     // building, the now-stale task just quietly skips sending instead of
     // doing pointless work - it has no bearing on any other session.
     void sendHistorySnapshot(const shared_ptr<Session>& session) {
+        queueSnapshot(nullopt, session, /*broadcast=*/false);
+    }
+
+    // The one implementation behind both "a viewer just connected" (every
+    // timeframe, one session) and publishTimeframe() ("this timeframe just
+    // finished its startup", every session already connected).
+    //
+    //   onlyTimeframe  nullopt = every timeframe; otherwise just that one
+    //   target         the single viewer to send to (ignored when broadcasting)
+    //   broadcast      send to every viewer connected at the moment the payloads
+    //                  are ready, rather than to `target`
+    //
+    // The ring-buffer / SMC copies are taken here, on the caller's thread, under
+    // their own locks; the JSON is built on the history worker; the finished
+    // strings are posted back to ioThread. The generation counter makes a
+    // snapshot that was queued before resetSessionData() get dropped instead of
+    // delivering the previous session's data.
+    void queueSnapshot(const optional<string>& onlyTimeframe, const shared_ptr<Session>& target,
+                       bool broadcast) {
         vector<pair<string, map<int64_t, VisualizationMessage>>> snapshot;
         {
             lock_guard<mutex> lock(historyMutex);
-            snapshot.reserve(historyByTimeframe.size());
-            for (const auto& entry : historyByTimeframe) {
-                snapshot.emplace_back(entry.first, entry.second);
+            if (onlyTimeframe) {
+                const auto found = historyByTimeframe.find(*onlyTimeframe);
+                if (found != historyByTimeframe.end()) {
+                    snapshot.emplace_back(found->first, found->second);
+                }
+            } else {
+                snapshot.reserve(historyByTimeframe.size());
+                for (const auto& entry : historyByTimeframe) {
+                    snapshot.emplace_back(entry.first, entry.second);
+                }
             }
         }
 
         vector<pair<string, pair<string, smc::SmcSnapshot>>> smcSnapshotCopy;
         {
             lock_guard<mutex> lock(smcMutex);
-            smcSnapshotCopy.reserve(smcByTimeframe.size());
-            for (const auto& entry : smcByTimeframe) {
-                smcSnapshotCopy.emplace_back(entry.first, entry.second);
+            if (onlyTimeframe) {
+                const auto found = smcByTimeframe.find(*onlyTimeframe);
+                if (found != smcByTimeframe.end()) {
+                    smcSnapshotCopy.emplace_back(found->first, found->second);
+                }
+            } else {
+                smcSnapshotCopy.reserve(smcByTimeframe.size());
+                for (const auto& entry : smcByTimeframe) {
+                    smcSnapshotCopy.emplace_back(entry.first, entry.second);
+                }
             }
         }
 
-        weak_ptr<Session> weakSession = session;
-        net::io_context* iocPtr = &ioc;
+        weak_ptr<Session> weakSession = target;
+        const uint64_t queuedGeneration = generation.load();
+        Impl* self = this;
+        // Runs on ioThread: delivers one finished payload.
+        auto deliver = [self, weakSession, broadcast, queuedGeneration](string payload) {
+            net::post(self->ioc, [self, weakSession, broadcast, queuedGeneration,
+                                  payload = move(payload)]() mutable {
+                if (self->generation.load() != queuedGeneration) {
+                    return;  // a session boundary passed while this was being built
+                }
+                if (broadcast) {
+                    for (const auto& session : self->sessions) {
+                        session->send(payload);
+                    }
+                } else if (auto session = weakSession.lock()) {
+                    session->send(move(payload));
+                }
+            });
+        };
         {
             lock_guard<mutex> lock(historyTaskMutex);
-            historyTasks.push_back([iocPtr, weakSession, snapshot = move(snapshot),
+            historyTasks.push_back([deliver, snapshot = move(snapshot),
                                     smcSnapshotCopy = move(smcSnapshotCopy)]() mutable {
                 for (auto& entry : snapshot) {
                     const auto& timeframe = entry.first;
                     const auto& buffer = entry.second;
                     if (buffer.empty()) continue;
                     const string& symbol = buffer.begin()->second.symbol;
-                    string payload = toHistoryJson(symbol, timeframe, buffer);
-                    net::post(*iocPtr, [weakSession, payload = move(payload)]() mutable {
-                        if (auto session = weakSession.lock()) {
-                            session->send(move(payload));
-                        }
-                    });
+                    deliver(toHistoryJson(symbol, timeframe, buffer));
                 }
                 for (auto& entry : smcSnapshotCopy) {
                     const auto& timeframe = entry.first;
                     const auto& symbol = entry.second.first;
                     const auto& smcSnapshot = entry.second.second;
-                    string payload = smcSnapshotToJson(symbol, timeframe, smcSnapshot);
-                    net::post(*iocPtr, [weakSession, payload = move(payload)]() mutable {
-                        if (auto session = weakSession.lock()) {
-                            session->send(move(payload));
-                        }
-                    });
+                    deliver(smcSnapshotToJson(symbol, timeframe, smcSnapshot));
                 }
             });
         }
@@ -791,6 +933,60 @@ void VisualizationServer::push(VisualizationMessage message) {
 void VisualizationServer::seedHistory(VisualizationMessage message) {
     impl_->recordHistory(message);
 }
+
+void VisualizationServer::setCommandHandler(CommandHandler handler) {
+    // Taking commandMutex also waits out a call that is running right now, so
+    // after setCommandHandler({}) returns the old handler can never run again.
+    lock_guard<mutex> lock(impl_->commandMutex);
+    impl_->commandHandler = move(handler);
+}
+
+void VisualizationServer::setSessionState(const string& stateJson) {
+    if (!impl_->running.load()) {
+        impl_->sessionStateJson = stateJson;  // no I/O thread yet: nothing else can be touching it
+        return;
+    }
+    net::post(impl_->ioc, [impl = impl_.get(), stateJson]() {
+        impl->sessionStateJson = stateJson;
+        for (const auto& session : impl->sessions) {
+            session->send(stateJson);
+        }
+        impl->lastSentAt = steady_clock::now();
+    });
+}
+
+void VisualizationServer::publishTimeframe(const string& timeframe) {
+    if (!impl_->running.load() || impl_->viewerCount.load() == 0) {
+        return;  // nobody is watching; a viewer that connects later receives the snapshot on connect
+    }
+    impl_->queueSnapshot(timeframe, nullptr, /*broadcast=*/true);
+}
+
+void VisualizationServer::resetSessionData() {
+    impl_->generation.fetch_add(1);
+    {
+        lock_guard<mutex> lock(impl_->historyTaskMutex);
+        impl_->historyTasks.clear();  // snapshots of the previous session that were not built yet
+    }
+    {
+        lock_guard<mutex> lock(impl_->historyMutex);
+        impl_->historyByTimeframe.clear();
+    }
+    {
+        lock_guard<mutex> lock(impl_->smcMutex);
+        impl_->smcByTimeframe.clear();
+    }
+    {
+        lock_guard<mutex> lock(impl_->queueMutex);
+        impl_->outboundQueue.clear();
+    }
+    {
+        lock_guard<mutex> lock(impl_->smcQueueMutex);
+        impl_->smcOutboundQueue.clear();
+    }
+}
+
+bool VisualizationServer::isRunning() const { return impl_->running.load(); }
 
 void VisualizationServer::setSmcSnapshot(const string& symbol, const string& timeframe,
                                         smc::SmcSnapshot snapshot) {

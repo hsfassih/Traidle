@@ -324,9 +324,16 @@ size_t loadDotEnv(const filesystem::path& path) {
 // Timeframe validation, shared by both markets. The loop and every message in
 // it are the ones main() in binance.cpp used to contain.
 // ---------------------------------------------------------------------------
-vector<TimeframeTask> buildTasks(const string& rawTimeframes) {
+vector<TimeframeTask> buildTasks(const string& rawTimeframes, vector<string>* skipped) {
     vector<TimeframeTask> tasks;
     set<string> seenIntervals;
+    const auto skip = [skipped](const string& message) {
+        if (skipped != nullptr) {
+            skipped->push_back(message);
+        } else {
+            cerr << message << endl;
+        }
+    };
     for (const auto& piece : splitByComma(rawTimeframes)) {
         const string timeframe = trim(piece);
         if (timeframe.empty()) {
@@ -334,18 +341,17 @@ vector<TimeframeTask> buildTasks(const string& rawTimeframes) {
         }
         const auto binanceInterval = candlesticks::toBinanceInterval(timeframe);
         if (!binanceInterval.has_value()) {
-            cerr << "Skipping unsupported timeframe '" << timeframe << "'. Choose from: "
-                 << candlesticks::supportedTimeframes() << endl;
+            skip("Skipping unsupported timeframe '" + timeframe + "'. Choose from: " +
+                 candlesticks::supportedTimeframes());
             continue;
         }
         if (!seenIntervals.insert(*binanceInterval).second) {
-            cerr << "Skipping duplicate timeframe '" << timeframe << "'." << endl;
+            skip("Skipping duplicate timeframe '" + timeframe + "'.");
             continue;
         }
         const auto englishName = englishNameForInterval(*binanceInterval);
         if (!englishName.has_value()) {
-            cerr << "No CSV filename mapping for interval '" << *binanceInterval
-                 << "'; skipping." << endl;
+            skip("No CSV filename mapping for interval '" + *binanceInterval + "'; skipping.");
             continue;
         }
 

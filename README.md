@@ -7,12 +7,18 @@ A C++17 console application that streams live candles for one instrument across 
 timeframes (`1m` ... `1M`), writes every closed candle with its indicators to a CSV, computes
 SMC/ICT structures, and serves everything to the browser chart in `web/visualizer.html`.
 
-Two markets are supported; you choose one when the program starts:
+Two markets are supported; you choose one **in the browser**, after the app is running:
 
 | Market | Source | Instrument you enter | Data folder |
 |---|---|---|---|
 | Binance USD-M Futures (crypto) | public WebSocket, no key needed | symbol, e.g. `BTCUSDT` | `btcusdt/` |
 | Forex / CFD via Capital.com | live quotes, **free account + API key** | epic, e.g. `EURUSD`, `XAUUSD` | `fx_eurusd/` |
+
+The app itself no longer asks anything on the terminal. Open `web/visualizer.html`: it shows a
+market picker, then a symbol + timeframes form, then the familiar chart with a **Disconnect**
+button at the top right. Pressing Disconnect stops that symbol's feed and returns you to the
+market picker, so you can switch symbols (or markets) without restarting the container - see
+[Switching symbols without restarting](#switching-symbols-without-restarting) below.
 
 <!-- ### Prerequisites
 
@@ -36,25 +42,31 @@ Building the project locally would be a headache for you, so just pull the image
 docker pull ghcr.io/hsfassih/traidle:latest
 mkdir traidle-run
 cd traidle-run
-docker run --rm -it -p 8765:8765 -v ${PWD}:/app/data ghcr.io/hsfassih/traidle:latest
+docker run --rm -p 8765:8765 -v ${PWD}:/app/data ghcr.io/hsfassih/traidle:latest
 ```
 
 This keeps the app's working data (the candle CSVs) in a clean, dedicated directory.
 `-p 8765:8765` publishes the chart's WebSocket port so `web/visualizer.html` can connect from your
-browser. You are asked to pick the market first:
+browser. Note there is no `-it`: the app never reads from the terminal anymore, so it does not
+need (or want) an interactive TTY - everything happens in the browser. If binding port 8765 fails
+(e.g. something else is already using it), the app now prints the reason and exits immediately
+rather than continuing with no way to reach it; free the port, or publish a different one with
+`-p <host-port>:8765` and use that port number in the Port field of `web/visualizer.html`.
+
+Open `web/visualizer.html` in your browser (just double-click it, or `file://` it directly - no
+web server needed). It connects to the app on port 8765 and shows a market picker:
 
 ```
-Select market: [1] Binance USD-M Futures  [2] Forex/CFD via Capital.com :
+Select market:  [1] Binance USD-M Futures   [2] Forex/CFD via Capital.com
 ```
-
-Press Enter (or type `1`) for Binance, `2` for Capital.com. To skip the question, pass the market
-as an argument: `... ghcr.io/hsfassih/traidle:latest binance` or `... capital`.
 
 ### Binance USD-M Futures
 
+Pick Binance, then enter the symbol and timeframes in the form:
+
 ```
-Enter a Binance USD-M Futures symbol (e.g. BTCUSDT): BTCUSDT
-Enter candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): 1m,15m,1h
+Symbol (e.g. BTCUSDT): BTCUSDT
+Candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): 1m,15m,1h
 ```
 
 Closed candles are appended to `btcusdt/<timeframe>.csv`, and missing history (up to 5 years) is
@@ -81,18 +93,21 @@ account works) and an API key:
 4. Run with the file passed in:
 
    ```powershell
-   docker run --rm -it --env-file .env -p 8765:8765 -v ${PWD}:/app/data ghcr.io/hsfassih/traidle:latest capital
+   docker run --rm --env-file .env -p 8765:8765 -v ${PWD}:/app/data ghcr.io/hsfassih/traidle:latest
    ```
 
    Docker's `--env-file` keeps quotes literally, so write the values **without quotes**.
    (Without `--env-file`, Traidle also reads a `.env` in its working directory itself and does
-   understand quotes; variables that are already set in the environment always win.)
+   understand quotes; variables that are already set in the environment always win. The file is
+   read fresh each time you start a Capital.com session from the browser, so you can edit `.env`
+   and use the Disconnect button to pick it up again without restarting the container.)
 
-Then enter an epic and the timeframes:
+In `web/visualizer.html`'s market picker, choose **Forex/CFD via Capital.com**, then enter an
+epic and the timeframes in the form:
 
 ```
-Enter a Capital.com epic (e.g. EURUSD, GBPUSD, USDJPY, XAUUSD): EURUSD
-Enter candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): 1m,15m,1h,4h,1d
+Epic (e.g. EURUSD, GBPUSD, USDJPY, XAUUSD): EURUSD
+Candlestick timeframes, comma-separated (e.g. 1m,15m,1h,1d): 1m,15m,1h,4h,1d
 ```
 
 What you get:
@@ -118,6 +133,22 @@ stream; it never calls any account, position, order or confirmation endpoint, ne
 prints balances, and never prints or writes the key, the password or the session tokens. Keep
 `.env` private (it is ignored by git and Docker builds); anyone holding it can trade your account.
 Prefer the demo account while you are trying things out.
+
+### Switching symbols without restarting
+
+The **Disconnect** button at the top right of the chart (next to the connection status) ends the
+current symbol's feed and takes you back to the market picker, so you can start a different
+symbol - or the other market entirely - in the same running container. You never need to restart
+`docker run` just to change what you are watching.
+
+What happens under the hood: every worker thread for the old symbol is stopped (including an
+in-progress historical backfill, which is cancelled promptly rather than being left to finish),
+their CSV files are closed, and the chart is cleared before the picker reappears. The CSVs
+already written are untouched - starting the same symbol again later resumes from them exactly
+as a restart of the old, terminal-driven version would have. If a second browser tab is open, it
+is kept in sync: it is shown the same picker/form/chart state as the tab that pressed Disconnect
+or Start, and a start request from a tab that is not the active one is simply ignored while a
+session is already running.
 
 ### Notes and limitations
 

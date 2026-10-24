@@ -76,6 +76,35 @@ constexpr size_t kHighColumn = 20;
 constexpr size_t kLowColumn = 21;
 constexpr size_t kCloseColumn = 22;
 
+// ---------------------------------------------------------------------------
+// Cancellation. `cancel` is an optional flag owned by the caller (see
+// ensureContinuousHistory's comment in the header); Cancelled is thrown from
+// the waits below and caught at the top of ensureContinuousHistory, so the
+// rate limiter and the 429 backoff - which can sleep for a minute - never delay
+// a stop request.
+// ---------------------------------------------------------------------------
+struct Cancelled {};
+
+bool isCancelled(const atomic<bool>* cancel) {
+    return cancel != nullptr && cancel->load(memory_order_relaxed);
+}
+
+// Sleeps for `total`, waking every 100 ms to look at the flag; throws Cancelled
+// as soon as it is set.
+void sleepUnlessCancelled(steady_clock::duration total, const atomic<bool>* cancel) {
+    const auto end = steady_clock::now() + total;
+    for (;;) {
+        if (isCancelled(cancel)) {
+            throw Cancelled{};
+        }
+        const auto left = end - steady_clock::now();
+        if (left <= steady_clock::duration::zero()) {
+            return;
+        }
+        this_thread::sleep_for(min<steady_clock::duration>(left, milliseconds(100)));
+    }
+}
+
 int requestWeightForLimit(int limit) {
     // Weight table from GET /fapi/v1/klines docs.
     if (limit < 100) return 1;
@@ -97,9 +126,12 @@ public:
         return limiter;
     }
 
-    void throttle(int weight) {
+    void throttle(int weight, const atomic<bool>* cancel = nullptr) {
         unique_lock<mutex> lock(mutex_);
         for (;;) {
+            if (isCancelled(cancel)) {
+                throw Cancelled{};
+            }
             prune(steady_clock::now());
             if (usedWeight_ + weight <= kSafeWeightPerMinute) {
                 events_.emplace_back(steady_clock::now(), weight);
@@ -109,7 +141,7 @@ public:
             const auto elapsed = steady_clock::now() - events_.front().first;
             const auto wait = duration_cast<milliseconds>(seconds(60) - elapsed);
             lock.unlock();
-            this_thread::sleep_for(max(wait, milliseconds(200)));
+            sleepUnlessCancelled(max(wait, milliseconds(200)), cancel);
             lock.lock();
         }
     }
@@ -325,7 +357,8 @@ optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
 // (candle, snapshot) pair - see HistorySeedHandler's declaration for why.
 void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
                                   indicators::IndicatorEngine& engine,
-                                  const HistorySeedHandler& seedHistory) {
+                                  const HistorySeedHandler& seedHistory,
+                                  const atomic<bool>* cancel = nullptr) {
     if (!filesystem::exists(csvPath)) {
         return;
     }
@@ -337,6 +370,9 @@ void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
     string line;
     bool isHeaderLine = true;
     while (getline(file, line)) {
+        if (isCancelled(cancel)) {
+            return;  // a multi-million-row 1m CSV takes a while: honour a stop request mid-replay
+        }
         if (!line.empty() && line.back() == '\r') {
             line.pop_back();
         }
@@ -388,11 +424,12 @@ public:
     KlineHistoryConnection(net::io_context& ioc, ssl::context& ctx) : ioc_(ioc), ctx_(ctx) {}
 
     vector<candlesticks::Candlestick> fetchPage(const string& symbol, const string& interval,
-                                                 int64_t startTimeMs, int64_t endTimeMs, int limit) {
+                                                 int64_t startTimeMs, int64_t endTimeMs, int limit,
+                                                 const atomic<bool>* cancel = nullptr) {
         for (int attempt = 0; attempt < 2; ++attempt) {
             try {
                 ensureConnected();
-                return fetchPageOnce(symbol, interval, startTimeMs, endTimeMs, limit);
+                return fetchPageOnce(symbol, interval, startTimeMs, endTimeMs, limit, cancel);
             } catch (const ConnectionLost&) {
                 stream_.reset();
             }
@@ -422,7 +459,7 @@ private:
 
     vector<candlesticks::Candlestick> fetchPageOnce(const string& symbol, const string& interval,
                                                      int64_t startTimeMs, int64_t endTimeMs,
-                                                     int limit) {
+                                                     int limit, const atomic<bool>* cancel) {
         const string target = "/fapi/v1/klines?symbol=" + symbol + "&interval=" + interval +
                                "&startTime=" + to_string(startTimeMs) +
                                "&endTime=" + to_string(endTimeMs) +
@@ -433,7 +470,7 @@ private:
 
         constexpr int kMaxRetries = 6;
         for (int retry = 0;; ++retry) {
-            RateLimiter::instance().throttle(requestWeightForLimit(limit));
+            RateLimiter::instance().throttle(requestWeightForLimit(limit), cancel);
 
             beast::error_code writeError;
             http::write(*stream_, request, writeError);
@@ -471,7 +508,7 @@ private:
                         // Keep the default backoff if the header isn't a plain integer.
                     }
                 }
-                this_thread::sleep_for(backoff);
+                sleepUnlessCancelled(backoff, cancel);
                 if (!response.keep_alive()) {
                     stream_.reset();
                     ensureConnected();
@@ -523,15 +560,16 @@ optional<int64_t> lastStoredCsvOpenTimeMs(const filesystem::path& csvPath) {
 }
 
 void replayCsvIntoEngine(const filesystem::path& csvPath, indicators::IndicatorEngine& engine,
-                         const HistorySeedHandler& seedHistory) {
-    replayExistingRowsIntoEngine(csvPath, engine, seedHistory);
+                         const HistorySeedHandler& seedHistory, const atomic<bool>* cancel) {
+    replayExistingRowsIntoEngine(csvPath, engine, seedHistory, cancel);
 }
 
 bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const string& symbol,
                               const string& binanceInterval, const filesystem::path& csvPath,
                               const StatusHandler& status, const LogHandler& log,
                               indicators::IndicatorEngine& engine,
-                              const HistorySeedHandler& seedHistory) {
+                              const HistorySeedHandler& seedHistory,
+                              const atomic<bool>* cancel) {
     try {
         // Restore the engine's internal state (rolling windows, seeded
         // EMAs, VWAP's daily accumulator, OBV's running total) from
@@ -540,7 +578,10 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
         // first - even in the "already continuous, nothing to backfill"
         // early-return case just below, the engine still needs to be
         // caught up before it's handed to the live path.
-        replayExistingRowsIntoEngine(csvPath, engine, seedHistory);
+        replayExistingRowsIntoEngine(csvPath, engine, seedHistory, cancel);
+        if (isCancelled(cancel)) {
+            return false;
+        }
 
         int64_t nextNeededOpenTimeMs = nowMs() - kHistoryWindowMs;
         if (auto last = lastStoredOpenTimeMs(csvPath)) {
@@ -567,14 +608,20 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
                 break;
             }
 
+            if (isCancelled(cancel)) {
+                return false;
+            }
             auto page = connection.fetchPage(symbol, binanceInterval, nextNeededOpenTimeMs,
-                                              currentNowMs, kMaxPageLimit);
+                                              currentNowMs, kMaxPageLimit, cancel);
             if (page.empty()) {
                 break;  // no more data in range (e.g. symbol younger than 3 years)
             }
 
             bool wroteAny = false;
             for (const auto& candle : page) {
+                if (isCancelled(cancel)) {
+                    return false;  // every row written so far is complete; the next run resumes here
+                }
                 if (candle.closeTime + kClosedSafetyMarginMs > currentNowMs) {
                     // Still forming as of this check - leave it for the live
                     // path (fetchCurrentCandle / WebSocket) to pick up.
@@ -616,6 +663,8 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
             log("history backfill complete: added " + to_string(fetchedCount) + " candle(s)");
         }
         return true;
+    } catch (const Cancelled&) {
+        return false;  // stop requested during a rate-limit / 429 wait: not an error, nothing to report
     } catch (const exception& e) {
         log(string("history backfill failed: ") + e.what());
         return false;

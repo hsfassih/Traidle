@@ -6,6 +6,7 @@
 #include "indicators.h"
 #include "pipeline_common.h"
 
+#include <atomic>
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -92,12 +93,17 @@ FormingSeed fetchFormingSeed(capital::Session& session, capital::RestClient& res
 // `replayExisting` is true for the first call on an engine (restores indicator
 // state from the CSV) and MUST be false for any repeat catch-up call on the same
 // engine - see the comment in the .cpp.
+//
+// `cancel`, if provided, is polled between pages and between CSV rows (see the
+// same parameter on historical::ensureContinuousHistory). When it reads true the
+// function returns false quietly; rows already written are complete.
 // ---------------------------------------------------------------------------
 bool ensureContinuousHistory(capital::Session& session, capital::RestClient& rest,
                              const string& epic, const pipeline::TimeframeTask& task,
                              const filesystem::path& csvPath, const StatusHandler& status,
                              const LogHandler& log, indicators::IndicatorEngine& engine,
                              const historical::HistorySeedHandler& seedHistory,
-                             bool replayExisting = true);
+                             bool replayExisting = true,
+                             const atomic<bool>* cancel = nullptr);
 
 }  // namespace capital_history

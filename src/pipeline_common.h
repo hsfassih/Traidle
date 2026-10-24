@@ -124,7 +124,11 @@ size_t loadDotEnv(const filesystem::path& path);
 
 // The timeframe-validation loop that used to live in Binance's main(): same
 // messages, same skipping rules, shared by both markets. Returns an empty
-// vector when nothing valid was given (the caller prints the final error).
-vector<TimeframeTask> buildTasks(const string& rawTimeframes);
+// vector when nothing valid was given (the caller reports the final error).
+//
+// Each skipped entry produces one message ("Skipping unsupported timeframe ...").
+// With `skipped` the messages are appended there (the browser shows them next to
+// the chart); without it they go to stderr, exactly as before.
+vector<TimeframeTask> buildTasks(const string& rawTimeframes, vector<string>* skipped = nullptr);
 
 }  // namespace pipeline

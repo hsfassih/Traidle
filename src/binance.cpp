@@ -69,6 +69,21 @@ constexpr auto kPort = "443";
 constexpr auto kWsHost = "fstream.binance.com";
 constexpr auto kWsPort = "443";
 
+// Thrown by fetchCurrentCandle() for a non-200 answer. A runtime_error subclass
+// with the same message as before, so every existing `catch (const exception&)`
+// behaves exactly as it did; it only additionally carries the HTTP status so
+// binance::checkSymbol() can tell "invalid symbol" (400) from everything else.
+class HttpStatusError : public runtime_error {
+public:
+    explicit HttpStatusError(int status)
+        : runtime_error("Binance REST request failed with HTTP " + to_string(status)),
+          status_(status) {}
+    int status() const { return status_; }
+
+private:
+    int status_;
+};
+
 // ---------------------------------------------------------------------------
 // REST fetch (byte-for-byte the original, validated implementation)
 // ---------------------------------------------------------------------------
@@ -107,8 +122,7 @@ optional<candlesticks::Candlestick> fetchCurrentCandle(
         throw beast::system_error(shutdownError);
     }
     if (response.result() != http::status::ok) {
-        throw runtime_error("Binance REST request failed with HTTP " +
-                            to_string(response.result_int()));
+        throw HttpStatusError(static_cast<int>(response.result_int()));
     }
 
     return candlesticks::parseKlineResponse(json::parse(response.body()), symbol);
@@ -221,6 +235,27 @@ private:
 
 namespace binance {
 
+// Mistyped-symbol check used by the session manager before it starts any worker.
+// See the declaration in binance.h for the exact (deliberately lenient) contract.
+bool checkSymbol(const string& symbol, string& errorText) {
+    try {
+        net::io_context ioc;
+        ssl::context ctx(ssl::context::tlsv12_client);
+        // ctx.load_verify_file("C:/certs/cacert.pem"); // same local-Windows switch as in runTimeframeStream below
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+        fetchCurrentCandle(ioc, ctx, symbol, "1m");
+    } catch (const HttpStatusError& e) {
+        if (e.status() == 400) {
+            errorText = "Unknown Binance USD-M Futures symbol '" + symbol + "'";
+            return false;
+        }
+    } catch (const exception&) {
+        // Network trouble etc.: not an answer about the symbol - let the workers handle it.
+    }
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // One fully isolated worker per timeframe: own io_context/ssl::context, own
 // CSV file, own REST-priming/WS-reconnect/watchdog/REST-fallback state, and
@@ -228,10 +263,24 @@ namespace binance {
 // timeframe cannot affect any other.
 // ---------------------------------------------------------------------------
 void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::path csvPath,
-                        TerminalBoard& board, visualization::VisualizationServer& vizServer) {
+                        TerminalBoard& board, visualization::VisualizationServer& vizServer,
+                        app::StopSignal* stop) {
     const string label = task.rawTimeframe;
     try {
+        // Declared first so it is destroyed last (see the guard just below).
         net::io_context ioc;
+        // Registered so stop->request() makes ioc.run() return. Removed again before
+        // `ioc` is destroyed (guards run in reverse declaration order).
+        if (stop != nullptr) {
+            stop->add(&ioc);
+        }
+        auto stopGuard = app::onScopeExit([&] {
+            if (stop != nullptr) {
+                stop->remove(&ioc);
+            }
+        });
+        const auto stopRequested = [stop] { return stop != nullptr && stop->stopped(); };
+
         ssl::context ctx(ssl::context::tlsv12_client);
          // ctx.load_verify_file("C:/certs/cacert.pem"); // for locally running on windows without docker
         ctx.set_default_verify_paths();
@@ -287,7 +336,11 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
                 // IndicatorEngine's own replay just saw.
                 smcReplayCandles.push_back(candle);
                 smcReplayAtrs.push_back(snapshot.atr);
-            });
+            },
+            stop != nullptr ? stop->flag() : nullptr);
+        if (stopRequested()) {
+            return;  // Disconnect pressed during the backfill: abandon this timeframe quietly
+        }
         if (!historyOk) {
             board.log("[" + label +
                       "] historical backfill did not fully complete; continuing with live data "
@@ -307,6 +360,13 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
         smcReplayAtrs.clear();
         smcReplayAtrs.shrink_to_fit();
         vizServer.setSmcSnapshot(symbol, label, smcEngine.currentSnapshot());
+        // The history and SMC structures are now complete: hand this timeframe's
+        // snapshot to a browser that is already connected (one that connects later
+        // gets it on connect instead). See VisualizationServer::publishTimeframe.
+        vizServer.publishTimeframe(label);
+        if (stopRequested()) {
+            return;
+        }
 
         ofstream csv = openCsvAppend(csvPath);
 
@@ -380,6 +440,9 @@ void runTimeframeStream(const string& symbol, TimeframeTask task, filesystem::pa
             }
         } catch (const exception& e) {
             board.log("[" + label + "] Initial REST fetch failed: " + e.what());
+        }
+        if (stopRequested()) {
+            return;
         }
 
         net::steady_timer pollTimer(ioc);
