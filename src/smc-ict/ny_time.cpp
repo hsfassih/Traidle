@@ -13,7 +13,7 @@ constexpr int64_t kEstOffsetMs = -5 * kMsPerHour;
 constexpr int64_t kEdtOffsetMs = -4 * kMsPerHour;
 
 // Portable UTC struct-tm -> epoch-seconds, matching the existing
-// timegm/_mkgmtime split already used in historical_get.cpp.
+// timegm/_mkgmtime split also used by the CSV history utilities.
 time_t toEpochSecondsUtc(tm t) {
 #if defined(_WIN32)
     return _mkgmtime(&t);

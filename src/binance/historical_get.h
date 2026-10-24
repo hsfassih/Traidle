@@ -1,6 +1,7 @@
 #pragma once
 
-#include "indicators.h"
+#include "../utils/csv_history.h"
+#include "../utils/indicators.h"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -33,8 +34,10 @@
 // fetchCurrentCandle() in binance.cpp. It reuses
 // candlesticks::parseKlineResponse() (by wrapping each row of a historical
 // page as its own single-row response) instead of duplicating validation
-// logic, and it owns its own small REST client, CSV read/write helpers, and
-// a process-wide rate limiter so it stays fully independent of the
+// logic, and it owns its own small REST client, Binance-specific CSV backfill
+// writer, and a process-wide rate limiter. Shared CSV replay and resume-point
+// handling lives in utils/csv_history so both market adapters can use it.
+// This keeps the Binance downloader independent of the
 // live-streaming code path in binance.cpp.
 // ---------------------------------------------------------------------------
 namespace historical {
@@ -51,8 +54,8 @@ namespace historical {
 // what causes the terminal to fall apart on a large backfill: hundreds of
 // scroll lines break the fixed board's relative cursor-movement math once
 // the console has to scroll past its buffer.
-using StatusHandler = std::function<void(const std::string&)>;
-using LogHandler = std::function<void(const std::string&)>;
+using StatusHandler = csv_history::StatusHandler;
+using LogHandler = csv_history::LogHandler;
 
 // Invoked once per candle this module processes - both for every row
 // already on disk that gets replayed into the engine on startup, and for
@@ -61,14 +64,13 @@ using LogHandler = std::function<void(const std::string&)>;
 // write. Entirely optional and side-effect-free from this module's own
 // point of view: it exists purely so an interested caller can observe
 // that data without this module needing any awareness of who's listening
-// or why. Currently used by binance.cpp to seed the visualization layer's
+// or why. Used by both market adapters to seed the visualization layer's
 // per-timeframe history ring buffer, so a browser connecting right after
-// startup has recent context to draw immediately - but historical_get.cpp
+// startup has recent context to draw immediately - but the CSV history utility
 // itself has no dependency on (or knowledge of) the visualization module,
 // keeping the two fully decoupled. Left default-constructed (a no-op) by
 // callers that have no use for it.
-using HistorySeedHandler =
-    std::function<void(const candlesticks::Candlestick&, const indicators::IndicatorSnapshot&)>;
+using HistorySeedHandler = csv_history::HistorySeedHandler;
 
 // Backfills csvPath for `symbol`/`binanceInterval` until it is caught up to
 // "now". Returns true once caught up (including the trivial case where
@@ -111,27 +113,5 @@ bool ensureContinuousHistory(boost::asio::io_context& ioc, boost::asio::ssl::con
                               const LogHandler& log, indicators::IndicatorEngine& engine,
                               const HistorySeedHandler& seedHistory = HistorySeedHandler{},
                               const std::atomic<bool>* cancel = nullptr);
-
-// Two thin public wrappers around helpers that were already in this file (in
-// the anonymous namespace), added so the Capital.com backfill
-// (capital_history.cpp) can reuse the exact same CSV resume-point scan and
-// CSV replay instead of duplicating them. They change nothing about
-// ensureContinuousHistory() or Binance behavior.
-//
-// Open time (epoch ms) of the last fully-formed row in csvPath, or nullopt if
-// the file is missing/has no valid data row. Named lastStoredCsvOpenTimeMs
-// rather than lastStoredOpenTimeMs on purpose: the private helper it wraps
-// already has that exact name and signature in this namespace, and declaring
-// a second one would make the unmodified call inside ensureContinuousHistory()
-// ambiguous.
-std::optional<int64_t> lastStoredCsvOpenTimeMs(const std::filesystem::path& csvPath);
-
-// Replays every existing data row of csvPath through `engine` (restoring its
-// rolling state) and hands each (candle, snapshot) pair to `seedHistory`.
-// Stops early (leaving the engine part-way replayed - the caller must then
-// discard it) once `cancel` reads true.
-void replayCsvIntoEngine(const std::filesystem::path& csvPath, indicators::IndicatorEngine& engine,
-                         const HistorySeedHandler& seedHistory,
-                         const std::atomic<bool>* cancel = nullptr);
 
 }  // namespace historical

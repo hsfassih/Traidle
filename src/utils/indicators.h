@@ -26,7 +26,7 @@ using namespace std;
 //
 // To survive a restart without losing that warm-up progress, every already
 // -stored CSV row must be replayed back through update() (oldest to
-// newest) before any new candle is processed. historical_get.cpp owns that
+// newest) before any new candle is processed. csv_history owns that
 // replay, since it already owns CSV-reading logic; this module only knows
 // how to consume one candle at a time and does not read or write files
 // itself.

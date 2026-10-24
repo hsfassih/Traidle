@@ -14,6 +14,8 @@ Capital.com 15-minute pagination now treats only an older-page HTTP 404 with `er
 
 The terminal renderer preserves closed candles as permanent lines and redraws only the current forming candle in place. It uses compact, width-aware output to prevent terminal wrapping from turning carriage-return updates into additional visible rows.
 
+The source tree is organized into `src/binance`, `src/capital`, and `src/utils`. Shared CSV resume-point scanning and indicator replay are implemented in `utils/csv_history`, so Capital history no longer depends on the Binance downloader. CMake source lists and includes have been updated for the organization.
+
 ## Recent Frontend Changes (web/visualizer.html, 2026-09-26)
 
 - Kill Zone bands were invisible: LWC pane canvases are z-index 1 (opaque) / 2 and the overlay sat at z-index 0. All overlays now use z-index >= 3.

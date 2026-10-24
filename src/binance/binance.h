@@ -1,8 +1,8 @@
 #pragma once
 
-#include "pipeline_common.h"
-#include "stop_signal.h"
-#include "visualization.h"
+#include "../utils/pipeline_common.h"
+#include "../utils/stop_signal.h"
+#include "../visualization.h"
 
 #include <filesystem>
 #include <string>

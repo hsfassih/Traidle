@@ -1,7 +1,7 @@
 #include "historical_get.h"
 
-#include "candlesticks.h"
-#include "indicators.h"
+#include "../utils/candlesticks.h"
+#include "../utils/indicators.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -63,18 +63,6 @@ constexpr int64_t kClosedSafetyMarginMs = 2000;
 // each thread also makes). We stay well under that so backfilling never
 // crowds out the live path or risks a 429/418 ban.
 constexpr int kSafeWeightPerMinute = 900;
-
-// CSV column layout: timestamp(1) + volume(4) + indicators(14) + OHLC(4).
-// Kept as named constants since both the resume-point scan and the replay
-// reader below need to agree on exactly where each field lives.
-constexpr size_t kTotalColumns = 23;
-constexpr size_t kBaseVolumeColumn = 1;
-constexpr size_t kFirstIndicatorColumn = 5;
-constexpr size_t kLastIndicatorColumn = 18;  // inclusive
-constexpr size_t kOpenColumn = 19;
-constexpr size_t kHighColumn = 20;
-constexpr size_t kLowColumn = 21;
-constexpr size_t kCloseColumn = 22;
 
 // ---------------------------------------------------------------------------
 // Cancellation. `cancel` is an optional flag owned by the caller (see
@@ -177,24 +165,6 @@ string formatUtcTimestamp(int64_t epochMs) {
     return oss.str();
 }
 
-optional<int64_t> parseUtcTimestampToEpochMs(const string& field) {
-    tm parsed{};
-    istringstream iss(field);
-    iss >> get_time(&parsed, "%Y-%m-%d %H:%M:%S");
-    if (iss.fail()) {
-        return nullopt;
-    }
-#if defined(_WIN32)
-    const time_t seconds = _mkgmtime(&parsed);
-#else
-    const time_t seconds = timegm(&parsed);
-#endif
-    if (seconds == static_cast<time_t>(-1)) {
-        return nullopt;
-    }
-    return static_cast<int64_t>(seconds) * 1000;
-}
-
 string formatPrice(double price) {
     ostringstream oss;
     oss << setprecision(10) << defaultfloat << price;
@@ -230,187 +200,6 @@ indicators::IndicatorSnapshot writeRow(ofstream& csv, const candlesticks::Candle
         << formatPrice(candle.close) << '\n';
     csv.flush();
     return snapshot;
-}
-
-// Splits one CSV data line into its comma-separated fields. Shared by the
-// resume-point scanner and the full-file replay reader below so the two
-// can never disagree about how a row is tokenized.
-vector<string> splitCsvLine(const string& line) {
-    vector<string> fields;
-    stringstream fieldStream(line);
-    string field;
-    while (getline(fieldStream, field, ',')) {
-        fields.push_back(field);
-    }
-    return fields;
-}
-
-// Reads only the tail of the file (cheap even for a multi-million-row 1m
-// CSV) and walks backwards line by line, skipping the header and any
-// trailing blank/torn line, to find the last row whose timestamp parses
-// cleanly. Returns that row's open time in epoch ms, or nullopt if the file
-// doesn't exist / has no valid data row yet (both mean "start from scratch,
-// 3 years back").
-optional<int64_t> lastStoredOpenTimeMs(const filesystem::path& csvPath) {
-    if (!filesystem::exists(csvPath)) {
-        return nullopt;
-    }
-    ifstream file(csvPath, ios::binary);
-    if (!file.is_open()) {
-        return nullopt;
-    }
-    file.seekg(0, ios::end);
-    const streamoff size = file.tellg();
-    if (size <= 0) {
-        return nullopt;
-    }
-    constexpr streamoff kTailBytes = 8192;
-    const streamoff tail = min(size, kTailBytes);
-    file.seekg(size - tail);
-    string buffer(static_cast<size_t>(tail), '\0');
-    file.read(buffer.data(), tail);
-
-    // If the tail doesn't end in a newline, the final line is still being
-    // written (or was torn by a crash mid-write) - drop it unconditionally
-    // rather than risk trusting a half-written row.
-    const bool endsWithNewline = !buffer.empty() && (buffer.back() == '\n');
-
-    vector<string> lines;
-    stringstream ss(buffer);
-    string line;
-    while (getline(ss, line)) {
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-        lines.push_back(line);
-    }
-    if (!lines.empty() && !endsWithNewline) {
-        lines.pop_back();
-    }
-
-    for (auto it = lines.rbegin(); it != lines.rend(); ++it) {
-        if (it->rfind("timestamp,", 0) == 0 || it->empty()) {
-            continue;
-        }
-
-        // Require a fully-formed row (timestamp + 4 volume + 14 indicator
-        // + 4 OHLC = 23 columns total) before trusting it as a resume
-        // point, so a row corrupted or truncated by a mid-write crash is
-        // skipped in favor of the last complete one rather than silently
-        // accepted with garbage/partial values.
-        const vector<string> fields = splitCsvLine(*it);
-        if (fields.size() != kTotalColumns) {
-            continue;
-        }
-
-        // Indices 1-4 (volume) and 19-22 (OHLC) must always be populated,
-        // parseable numbers. Indices 5-18 (the 14 indicator columns) may
-        // legitimately be an empty cell during that indicator's warm-up
-        // period - that is expected, valid data, not corruption, so a
-        // blank there does not disqualify the row.
-        bool fieldsValid = true;
-        for (size_t i = 1; i < fields.size(); ++i) {
-            const bool isIndicatorColumn = (i >= kFirstIndicatorColumn && i <= kLastIndicatorColumn);
-            if (isIndicatorColumn && fields[i].empty()) {
-                continue;
-            }
-            try {
-                size_t consumed = 0;
-                stod(fields[i], &consumed);
-                fieldsValid = fieldsValid && (consumed == fields[i].size());
-            } catch (const exception&) {
-                fieldsValid = false;
-            }
-            if (!fieldsValid) {
-                break;
-            }
-        }
-        if (!fieldsValid) {
-            continue;
-        }
-
-        if (auto ms = parseUtcTimestampToEpochMs(fields[0])) {
-            return ms;
-        }
-    }
-    return nullopt;
-}
-
-// Reads every existing data row in csvPath (if any) and replays it through
-// `engine`, oldest to newest (i.e. plain file order - candles are always
-// appended in chronological order), so the engine's internal state is
-// exactly as if this run had been going the whole time instead of
-// restarting. Only the columns IndicatorEngine::update() actually reads
-// (open time, OHLC, base volume) are reconstructed from the CSV; `closed`
-// is set explicitly to true below (every row on disk represents a candle
-// that was already closed at write time - the default-constructed value
-// would otherwise read as false, which is wrong now that a `closed` flag
-// is a genuine part of the wire format the visualization layer consumes).
-// A row that doesn't match the current 23-column schema, or whose OHLCV
-// cells don't parse, is skipped rather than aborting the whole replay -
-// crash-torn or stale-schema rows are exactly what the resume-point
-// scanner above is already designed to tolerate at the very end of the
-// file, and a handful of skipped rows in the middle cannot happen under
-// normal operation.
-//
-// If `seedHistory` is set, it's invoked with each successfully-replayed
-// (candle, snapshot) pair - see HistorySeedHandler's declaration for why.
-void replayExistingRowsIntoEngine(const filesystem::path& csvPath,
-                                  indicators::IndicatorEngine& engine,
-                                  const HistorySeedHandler& seedHistory,
-                                  const atomic<bool>* cancel = nullptr) {
-    if (!filesystem::exists(csvPath)) {
-        return;
-    }
-    ifstream file(csvPath);
-    if (!file.is_open()) {
-        return;
-    }
-
-    string line;
-    bool isHeaderLine = true;
-    while (getline(file, line)) {
-        if (isCancelled(cancel)) {
-            return;  // a multi-million-row 1m CSV takes a while: honour a stop request mid-replay
-        }
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
-        if (isHeaderLine) {
-            isHeaderLine = false;
-            continue;
-        }
-        if (line.empty()) {
-            continue;
-        }
-
-        const vector<string> fields = splitCsvLine(line);
-        if (fields.size() != kTotalColumns) {
-            continue;
-        }
-
-        const auto openTimeMs = parseUtcTimestampToEpochMs(fields[0]);
-        if (!openTimeMs.has_value()) {
-            continue;
-        }
-
-        try {
-            candlesticks::Candlestick candle{};
-            candle.openTime = *openTimeMs;
-            candle.baseVolume = stod(fields[kBaseVolumeColumn]);
-            candle.open = stod(fields[kOpenColumn]);
-            candle.high = stod(fields[kHighColumn]);
-            candle.low = stod(fields[kLowColumn]);
-            candle.close = stod(fields[kCloseColumn]);
-            candle.closed = true;
-            const auto snapshot = engine.update(candle);
-            if (seedHistory) {
-                seedHistory(candle, snapshot);
-            }
-        } catch (const exception&) {
-            continue;  // corrupt row - skip it rather than abort the whole replay
-        }
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -554,16 +343,6 @@ int64_t nowMs() {
 
 }  // namespace
 
-// Public wrappers declared in historical_get.h - see the comment there.
-optional<int64_t> lastStoredCsvOpenTimeMs(const filesystem::path& csvPath) {
-    return lastStoredOpenTimeMs(csvPath);
-}
-
-void replayCsvIntoEngine(const filesystem::path& csvPath, indicators::IndicatorEngine& engine,
-                         const HistorySeedHandler& seedHistory, const atomic<bool>* cancel) {
-    replayExistingRowsIntoEngine(csvPath, engine, seedHistory, cancel);
-}
-
 bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const string& symbol,
                               const string& binanceInterval, const filesystem::path& csvPath,
                               const StatusHandler& status, const LogHandler& log,
@@ -578,13 +357,13 @@ bool ensureContinuousHistory(net::io_context& ioc, ssl::context& ctx, const stri
         // first - even in the "already continuous, nothing to backfill"
         // early-return case just below, the engine still needs to be
         // caught up before it's handed to the live path.
-        replayExistingRowsIntoEngine(csvPath, engine, seedHistory, cancel);
+        csv_history::replayCsvIntoEngine(csvPath, engine, seedHistory, cancel);
         if (isCancelled(cancel)) {
             return false;
         }
 
         int64_t nextNeededOpenTimeMs = nowMs() - kHistoryWindowMs;
-        if (auto last = lastStoredOpenTimeMs(csvPath)) {
+        if (auto last = csv_history::lastStoredCsvOpenTimeMs(csvPath)) {
             nextNeededOpenTimeMs = *last + 1;
         }
 

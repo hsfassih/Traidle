@@ -1,11 +1,11 @@
 #include "capital.h"
 
-#include "candlesticks.h"
+#include "../utils/candlesticks.h"
 #include "capital_history.h"
-#include "historical_get.h"
-#include "indicators.h"
-#include "smc-ict/smc_engine.h"
-#include "visualization.h"
+#include "../utils/csv_history.h"
+#include "../utils/indicators.h"
+#include "../smc-ict/smc_engine.h"
+#include "../visualization.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -1126,7 +1126,7 @@ void runTimeframeWorker(shared_ptr<Session> session, CapitalFeed& feed, app::Sto
         vizServer.publishTimeframe(label);
 
         csv = pipeline::openCsvAppend(csvPath);
-        if (const auto stored = historical::lastStoredCsvOpenTimeMs(csvPath)) {
+        if (const auto stored = csv_history::lastStoredCsvOpenTimeMs(csvPath)) {
             lastWrittenOpenMs = *stored;
         }
 

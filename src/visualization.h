@@ -1,7 +1,7 @@
 #pragma once
 
-#include "candlesticks.h"
-#include "indicators.h"
+#include "utils/candlesticks.h"
+#include "utils/indicators.h"
 #include "smc-ict/smc_engine.h"
 
 #include <cstdint>
@@ -20,7 +20,7 @@ using namespace std;
 //
 // This module is deliberately a one-way, fire-and-forget data sink from the
 // point of view of everything else in the project: binance.cpp and
-// historical_get.cpp only ever call VisualizationServer::push()/
+// history backfill and live-stream modules only ever call VisualizationServer::push()/
 // seedHistory(), both of which are thread-safe, non-blocking, and never
 // throw - a stalled browser, a closed tab, or even a failed server bind can
 // never delay or break Binance ingestion, CSV writes, or indicator
@@ -160,7 +160,7 @@ public:
     void push(VisualizationMessage message);
 
     // Thread-safe, non-blocking, never throws. Called during startup
-    // replay/backfill (historical_get.cpp) for every candle it processes,
+    // replay/backfill modules for every candle they process,
     // purely to populate the history ring buffer so a browser connecting
     // right after startup immediately has recent context to draw. Never
     // broadcast live - these are not "just happened" events.

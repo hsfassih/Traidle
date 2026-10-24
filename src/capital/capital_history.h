@@ -1,10 +1,10 @@
 #pragma once
 
-#include "candle_builder.h"
+#include "../utils/candle_builder.h"
 #include "capital_api.h"
-#include "historical_get.h"
-#include "indicators.h"
-#include "pipeline_common.h"
+#include "../utils/csv_history.h"
+#include "../utils/indicators.h"
+#include "../utils/pipeline_common.h"
 
 #include <atomic>
 #include <cstdint>
@@ -19,15 +19,15 @@ using namespace std;
 // aggregating locally for the intervals Capital has no native resolution for,
 // and builds the REST seed for the first live candle.
 //
-// It reuses historical_get's own CSV resume-point scan and CSV replay (through
-// two thin public wrappers) and pipeline::writeCsvRow(), so a Forex CSV row is
+// It reuses the shared CSV resume-point scan and replay from utils/csv_history
+// and pipeline::writeCsvRow(), so a Forex CSV row is
 // byte-for-byte the same shape as a Binance one and indicator state is restored
 // on restart exactly the same way.
 // ---------------------------------------------------------------------------
 namespace capital_history {
 
-using StatusHandler = historical::StatusHandler;
-using LogHandler = historical::LogHandler;
+using StatusHandler = csv_history::StatusHandler;
+using LogHandler = csv_history::LogHandler;
 
 // A bucket is trusted as closed only if its end is at least this far in the past
 // (same name and value as historical_get.cpp's kClosedSafetyMarginMs): absorbs
@@ -102,7 +102,7 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
                              const string& epic, const pipeline::TimeframeTask& task,
                              const filesystem::path& csvPath, const StatusHandler& status,
                              const LogHandler& log, indicators::IndicatorEngine& engine,
-                             const historical::HistorySeedHandler& seedHistory,
+                             const csv_history::HistorySeedHandler& seedHistory,
                              bool replayExisting = true,
                              const atomic<bool>* cancel = nullptr);
 

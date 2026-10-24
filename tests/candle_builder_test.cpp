@@ -7,7 +7,7 @@
 // test, with shell integer arithmetic and GNU `date -u`, so it is a real oracle
 // rather than the implementation checking itself.
 
-#include "../src/candle_builder.h"
+#include "../src/utils/candle_builder.h"
 
 #include <cmath>
 #include <cstdint>

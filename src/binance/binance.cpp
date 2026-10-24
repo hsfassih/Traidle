@@ -1,10 +1,10 @@
 #include "binance.h"
-#include "candlesticks.h"
+#include "../utils/candlesticks.h"
 #include "historical_get.h"
-#include "indicators.h"
-#include "visualization.h"
-#include "smc-ict/smc_engine.h"
-#include "pipeline_common.h"
+#include "../utils/indicators.h"
+#include "../visualization.h"
+#include "../smc-ict/smc_engine.h"
+#include "../utils/pipeline_common.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/steady_timer.hpp>

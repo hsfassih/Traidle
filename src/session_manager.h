@@ -1,8 +1,8 @@
 #pragma once
 
-#include "capital.h"
-#include "pipeline_common.h"
-#include "stop_signal.h"
+#include "capital/capital.h"
+#include "utils/pipeline_common.h"
+#include "utils/stop_signal.h"
 #include "visualization.h"
 
 #include <atomic>

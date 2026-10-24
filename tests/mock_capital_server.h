@@ -36,7 +36,7 @@
 // never touches a trading endpoint and never exceeds the limits.
 // ---------------------------------------------------------------------------
 
-#include "../src/candle_builder.h"
+#include "../src/utils/candle_builder.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>

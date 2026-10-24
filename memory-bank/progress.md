@@ -12,6 +12,7 @@
 - Web visualizer: visible Kill Zone bands + top-strip markers, Sessions toggle, responsive layout (700-1920px).
 - Capital.com weekly history backfill ignores misaligned overfetched bars before its requested lower bound while preserving UTC-alignment checks for bars in range.
 - Capital.com historical paging accepts the exact `error.prices.not-found` 404 only on older-page requests as an end-of-history signal; other failures remain errors.
+- Shared CSV history scanning/replay extracted to `src/utils/csv_history`; Capital no longer compiles or includes Binance history code. CMake targets point at the reorganized source tree.
 
 ## Known Constraints
 

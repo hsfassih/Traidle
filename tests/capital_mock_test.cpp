@@ -20,12 +20,12 @@
 
 #include "mock_capital_server.h"
 
-#include "../src/candle_builder.h"
-#include "../src/capital.h"
-#include "../src/capital_api.h"
-#include "../src/capital_history.h"
-#include "../src/indicators.h"
-#include "../src/pipeline_common.h"
+#include "../src/utils/candle_builder.h"
+#include "../src/capital/capital.h"
+#include "../src/capital/capital_api.h"
+#include "../src/capital/capital_history.h"
+#include "../src/utils/indicators.h"
+#include "../src/utils/pipeline_common.h"
 #include "../src/visualization.h"
 
 #include <fcntl.h>

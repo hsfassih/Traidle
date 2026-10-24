@@ -2,7 +2,7 @@
 
 #include "candlesticks.h"
 #include "indicators.h"
-#include "visualization.h"
+#include "../visualization.h"
 
 #include <cstddef>
 #include <cstdint>

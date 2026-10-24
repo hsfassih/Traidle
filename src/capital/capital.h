@@ -1,10 +1,10 @@
 #pragma once
 
-#include "candle_builder.h"
+#include "../utils/candle_builder.h"
 #include "capital_api.h"
-#include "pipeline_common.h"
-#include "stop_signal.h"
-#include "visualization.h"
+#include "../utils/pipeline_common.h"
+#include "../utils/stop_signal.h"
+#include "../visualization.h"
 
 #include <boost/asio/io_context.hpp>
 

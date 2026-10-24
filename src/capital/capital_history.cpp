@@ -49,7 +49,7 @@ constexpr int64_t kMaxPlausibleShiftMs = int64_t(14) * 3600 * 1000;
 constexpr int64_t kSeedOverlapMs = 1500;
 
 // Minimum time between in-place progress updates (status never touches the
-// scrolling log - see historical_get.h for why).
+// scrolling log - see utils/csv_history.h for the shared callback contract).
 constexpr auto kProgressInterval = milliseconds(750);
 
 constexpr int64_t kFiveMinutesMs = 5 * 60 * 1000;
@@ -321,7 +321,7 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
                              const string& epic, const pipeline::TimeframeTask& task,
                              const filesystem::path& csvPath, const StatusHandler& status,
                              const LogHandler& log, indicators::IndicatorEngine& engine,
-                             const historical::HistorySeedHandler& seedHistory,
+                             const csv_history::HistorySeedHandler& seedHistory,
                              bool replayExisting, const atomic<bool>* cancel) {
     const auto cancelled = [cancel] { return cancel != nullptr && cancel->load(memory_order_relaxed); };
     try {
@@ -332,7 +332,7 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
         // the engine already holds those rows, and feeding them twice would
         // corrupt every rolling window, EMA, VWAP and OBV.
         if (replayExisting) {
-            historical::replayCsvIntoEngine(csvPath, engine, seedHistory, cancel);
+            csv_history::replayCsvIntoEngine(csvPath, engine, seedHistory, cancel);
         }
         if (cancelled()) {
             return false;
@@ -351,7 +351,7 @@ bool ensureContinuousHistory(capital::Session& session, capital::RestClient& res
         // whose last bars are not in the first page we fetched.
         const int64_t nowMs = session.serverNowMs();
 
-        const auto lastStoredRaw = historical::lastStoredCsvOpenTimeMs(csvPath);
+        const auto lastStoredRaw = csv_history::lastStoredCsvOpenTimeMs(csvPath);
         optional<int64_t> lastStored;
         if (lastStoredRaw) {
             lastStored = candle_builder::bucketOpen(spec, *lastStoredRaw);

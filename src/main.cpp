@@ -1,7 +1,7 @@
-#include "binance.h"
-#include "candlesticks.h"
-#include "capital.h"
-#include "pipeline_common.h"
+#include "binance/binance.h"
+#include "capital/capital.h"
+#include "utils/candlesticks.h"
+#include "utils/pipeline_common.h"
 #include "session_manager.h"
 #include "visualization.h"
 

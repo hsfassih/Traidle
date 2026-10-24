@@ -16,8 +16,8 @@
 // POSIX only, like capital_mock_test.
 // ---------------------------------------------------------------------------
 
-#include "../src/capital_api.h"
-#include "../src/pipeline_common.h"
+#include "../src/capital/capital_api.h"
+#include "../src/utils/pipeline_common.h"
 #include "../src/session_manager.h"
 #include "../src/visualization.h"
 

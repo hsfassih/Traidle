@@ -1,3 +1,10 @@
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 #include "pipeline_common.h"
 
 #include <algorithm>
@@ -10,13 +17,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
-
-#if defined(_WIN32)
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#endif
 
 using namespace std;
 
