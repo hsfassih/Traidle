@@ -7,11 +7,10 @@
 .env
 build
 build-*
-fx_*
 vcpkg_installed
 scrap-data
 tools
-*usdt
+storage
 *.exe
 *.dll
 *.pdb

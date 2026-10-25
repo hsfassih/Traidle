@@ -36,8 +36,7 @@ scripts/
 strategies/
 .github/instructions/
 .github/*.md
-*usdt/
-fx_*/
+storage/
 docs/
 tasks/
 tools/
