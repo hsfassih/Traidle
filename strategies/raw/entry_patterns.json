@@ -1,0 +1,505 @@
+{
+  "pass_2_strategies": [
+    {
+      "strategy_id": "overlapping_pd_array_entry",
+      "aliases": [
+        "Most Accurate Entry Pattern",
+        "First Overlapping PD Array"
+      ],
+      "category": "htf_continuation",
+      "summary": "Identify a dealing range and wait for a retracement. Instead of blindly using OTE, enter on the first overlapping PD array (typically a fair value gap overlapping with a breaker or order block) encountered during the pullback.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "1h",
+        "setup_tf": null,
+        "entry_tf": "1m",
+        "strict": false,
+        "notes": "Highly fractal. The presenter explicitly demonstrates using a 1-hour chart for context/boundaries, then dropping to a 1-minute or 5-minute chart for the overlapping array entry."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "A clear higher-timeframe context (boundary) moving from a discount array to a premium array (or vice versa)."
+        ]
+      },
+      "glossary": {
+        "Overlapping PD array": "Two or more PD arrays located at the exact same price level (e.g., a breaker overlapping with a fair value gap).",
+        "Boundary": "A higher-timeframe point of interest or context that justifies going into a lower timeframe to look for a trade."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "fvg.bullish",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "07:30"
+        },
+        {
+          "step": 2,
+          "signal": "order_block.bullish",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": true,
+          "max_candles_after_previous_step": 0,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "08:30"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "first_overlapping_pd_array",
+          "kind": "indicator_relation",
+          "plain_definition": "The very first instance during a retracement where a Fair Value Gap shares the same price range as another PD array (such as a breaker, order block, or mitigation block).",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "08:00"
+        }
+      ],
+      "sequence": [
+        "Determine the higher timeframe context and direction (e.g., moving from a Daily/1H discount array to a premium array).",
+        "Identify the active dealing range on the execution timeframe (from the recent swing low to the swing high that caused the expansion).",
+        "Draw a Fibonacci retracement from swing low to swing high to identify equilibrium (0.5) and OTE (0.705), using them as guidelines.",
+        "Scan the retracement path for the 'first overlapping PD array' (e.g., an FVG overlapping with a Breaker or Order Block), which will act as the primary magnet.",
+        "Enter the trade at this overlapping zone rather than waiting strictly for the OTE level.",
+        "If the market subsequently takes out a major intermediate term high (target hit), expect a deeper retracement into a higher timeframe PD array before continuing."
+      ],
+      "invalidation": [
+        {
+          "text": "Price breaks and sustains beyond the intermediate term low (the origin of the dealing range).",
+          "provenance": "presenter_stated",
+          "ts": "09:30"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not go into the 1-minute timeframe without a higher timeframe boundary or context. Doing so creates a reason to trade everywhere, lowering probability.",
+          "provenance": "presenter_stated",
+          "ts": "13:30"
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the first place where a fair value gap overlaps with another discount/premium array (like a breaker or order block).",
+        "structured": {
+          "type": "limit",
+          "reference": "custom_signals.first_overlapping_pd_array"
+        },
+        "provenance": "presenter_stated",
+        "ts": "08:00",
+        "quote": "enter on the first place where we have overlapping PD arrays"
+      },
+      "target_rule": {
+        "text": "The first target is the immediate intermediate term high. The final target is the ultimate higher timeframe draw on liquidity.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "09:30",
+        "quote": "first Target being this High second target being that high right there"
+      },
+      "stop_rule": {
+        "text": "Place the stop loss below the intermediate term low (the start of the dealing range), covering the bodies of the candles. Do not place it tightly just under the entry PD array.",
+        "structured": {
+          "type": "beyond",
+          "reference": "swing_low",
+          "buffer_atr": null
+        },
+        "provenance": "presenter_stated",
+        "ts": "18:00",
+        "quote": "putting it at the intermediate term low right there covering the bodies of the candles"
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "ref:order_block",
+        "ref:fvg",
+        "ref:breaker"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "The strongest magnet before we expand further is the overlapping PD spot.",
+          "ts": "04:30",
+          "verified": false
+        }
+      ],
+      "notes": "The presenter emphasizes giving the stop loss 'room to breathe' below the structural low, specifically advising against being greedy for high RR by placing the stop just below the entry array, as probabilities dictate price can sometimes dip deeper before expanding.",
+      "examples": [
+        "ex1_es_overlapping_pd",
+        "ex2_gbpaud_overlapping_pd"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Specific entry trigger within the overlap",
+          "why": "The presenter says 'enter off of that fair value gap' or 'enter on the exact spot where we are overlapping', meaning the exact limit order placement (top of FVG vs. OB mean threshold) is slightly discretionary.",
+          "ts": "10:30"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The rules for context, dealing range, entry criteria, and stop loss placement are repeatedly and explicitly defined across multiple clear examples."
+      }
+    }
+  ],
+  "pass_3_examples": [
+    {
+      "example_id": "ex1_es_overlapping_pd",
+      "strategy_id": "overlapping_pd_array_entry",
+      "video_span": {
+        "start": "01:16",
+        "end": "14:30",
+        "canonical_frame_ts": "11:30"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "1m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "overlapping fair value Gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "breaker",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "breaker"
+              },
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "mitigation block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "1H rejection from a Daily fair value gap heading towards a daily premium array / high.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Higher timeframe establishes context: price bounced from a Daily discount array (FVG) and is heading toward a Daily high.",
+          "maps_to_signal_step": null,
+          "ts": "01:30"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "1-hour dealing range is defined; a 1H overlapping PD array (breaker + FVG) is identified near equilibrium.",
+          "maps_to_signal_step": null,
+          "ts": "04:00"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Drops to 1-minute timeframe within the 1-hour context area.",
+          "maps_to_signal_step": null,
+          "ts": "06:30"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "First 1-minute entry forms: a breaker overlapping with a fair value gap.",
+          "maps_to_signal_step": 1,
+          "ts": "07:30"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price expands higher, providing a second entry on a mitigation block overlapping with a fair value gap.",
+          "maps_to_signal_step": 1,
+          "ts": "10:30"
+        },
+        {
+          "step": 6,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price reaches the intermediate term high target. This major liquidity sweep causes a deeper retracement into a 15-minute FVG + order block before continuing.",
+          "maps_to_signal_step": null,
+          "ts": "11:30"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He emphasizes that context is the absolute most important part. Without the 1-hour overlapping array boundary, entering on the 1-minute timeframe lacks high probability.",
+      "engine_check": {
+        "should_detect": [
+          "fvg",
+          "order_blocks"
+        ],
+        "may_differ": [
+          {
+            "signal": "first_overlapping_pd_array",
+            "reason": "Traidle requires specific displacement for FVGs; the presenter combines arrays organically without strictly quantifying the displacement magnitude."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices, dates, or symbol feed",
+          "why": "No visual access to the video frames; transcription relies entirely on the audio.",
+          "ts": "01:16"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_gbpaud_overlapping_pd",
+      "strategy_id": "overlapping_pd_array_entry",
+      "video_span": {
+        "start": "14:30",
+        "end": "18:00",
+        "canonical_frame_ts": "16:00"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": "GBPAUD",
+          "feed_as_shown": null,
+          "timeframe": "5m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value Gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "1H timeframe showing two overlapping discount arrays (FVG + small breaker).",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Identifies 1-hour context: price retraces into a 1H overlapping FVG and small breaker.",
+          "maps_to_signal_step": null,
+          "ts": "15:00"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Drops to 5-minute timeframe, waits for an expansion out of the 1H zone.",
+          "maps_to_signal_step": null,
+          "ts": "15:30"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price retraces into the first 5-minute overlapping discount array (an order block and a fair value gap).",
+          "maps_to_signal_step": 1,
+          "ts": "16:00"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Stop loss is placed safely below the intermediate term low to account for market probability, instead of tightly under the entry array.",
+          "maps_to_signal_step": null,
+          "ts": "17:30"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price expands and hits the take profit target at the intermediate term highs.",
+          "maps_to_signal_step": null,
+          "ts": "18:00"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He heavily stresses not to place the stop loss too tightly (e.g., just below the entry array). He advises giving the trade room to breathe by placing the stop below the structural intermediate term low to avoid random stop-outs.",
+      "engine_check": {
+        "should_detect": [
+          "fvg",
+          "order_blocks"
+        ],
+        "may_differ": [
+          {
+            "signal": "stop_loss_placement",
+            "reason": "Presenter uses structural logic (intermediate term low) rather than strict pip-based or array-edge-based invalidation."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices, dates, or timeframe structure",
+          "why": "No visual access to the video frames; transcription relies entirely on the audio.",
+          "ts": "14:30"
+        }
+      ]
+    }
+  ]
+}

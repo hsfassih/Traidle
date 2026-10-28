@@ -1,0 +1,542 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "relative_strength_filtering",
+      "aliases": [
+        "intermarket_analysis",
+        "pair_selection"
+      ],
+      "category": "trend_following",
+      "summary": "Use the higher-timeframe bond and dollar read to decide whether a Forex or index idea is worth trading, then choose the strongest long candidate or weakest short candidate inside the correlated peer group. Execute only after the chosen chart reaches its own premium or discount array and a separate lower-timeframe confirmation model triggers.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "1d|1w",
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "Daily or weekly intermarket context sets the presenter bias. The actual execution timeframe belongs to the downstream confirmation model used on the selected chart."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.decoupled_market",
+          "custom_signals.relatively_stronger_pair",
+          "market:needs_external_symbols"
+        ]
+      },
+      "glossary": {
+        "Decoupled": "A low-probability state where bonds and the dollar stop giving the normal inverse read; see custom_signals.decoupled_market.",
+        "Filtering process": "The top-down pass from bonds to dollar to asset class to peer-group comparison that narrows the trade to one chart.",
+        "Relative strength": "Inside a correlated peer group, prefer the chart that expands further in the trade direction or refuses to lose the structural point that the peer sweeps; see custom_signals.relatively_stronger_pair."
+      },
+      "signals_required": [],
+      "custom_signals": [
+        {
+          "name": "decoupled_market",
+          "kind": "indicator_relation",
+          "plain_definition": "The 30-year Treasury bond market and the US Dollar are not giving the normal inverse read: they are moving together, or the bond leg is too compressed to trust for bias.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "03:04"
+        },
+        {
+          "name": "relatively_stronger_pair",
+          "kind": "indicator_relation",
+          "plain_definition": "Among correlated instruments, this chart is the preferred long when it expands further in the bullish direction or holds a swing low that the peer sweeps; for shorts, mirror it to the relatively weaker pair.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "09:35"
+        }
+      ],
+      "sequence": [
+        "Read the daily or weekly bond chart first, then compare it with the US Dollar.",
+        "If that intermarket read is decoupled, stand aside or downgrade the setup quality.",
+        "Use the Dollar's higher-timeframe draw on liquidity to set the presenter bias for Forex or indices.",
+        "Compare the correlated peer group and keep only the strongest long candidate or weakest short candidate.",
+        "Wait for the chosen chart to reach its own premium or discount array before looking for a separate lower-timeframe confirmation model."
+      ],
+      "invalidation": [
+        {
+          "text": "If Bonds and the Dollar are decoupled, the market indicates a 50/50 bias and low probability Seek and Destroy conditions.",
+          "provenance": "presenter_stated",
+          "ts": "04:15",
+          "numeric_definition": "custom_signals.decoupled_market"
+        }
+      ],
+      "filters": [
+        {
+          "text": "If the bonds have been consolidating heavily, take them less into account and rely more directly on the Dollar.",
+          "provenance": "presenter_stated",
+          "ts": "05:38",
+          "numeric_definition": null
+        },
+        {
+          "text": "Beginners should avoid this filtering process and just focus on mastering one single pair to build patience.",
+          "provenance": "presenter_stated",
+          "ts": "10:48",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "After choosing the strongest long candidate or weakest short candidate, wait for that chart to reach its own premium or discount array and trigger a downstream confirmation model such as SMT divergence, a breaker block, or a swing-failure pattern.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "10:07",
+        "quote": "when we are waiting for confirmation we look for smt so whether the breaker or the swing failure happens"
+      },
+      "target_rule": {
+        "text": "On the chosen chart, target the opposing higher-timeframe draw on liquidity defined by that chart's own context.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "08:45",
+        "quote": "this already tells me a lot of what my draw on liquidity will likely be on EU then we have this liquidity pool right there"
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "smt_divergence_confirmation"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "When the inter-market analysis agrees and everything moves in harmony, you have very high probability price action.",
+          "ts": "06:16",
+          "verified": false
+        }
+      ],
+      "notes": "Market-condition filter, not a standalone entry model. The required bias comes from the presenter’s external bond-and-dollar read, not Traidle’s single-symbol structure bias. The selected symbol must still be executed with its own downstream confirmation setup once price reaches the chosen premium or discount array.",
+      "examples": [
+        "ex1_bonds_correlation",
+        "ex2_forex_filtering",
+        "ex3_indices_filtering"
+      ],
+      "uncertainties": [
+        {
+          "issue": "No specific entry criteria defined here.",
+          "why": "The video focuses entirely on pair selection/filtering, relying on entry triggers taught in previous videos.",
+          "ts": "10:07"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The logic for pair selection (relative strength and intermarket correlation) is explicitly laid out and demonstrated conceptually."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_bonds_correlation",
+      "strategy_id": "relative_strength_filtering",
+      "video_span": {
+        "start": "01:46",
+        "end": "07:23",
+        "canonical_frame_ts": "01:46"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_zb1",
+          "frame_role": "htf_context",
+          "symbol": "ZB1",
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "exact",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "Explaining general intermarket theory",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "decoupled_market",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "decoupled"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_zb1",
+          "candle_i": null,
+          "what_happens": "Presenter displays the 30-year Treasury Bond chart to explain its standard inverse correlation to the US Dollar.",
+          "maps_to_signal_step": null,
+          "ts": "01:46"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_zb1",
+          "candle_i": null,
+          "what_happens": "Explains that when bonds consolidate and move in the same direction as the Dollar (decoupled), it signals lower probability 'Seek and Destroy' conditions.",
+          "maps_to_signal_step": null,
+          "ts": "03:04"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He emphasizes that analyzing bonds first gives a fundamental view of the market. If bonds and the dollar are not inversely synced, the overall market condition is 50/50 and highly choppy.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read chart data",
+          "why": "No visual access to the video frames to extract exact OHLC data, dates, or prices for ZB1.",
+          "ts": "01:46"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_forex_filtering",
+      "strategy_id": "relative_strength_filtering",
+      "video_span": {
+        "start": "07:23",
+        "end": "12:00",
+        "canonical_frame_ts": "09:35"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_dxy_forex",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "exact",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "daily fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "other",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Dollar (DXY) chart shows overhead FVG and lower liquidity pool",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "relatively_stronger_pair",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "stronger and relatively stronger"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_dxy_forex",
+          "candle_i": null,
+          "what_happens": "Analyzes the US Dollar chart to establish a bearish bias, aiming for a lower liquidity pool after mitigating a Daily FVG.",
+          "maps_to_signal_step": null,
+          "ts": "07:50"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_dxy_forex",
+          "candle_i": null,
+          "what_happens": "Switches to EURUSD (EU) to show harmony with the Dollar, establishing the draw on liquidity upwards.",
+          "maps_to_signal_step": null,
+          "ts": "08:29"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_dxy_forex",
+          "candle_i": null,
+          "what_happens": "Compares EU directly with GBPUSD (GU). GU makes a bigger, more explosive upward move and fails to take a high that EU might have, showing SMT and Relative Strength.",
+          "maps_to_signal_step": null,
+          "ts": "09:35"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_dxy_forex",
+          "candle_i": null,
+          "what_happens": "Concludes that because GU is relatively stronger, it is the highest probability pair to look for buys in a discount array.",
+          "maps_to_signal_step": null,
+          "ts": "09:49"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He uses the divergence between EU and GU to prove that you shouldn't just pick any pair going against the Dollar. You must pick the one showing relative strength for longs to maximize probability and payout.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.relatively_stronger_pair",
+            "reason": "Traidle requires specific multi-asset SMT logic to measure relative structural sweeps, which standard single-asset indicators do not compute natively."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read chart data",
+          "why": "No visual access to the video frames to extract exact OHLC data, dates, or prices for DXY, EU, or GU.",
+          "ts": "07:23"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_indices_filtering",
+      "strategy_id": "relative_strength_filtering",
+      "video_span": {
+        "start": "12:00",
+        "end": "13:35",
+        "canonical_frame_ts": "12:36"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_indices",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "exact",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "Comparing pairs",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_indices",
+          "candle_i": null,
+          "what_happens": "Compares ES, NQ, and YM (Dow).",
+          "maps_to_signal_step": null,
+          "ts": "12:00"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_indices",
+          "candle_i": null,
+          "what_happens": "Identifies NQ as relatively stronger than ES, meaning NQ is preferred for buys.",
+          "maps_to_signal_step": null,
+          "ts": "12:14"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_indices",
+          "candle_i": null,
+          "what_happens": "Identifies YM as the absolute weakest among the three, making it the preferred pair for sells.",
+          "maps_to_signal_step": null,
+          "ts": "12:36"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He emphasizes avoiding buys on the Dow because it is the weakest index, instead preferring to short the Dow if the Dollar bias was bullish.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read chart data",
+          "why": "No visual access to the video frames to extract exact OHLC data, dates, or prices.",
+          "ts": "12:00"
+        }
+      ]
+    }
+  ]
+}

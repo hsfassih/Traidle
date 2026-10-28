@@ -1,0 +1,902 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "dealing_range_reversal",
+      "aliases": [],
+      "category": "liquidity_reversal",
+      "summary": "Use daily higher-timeframe PD-array context to pick direction, then on 15m trade a dealing range that has swept both prior swing sides. Enter on the return into the range extreme after both-side liquidity is cleared, with an optional same-direction fair value gap as added confluence.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "1d",
+        "setup_tf": "15m",
+        "entry_tf": "15m",
+        "strict": false,
+        "notes": "Daily context frames direction; the 15m chart defines the dealing range and its return entry. The required bias is the presenter's daily premium/discount-array narrative, not the engine structure bias."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.htf_pd_array_tap"
+        ]
+      },
+      "glossary": {
+        "Dealing range": "A price range whose low swept the prior swing low and whose high swept the prior swing high; see custom_signals.dealing_range."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.htf_pd_array_tap",
+          "equals": true,
+          "timeframe": "bias_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "07:27"
+        },
+        {
+          "step": 2,
+          "signal": "custom_signals.dealing_range",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "03:21"
+        },
+        {
+          "step": 3,
+          "signal": "custom_signals.quadrant_extreme",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "10:20"
+        },
+        {
+          "step": 4,
+          "signal": "custom_signals.fvg_without_displacement",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": true,
+          "max_candles_after_previous_step": 0,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "06:15"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "htf_pd_array_tap",
+          "kind": "price_action",
+          "plain_definition": "Price trades into a higher-timeframe discount array (bullish) or premium array (bearish), such as a fair value gap or order block.",
+          "numeric_definition": "(low <= bullish_fvg[0].gap_high@bias_tf AND high >= bullish_fvg[0].gap_low@bias_tf AND NOT bullish_fvg[0].filled@bias_tf) OR (low <= bullish_ob[0].zone_high@bias_tf AND high >= bullish_ob[0].zone_low@bias_tf AND NOT bullish_ob[0].invalidated@bias_tf)",
+          "definition_source": "inferred",
+          "ts": "07:27"
+        },
+        {
+          "name": "dealing_range",
+          "kind": "price_action",
+          "plain_definition": "A price range whose low swept the prior swing low (sell-side) and whose high swept the prior swing high (buy-side).",
+          "numeric_definition": "swing_low[0].price < swing_low[1].price AND swing_high[0].price > swing_high[1].price",
+          "definition_source": "presenter_stated",
+          "ts": "03:21"
+        },
+        {
+          "name": "dealing_range_high",
+          "kind": "level",
+          "plain_definition": "The high of the current dealing range.",
+          "numeric_definition": "custom_signals.dealing_range",
+          "definition_source": "presenter_stated",
+          "ts": "03:21"
+        },
+        {
+          "name": "dealing_range_low",
+          "kind": "level",
+          "plain_definition": "The low of the current dealing range.",
+          "numeric_definition": "custom_signals.dealing_range",
+          "definition_source": "presenter_stated",
+          "ts": "03:21"
+        },
+        {
+          "name": "quadrant_extreme",
+          "kind": "price_action",
+          "plain_definition": "Price reaches the lowest quarter of the established range (0 to 0.25, discount of discount) for longs.",
+          "numeric_definition": "low <= custom_signals.dealing_range_low + 0.25 * (custom_signals.dealing_range_high - custom_signals.dealing_range_low)",
+          "definition_source": "presenter_stated",
+          "ts": "10:20"
+        },
+        {
+          "name": "fvg_without_displacement",
+          "kind": "candle_pattern",
+          "plain_definition": "A three-candle bullish fair value gap with a wick gap between candle 1 and candle 3, regardless of displacement size; mirror for bearish.",
+          "numeric_definition": "high[-2] < low",
+          "definition_source": "presenter_stated",
+          "ts": "06:15"
+        }
+      ],
+      "sequence": [
+        "Mark the daily premium/discount-array context that defines the draw on liquidity.",
+        "On 15m, wait for a dealing range that sweeps both the prior swing high and the prior swing low.",
+        "Let price return into the lower quarter of that range for the long-side mirror of the setup.",
+        "An optional same-direction fair value gap inside that return adds confluence before entry."
+      ],
+      "invalidation": [
+        {
+          "text": "If a range only takes liquidity on one side (e.g., sweeps a high but not a low), it is not a dealing range and is skipped by this specific system.",
+          "provenance": "presenter_stated",
+          "ts": "03:10",
+          "numeric_definition": "NOT custom_signals.dealing_range"
+        },
+        {
+          "text": "Trades that offer a risk-to-reward ratio of less than 1:1 are invalidated.",
+          "provenance": "presenter_stated",
+          "ts": "18:01",
+          "numeric_definition": null
+        }
+      ],
+      "filters": [
+        {
+          "text": "Only trade dealing ranges when there is clear context derived from the Daily timeframe (moving between premium and discount arrays).",
+          "provenance": "presenter_stated",
+          "ts": "07:27",
+          "numeric_definition": "custom_signals.htf_pd_array_tap"
+        },
+        {
+          "text": "Kill zones and order flow can be added as filters to avoid losses, though the base strategy demonstrated relies purely on the dealing range structure.",
+          "provenance": "presenter_stated",
+          "ts": "19:51",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the return into the dealing-range extreme in the direction of the higher-timeframe draw on liquidity.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "10:20",
+        "quote": "we want to enter at the low of that dealing range"
+      },
+      "target_rule": {
+        "text": "Target the opposing daily premium/discount array or the daily swing objective identified during the higher-timeframe read.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "09:35",
+        "quote": "this is our Target right there that daily swing low"
+      },
+      "stop_rule": {
+        "text": "Place the stop beyond the dealing-range low on the bullish side (mirror: beyond the high on bearish examples).",
+        "structured": {
+          "type": "beyond",
+          "reference": "custom_signals.dealing_range_low",
+          "buffer_atr": null
+        },
+        "provenance": "presenter_stated",
+        "ts": "10:32",
+        "quote": "you place your stop above the dealing range"
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": 1.0,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "Applying this simple strategy resulted in a net +4.26R over three days in a simulated backtest, and adding kill zones/order flow could improve it to +8.26R.",
+          "ts": "19:19",
+          "verified": false
+        }
+      ],
+      "notes": "The engine premium_discount fields are not the dealing range used here; the range is the presenter's two-sided liquidity sweep, modeled with the registry dealing_range/high/low signals. The daily-context proxy uses htf_pd_array_tap, which captures FVG/order-block taps but does not fully cover previous-day-high/low narrative or every premium/discount-array variant mentioned in the lesson.",
+      "examples": [
+        "ex_1_concept_definition",
+        "ex_2_first_trading_example",
+        "ex_3_eurusd_losing_curve_simulation"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Daily premium/discount-array context is only partially machine-captured",
+          "why": "The presenter mixes daily FVGs, previous-day levels and swing objectives in one narrative. The registry proxy htf_pd_array_tap covers FVG/order-block taps, but not every daily-array variant named in the lesson.",
+          "ts": "07:27"
+        },
+        {
+          "issue": "Entry fill inside the dealing-range extreme is not numerically specified",
+          "why": "The lesson says to enter at the dealing-range extreme and shows the lower-quarter idea, but it does not give one exact limit price inside that zone, so the entry rule remains text-only.",
+          "ts": "10:20"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "reason": "The definition of the dealing range itself is very clear (sweeps both sides). However, the specific entry mechanics on the 15-minute timeframe are presented somewhat loosely during the backtest simulation, relying heavily on visual discretion regarding which specific sweeps constitute the boundaries of the 'tradable' dealing range vs a smaller internal one."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex_1_concept_definition",
+      "strategy_id": "dealing_range_reversal",
+      "video_span": {
+        "start": "02:03",
+        "end": "07:07",
+        "canonical_frame_ts": "06:26"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_concept",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "buy side liquidity / swing highs"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "sell side liquidity / swing lows"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "took out buy side liquidity"
+              },
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "took out sell side liquidity"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "bullish fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "Isolated structural example",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "fib",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Fibonacci used to mark out the boundaries of the dealing range"
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_concept",
+          "candle_i": null,
+          "what_happens": "A range is identified that takes out buy-side liquidity (swing high) but fails to take out sell-side liquidity. It is deemed an invalid dealing range.",
+          "maps_to_signal_step": null,
+          "ts": "03:10"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_concept",
+          "candle_i": null,
+          "what_happens": "A new range forms that successfully takes out both a swing high (buy-side) and a swing low (sell-side). This is validated as a dealing range.",
+          "maps_to_signal_step": 2,
+          "ts": "03:21"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_concept",
+          "candle_i": null,
+          "what_happens": "The presenter highlights a sequence of bearish dealing ranges as price expands downward.",
+          "maps_to_signal_step": null,
+          "ts": "04:20"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_concept",
+          "candle_i": null,
+          "what_happens": "The presenter switches to bullish examples, showing ranges that sweep sell-side liquidity first, then buy-side liquidity, and prices returning to those ranges.",
+          "maps_to_signal_step": null,
+          "ts": "05:01"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1_concept",
+          "candle_i": null,
+          "what_happens": "An additional confirmation rule is introduced: the dealing range must contain a fair value gap in the direction of the trade (e.g., a bullish FVG for a bullish dealing range).",
+          "maps_to_signal_step": 4,
+          "ts": "06:15"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_concept"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter contrasts vague trading concepts with his objective definition: a dealing range must demonstrably sweep both sides of liquidity. He also notes that while a range failing to sweep both sides might still hold price, it does not fit his mechanical definition for this specific trading plan.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_high",
+          "structural_event.liquidity_sweep_low",
+          "fvg.bullish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices or dates.",
+          "why": "Missing visual access to the specific chart data shown in the video.",
+          "ts": "02:03"
+        }
+      ]
+    },
+    {
+      "example_id": "ex_2_first_trading_example",
+      "strategy_id": "dealing_range_reversal",
+      "video_span": {
+        "start": "07:07",
+        "end": "12:32",
+        "canonical_frame_ts": "12:01"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "htf_context",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "daily swing low / discount array"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "previous day high sweep"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "daily fair value Gap / premium array"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "pdh",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Price hitting a Daily Premium Array (FVG + PDH sweep) and moving toward a Discount Array",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "htf_pd_array_tap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "premium array / discount array"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_15m",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweep buy side liquidity"
+              },
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweep South Side liquidity"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Derived from Daily timeframe context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Daily timeframe establishes context: Price expands lower, then retraces into a Daily FVG and sweeps the Previous Day High (creating a premium array).",
+          "maps_to_signal_step": 1,
+          "ts": "07:07"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "The ultimate target is defined as the Daily swing low (the discount array).",
+          "maps_to_signal_step": null,
+          "ts": "08:38"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Dropping to the 15-minute chart within the Daily FVG, price is observed sweeping buy-side liquidity and then sell-side liquidity, forming a dealing range.",
+          "maps_to_signal_step": 2,
+          "ts": "10:02"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Price returns to the low of the bearish dealing range, overlapping with an FVG. An entry is simulated with a stop above the dealing range high.",
+          "maps_to_signal_step": 3,
+          "ts": "10:20"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "The presenter shows an alternative larger dealing range for traders who want 'more certainty', waiting for a more definitive break of sell-side liquidity before entering on a pullback.",
+          "maps_to_signal_step": null,
+          "ts": "10:47"
+        },
+        {
+          "step": 6,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "After simulating a loss on a smaller range, he finds a definitive dealing range sweeping both sides, executes on its extreme boundary, and targets the daily swing low.",
+          "maps_to_signal_step": 3,
+          "ts": "12:01"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_15m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_shown",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter emphasizes that 15-minute dealing ranges should not be traded blindly. They must be contextualized by the Daily timeframe narrative (moving from a premium array to a discount array). Once that context is established, dealing ranges become objective entry triggers.",
+      "engine_check": {
+        "should_detect": [
+          "pdh",
+          "fvg.bearish",
+          "structural_event.liquidity_sweep_high",
+          "structural_event.liquidity_sweep_low"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices or dates.",
+          "why": "Missing visual access to the specific chart data shown in the video.",
+          "ts": "07:07"
+        }
+      ]
+    },
+    {
+      "example_id": "ex_3_eurusd_losing_curve_simulation",
+      "strategy_id": "dealing_range_reversal",
+      "video_span": {
+        "start": "12:32",
+        "end": "21:12",
+        "canonical_frame_ts": "18:47"
+      },
+      "example_role": "variation",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "htf_context",
+          "symbol": "EURUSD",
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "daily discount array"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "weekly fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Price in a Weekly FVG delivering toward a Daily swing low",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_15m",
+          "frame_role": "full",
+          "symbol": "EURUSD",
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "buy side liquidity taken"
+              },
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sell side liquidity taken"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "HTF context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Context established on Daily chart: price is in a Weekly FVG acting as a premium array, targeted toward a Daily swing low as a discount array.",
+          "maps_to_signal_step": 1,
+          "ts": "12:56"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "First 15m dealing range identified. Price sweeps high then low. Trade taken and results in a loss.",
+          "maps_to_signal_step": 2,
+          "ts": "13:46"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Second dealing range forms, trade entered targeting Daily low, results in another loss.",
+          "maps_to_signal_step": 2,
+          "ts": "16:16"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Third dealing range forms, entered at range high, targeting Daily low. Trade runs in profit but stops out eventually (another loss noted).",
+          "maps_to_signal_step": 2,
+          "ts": "16:50"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "A huge dealing range forms. Entry is available but RR is 0.6, so the setup is invalidated and skipped.",
+          "maps_to_signal_step": null,
+          "ts": "18:01"
+        },
+        {
+          "step": 6,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Final dealing range forms, sweeping both sides. Entered at extreme, price aggressively expands to the Daily swing low target, hitting take profit.",
+          "maps_to_signal_step": 3,
+          "ts": "18:47"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_15m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": 4.26,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights the psychological 'losing curve' where traders strategy-hop after initial drawdown. By strictly following the dealing range rules across multiple simulated losses, the strategy yields a net profit of 4.26R.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_high",
+          "structural_event.liquidity_sweep_low"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices or dates.",
+          "why": "Missing visual access to the specific chart data shown in the video.",
+          "ts": "12:32"
+        }
+      ]
+    }
+  ]
+}

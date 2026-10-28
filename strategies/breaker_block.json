@@ -1,0 +1,912 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "breaker_block_setup",
+      "aliases": [
+        "Breaker setup",
+        "Breaker pattern",
+        "Unicorn setup (when overlapping with FVG)"
+      ],
+      "category": "liquidity_reversal",
+      "summary": "With higher-timeframe PD-array bias in place, wait for a breaker pattern that sweeps one swing extreme and then breaks back through the intervening swing on the lower timeframe. Trade the retest of that breaker block, preferably when a fair value gap overlaps it as a unicorn setup.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "4h|1d|1w|1mo",
+        "setup_tf": "5m|1h|4h",
+        "entry_tf": null,
+        "strict": false,
+        "notes": "Higher-timeframe bias comes from a 4h-to-monthly PD array. The breaker confirmation itself is shown fractally on 4h, 1h, or 5m, and there is no separate entry timeframe: the retest is taken on setup_tf."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": []
+      },
+      "glossary": {
+        "Unicorn setup": "A breaker block that overlaps a fair value gap; see custom_signals.unicorn_overlap.",
+        "Mean threshold": "50% of the breaker candle body; see registry custom_signals.breaker_mean_threshold."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.breaker_pattern",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "01:15"
+        },
+        {
+          "step": 2,
+          "signal": "custom_signals.unicorn_overlap",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": true,
+          "max_candles_after_previous_step": 0,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "05:14"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "breaker_pattern",
+          "kind": "price_action",
+          "plain_definition": "A high forms, price then sweeps the prior swing low, and then closes back above that high; the up candle(s) at the broken high form the breaker block.",
+          "numeric_definition": "swing_low[0].price < swing_low[1].price AND swing_high[0].open_time > swing_low[1].open_time AND swing_high[0].open_time < swing_low[0].open_time AND close > swing_high[0].price AND close[-1] <= swing_high[0].price",
+          "definition_source": "presenter_stated",
+          "ts": "01:15"
+        },
+        {
+          "name": "unicorn_overlap",
+          "kind": "indicator_relation",
+          "plain_definition": "A breaker block overlaps a fair value gap on the same timeframe.",
+          "numeric_definition": "custom_signals.breaker_pattern AND close >= open AND max(bullish_fvg[0].gap_low, open) <= min(bullish_fvg[0].gap_high, high) AND NOT bullish_fvg[0].filled",
+          "definition_source": "inferred",
+          "ts": "05:14"
+        }
+      ],
+      "sequence": [
+        "Set higher-timeframe bullish or bearish bias from a PD array narrative.",
+        "On 4h, 1h, or 5m, confirm the breaker by sweeping one swing extreme and then breaking back through the intervening swing.",
+        "Mark the breaker block at that breaking candle and note any overlapping fair value gap as a unicorn setup.",
+        "Wait for price to retrace into the breaker block and trade in the higher-timeframe direction."
+      ],
+      "invalidation": [
+        {
+          "text": "The higher timeframe context or bias is incorrect or missing.",
+          "provenance": "presenter_stated",
+          "ts": "06:43",
+          "numeric_definition": null
+        }
+      ],
+      "filters": [
+        {
+          "text": "Every PD array is useless without a higher timeframe narrative or bias.",
+          "provenance": "presenter_stated",
+          "ts": "03:02",
+          "numeric_definition": null
+        },
+        {
+          "text": "A slight close above the mean threshold does not instantly invalidate the idea if the overall directional arguments remain stronger.",
+          "provenance": "presenter_stated",
+          "ts": "04:37",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter when price returns to the breaker block. Use the wick only when the breaker overlaps a fair value gap; otherwise use the body.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "01:49",
+        "quote": "the up candle gets traded back into and then we continue higher"
+      },
+      "target_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "order_block_mitigation",
+        "mitigation_block_setup"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "A breaker block with an overlapping FVG (unicorn setup) makes it even stronger.",
+          "ts": "05:29",
+          "verified": false
+        },
+        {
+          "claim": "Swing failure patterns and breaker patterns are the only two patterns that will tell if the market is reversing.",
+          "ts": "09:58",
+          "verified": false
+        }
+      ],
+      "notes": "The presenter's breaker pattern is the sweep/failure structure captured by registry breaker_pattern, not the engine order_block.subtype == breaker, which only appears when an existing order block later closes through its far edge. He treats a wick through the prior swing as enough to confirm the breaker, while the registry definition uses a close beyond that swing; examples flag that possible divergence. Higher-timeframe bias here is a presenter PD-array narrative, not the engine structure bias.",
+      "examples": [
+        "ex1_breaker_schematics",
+        "ex2_bearish_breaker_unicorn",
+        "ex3_fractal_bullish_breaker",
+        "ex4_bullish_breaker_continuation"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Trade parameters (Stop Loss and Take Profit)",
+          "why": "The video focuses purely on identifying breaker blocks, overlapping confluence, and multi-timeframe alignment, omitting trade management specifics.",
+          "ts": "00:00"
+        },
+        {
+          "issue": "Exact higher-timeframe bias source is not fixed",
+          "why": "The presenter names examples like a monthly order block or a weekly premium array but does not give a closed list of valid higher-timeframe PD arrays for this setup.",
+          "ts": "03:02"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The distinction between breaker and mitigation blocks is very clearly articulated, and the requirement for HTF context is heavily emphasized."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_breaker_schematics",
+      "strategy_id": "breaker_block_setup",
+      "video_span": {
+        "start": "00:40",
+        "end": "02:46",
+        "canonical_frame_ts": "01:40"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "schematic_drawing",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "schematic",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing high"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "inferred from setup direction",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "breaker_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "breaker pattern"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "line",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Draws the structural path of a bearish breaker block."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price moves up to form a high, drops to form a low, then rallies to sweep the swing high.",
+          "maps_to_signal_step": 1,
+          "ts": "00:45"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price immediately drops, breaking and sweeping the intermediate swing low, completing the breaker pattern.",
+          "maps_to_signal_step": 1,
+          "ts": "00:52"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The down candle at the broken swing low is identified as the bearish breaker block.",
+          "maps_to_signal_step": 1,
+          "ts": "01:29"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price moves back into the breaker block range and continues lower.",
+          "maps_to_signal_step": 2,
+          "ts": "00:59"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "schematic"
+      },
+      "presenter_commentary": "He contrasts this with a mitigation block, pointing out that for a breaker block, BOTH the swing high and swing low must be taken out.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": [
+          {
+            "signal": "custom_signals.breaker_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "This is a hand-drawn schematic on a blank chart.",
+          "ts": "00:40"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_bearish_breaker_unicorn",
+      "strategy_id": "breaker_block_setup",
+      "video_span": {
+        "start": "02:46",
+        "end": "07:31",
+        "canonical_frame_ts": "05:14"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing high"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value Gap overlapping"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "coming off a weekly premium array",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "breaker_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "breaker pattern"
+            },
+            {
+              "name": "unicorn_overlap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "unicorn setup"
+            },
+            {
+              "name": "breaker_mean_threshold",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "mean threshold"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the overlapping FVG and breaker block."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price drops off a weekly premium array, creating a swing high, then a swing low. It then rallies to take the swing high.",
+          "maps_to_signal_step": 1,
+          "ts": "03:38"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price immediately drops down below, taking the swing low as well.",
+          "maps_to_signal_step": 1,
+          "ts": "03:48"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The consecutive down candles at the broken low form the bearish breaker block.",
+          "maps_to_signal_step": 1,
+          "ts": "04:07"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A fair value gap perfectly overlaps with the breaker block, forming a 'unicorn setup'.",
+          "maps_to_signal_step": 2,
+          "ts": "05:14"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price trades back into the mean threshold of the breaker block and rejects.",
+          "maps_to_signal_step": 2,
+          "ts": "05:58"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He explains that a breaker overlapping with an FVG is called a 'unicorn setup' and makes the PD array much stronger. He also stresses the necessity of higher timeframe bias.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.breaker_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "No visual access to the chart's axes or candlestick data.",
+          "ts": "02:46"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_fractal_bullish_breaker",
+      "strategy_id": "breaker_block_setup",
+      "video_span": {
+        "start": "07:31",
+        "end": "11:34",
+        "canonical_frame_ts": "08:49"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing high"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Monthly order block",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "breaker_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "breaker"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the up candle body as the breaker block."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price comes off a monthly order block providing a bullish bias.",
+          "maps_to_signal_step": null,
+          "ts": "07:44"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "On the 4-hour chart, price creates a swing high, then wicks below a swing low.",
+          "maps_to_signal_step": 1,
+          "ts": "08:13"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Immediate displacement higher takes out the swing high.",
+          "maps_to_signal_step": 1,
+          "ts": "08:24"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The up candle body (not the wick, because the wick doesn't overlap the FVG) is chosen as the bullish breaker block.",
+          "maps_to_signal_step": 1,
+          "ts": "08:34"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price trades back into the breaker body and displaces higher again.",
+          "maps_to_signal_step": 2,
+          "ts": "08:40"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He emphasizes using the candle body rather than the wick because the wick does not overlap with the fair value gap. He also zooms in to the 5-minute chart to show the exact same fractals occurring inside this block.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": [
+          {
+            "signal": "custom_signals.breaker_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "No visual access to the chart's axes or candlestick data.",
+          "ts": "07:31"
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_bullish_breaker_continuation",
+      "strategy_id": "breaker_block_setup",
+      "video_span": {
+        "start": "11:34",
+        "end": "12:43",
+        "canonical_frame_ts": "12:18"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing High"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gap / overlapping fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "previous order block overlapping with a mitigation block",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "breaker_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "bullish breaker"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the entry point inside the FVG and breaker block."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Coming off a previous order block, price makes a swing low, a swing high, then takes the swing low.",
+          "maps_to_signal_step": 1,
+          "ts": "11:48"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price immediately pushes up and takes the swing high. The presenter notes that a wick above the high is enough to confirm the bullish breaker block.",
+          "maps_to_signal_step": 1,
+          "ts": "11:54"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "An overlapping fair value gap is present.",
+          "maps_to_signal_step": 2,
+          "ts": "12:18"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price stings into the fair value gap and breaker block, and pushes higher.",
+          "maps_to_signal_step": 2,
+          "ts": "12:20"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He notes that you don't need a candle close above the high to confirm the breaker; as soon as it wicks above the high, the breaker is confirmed and higher prices can be expected upon return.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "structural_event.bullish_bos",
+            "reason": "Presenter explicitly states a wick above the high confirms the breaker, whereas a standard BOS might require a body close."
+          },
+          {
+            "signal": "custom_signals.breaker_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "No visual access to the chart's axes or candlestick data.",
+          "ts": "11:34"
+        }
+      ]
+    }
+  ]
+}

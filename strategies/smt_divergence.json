@@ -1,0 +1,726 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "smt_divergence_confirmation",
+      "aliases": [
+        "smart_money_technique",
+        "crack_in_correlation",
+        "smt_turtle_soup"
+      ],
+      "category": "indicator_confluence",
+      "summary": "Use SMT divergence only after price reaches a higher-timeframe PD array on the traded instrument. In the bullish form, the traded instrument sweeps a prior low while a correlated external symbol holds a higher low, then the buy-stop entry sits above the sweeping candle high.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": null,
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "Fractal confirmation model. The higher-timeframe context is a presenter-defined PD array on the traded instrument (examples: 4h or 1d), while the sweep and the SMT comparison are read from the lower execution chart."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.htf_pd_array_tap",
+          "market:needs_external_symbols"
+        ]
+      },
+      "glossary": {
+        "SMT": "Smart Money Technique: a crack in correlation between correlated instruments; see custom_signals.smt_divergence.",
+        "Buying on strength": "Place a stop order above the high of the sweep candle; machine reference = structural_event.candle_high."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.htf_pd_array_tap",
+          "equals": true,
+          "timeframe": "bias_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "02:18"
+        },
+        {
+          "step": 2,
+          "signal": "structural_event.kind",
+          "equals": "liquidity_sweep_low",
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "03:44"
+        },
+        {
+          "step": 3,
+          "signal": "custom_signals.smt_divergence",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "04:07"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "htf_pd_array_tap",
+          "kind": "price_action",
+          "plain_definition": "Price trades into a higher-timeframe discount array (bullish) or premium array (bearish), such as a fair value gap or order block.",
+          "numeric_definition": "(low <= bullish_fvg[0].gap_high@bias_tf AND high >= bullish_fvg[0].gap_low@bias_tf AND NOT bullish_fvg[0].filled@bias_tf) OR (low <= bullish_ob[0].zone_high@bias_tf AND high >= bullish_ob[0].zone_low@bias_tf AND NOT bullish_ob[0].invalidated@bias_tf)",
+          "definition_source": "inferred",
+          "ts": "02:18"
+        },
+        {
+          "name": "smt_divergence",
+          "kind": "indicator_relation",
+          "plain_definition": "Between two correlated instruments, one makes a lower swing low while the other makes a higher swing low (crack in correlation).",
+          "numeric_definition": "swing_low[0].price < swing_low[1].price AND external.correlated.swing_low[0].price > external.correlated.swing_low[1].price",
+          "definition_source": "presenter_stated",
+          "ts": "04:07"
+        }
+      ],
+      "sequence": [
+        "Wait for the traded instrument to tap the higher-timeframe PD array already chosen by the bias process.",
+        "On the execution chart, let the traded instrument sweep the prior swing low.",
+        "Confirm SMT divergence against the correlated symbol, then place the buy stop above the sweep candle high or wait for a separate lower-timeframe entry model."
+      ],
+      "invalidation": [
+        {
+          "text": "If both correlated assets make symmetrical swing lows without a crack in correlation, no SMT divergence exists.",
+          "provenance": "presenter_stated",
+          "ts": "04:49",
+          "numeric_definition": "NOT custom_signals.smt_divergence"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not use SMT as a directional bias tool; use it solely as a late confirmation tool after HTF bias and PD arrays are determined.",
+          "provenance": "presenter_stated",
+          "ts": "05:01",
+          "numeric_definition": "custom_signals.htf_pd_array_tap"
+        },
+        {
+          "text": "Only compare swing lows when bullish; only compare swing highs when bearish.",
+          "provenance": "presenter_stated",
+          "ts": "06:16",
+          "numeric_definition": "structural_event.kind == liquidity_sweep_low"
+        },
+        {
+          "text": "Execute on the strength leader on a higher-timeframe basis rather than selecting a pair based purely on SMT.",
+          "provenance": "presenter_stated",
+          "ts": "07:01",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Place a buy stop above the high of the sweep candle ('buying on strength'), or wait for a later lower-timeframe entry model.",
+        "structured": {
+          "type": "stop",
+          "reference": "structural_event.candle_high"
+        },
+        "provenance": "presenter_stated",
+        "ts": "08:10",
+        "quote": "the candle that was responsible for coming back below that low that exactly there would be your entry"
+      },
+      "target_rule": {
+        "text": "Target the opposing swing high or the higher-timeframe PD array already serving as the draw on liquidity.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "10:31",
+        "quote": "overlapping with what right here an order block this is our last line of defense this could be our Target"
+      },
+      "stop_rule": {
+        "text": "Place the stop below the sweep candle low with enough room to breathe; the quoted 6-point NQ example stays market-specific.",
+        "structured": {
+          "type": "beyond",
+          "reference": "structural_event.candle_low",
+          "buffer_atr": "K_STOP_BUFFER_ATR"
+        },
+        "provenance": "presenter_stated",
+        "ts": "09:39",
+        "quote": "give it some room give it some room to breathe don't suffocate your stop loss so in this case what you could do is say all right give it six points"
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": "Turtle soup entries can call the exact bottom/top, but waiting for standard secondary confirmation allows for more refined stop losses."
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "SMT provides high-probability entry confirmation because cracks in correlation reflect underlying institutional orders being placed.",
+          "ts": "04:27",
+          "verified": false
+        },
+        {
+          "claim": "Using SMT as a bias tool will severely confuse the trader.",
+          "ts": "05:01",
+          "verified": false
+        }
+      ],
+      "notes": "SMT is a late confirmation inside an existing higher-timeframe PD array, not a standalone bias tool; the required bias remains the presenter's higher-timeframe read rather than the engine's structure bias. Because Traidle stores one symbol per process, the correlation leg and the strength-leader choice remain external: custom_signals.smt_divergence uses external.correlated.* and this strategy is therefore tier C. Candle overlays matter because line charts hide the wick sweeps that the confirmation depends on.",
+      "examples": [
+        "smt_indices_es_nq",
+        "smt_forex_gu_eu"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Strength-leader selection stays external",
+          "why": "Choosing which correlated instrument to trade requires cross-symbol higher-timeframe comparison beyond the traded symbol's stored state.",
+          "ts": "07:01"
+        },
+        {
+          "issue": "Target selection stays discretionary",
+          "why": "The presenter allows either the opposing swing or the higher-timeframe PD array as the draw on liquidity, so the text is preserved and structured null avoids inventing a single target reference.",
+          "ts": "10:31"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The presenter provides precise definitions, explicit operational warnings against using SMT for bias, and a concrete entry mechanism ('Buying on strength technique') with stop placement guidance."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "smt_indices_es_nq",
+      "strategy_id": "smt_divergence_confirmation",
+      "video_span": {
+        "start": "02:18",
+        "end": "10:15",
+        "canonical_frame_ts": "09:39"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_es_4h",
+          "frame_role": "htf_context",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "four-hour fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "4-hour bullish fair value gap context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "4H FVG",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Higher timeframe 4-hour fair value gap PD array"
+            }
+          ],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_overlay_es_nq",
+          "frame_role": "entry",
+          "symbol": "ES / NQ",
+          "feed_as_shown": "NQM",
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "higher low on ES"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "lower low on NQ"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "breaker pattern / turtle soup on NQ"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "4-hour FVG confirmed by bullish SMT",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "smt_divergence",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "smt crack in correlation"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "line",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Trendline connecting non-matching swing lows on ES and NQ"
+            },
+            {
+              "type": "line",
+              "text": "Buy stop trigger",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Horizontal marker at high of sweeping candle"
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_es_4h",
+          "candle_i": null,
+          "what_happens": "Price on ES trades down into a 4-hour fair value gap.",
+          "maps_to_signal_step": 1,
+          "ts": "02:18"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_overlay_es_nq",
+          "candle_i": null,
+          "what_happens": "Overlay of NQ candles is added to compare swing lows with ES.",
+          "maps_to_signal_step": null,
+          "ts": "02:55"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_overlay_es_nq",
+          "candle_i": null,
+          "what_happens": "NQ sweeps a prior swing low to print a lower low, whereas ES holds and prints a higher low, forming a bullish SMT divergence.",
+          "maps_to_signal_step": 3,
+          "ts": "04:07"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_overlay_es_nq",
+          "candle_i": null,
+          "what_happens": "A subsequent swing low forms another SMT divergence where NQ sweeps lower and ES prints another higher low.",
+          "maps_to_signal_step": 3,
+          "ts": "05:47"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_overlay_es_nq",
+          "candle_i": null,
+          "what_happens": "Buying on strength entry: a buy stop order is placed above the high of the red candle responsible for sweeping the low on NQ.",
+          "maps_to_signal_step": null,
+          "ts": "08:19"
+        },
+        {
+          "step": 6,
+          "frame_id": "f2_overlay_es_nq",
+          "candle_i": null,
+          "what_happens": "Stop loss is placed 6 points below the low of the sweep to give the trade breathing room.",
+          "maps_to_signal_step": null,
+          "ts": "09:39"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_overlay_es_nq"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter cautions against using SMT as a directional bias tool, stating it will severely confuse the trader. Instead, it must serve solely as a confirmation tool inside an existing HTF PD array. When executing turtle soup SMT entries on the HTF strength leader (NQ), he demonstrates the 'buying on strength' technique above the sweeping candle with an explicit 6-point stop buffer.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "structural_event.liquidity_sweep_low",
+          "swing_low"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.smt_divergence",
+            "reason": "Standard single-ticker engines do not compare synchronized swing points across two separate market feeds."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract OHLC candle values or exact price coordinates",
+          "why": "Visual frames are unresolvable. Candlestick arrays are left empty per Rule 1 and Rule 5."
+        }
+      ]
+    },
+    {
+      "example_id": "smt_forex_gu_eu",
+      "strategy_id": "smt_divergence_confirmation",
+      "video_span": {
+        "start": "10:15",
+        "end": "15:04",
+        "canonical_frame_ts": "13:26"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_gu_daily",
+          "frame_role": "htf_context",
+          "symbol": "GBPUSD",
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "daily fair value gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "daily order block overlapping fair value gap"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Daily FVG overlapping an order block as last line of defense",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "Daily FVG / OB",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Overlapping Daily FVG and Order Block confluence zone"
+            }
+          ],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_overlay_gu_eu",
+          "frame_role": "entry",
+          "symbol": "GBPUSD / EURUSD",
+          "feed_as_shown": "EURUSD",
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "breaker pattern / lower low on GU"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "swing failure pattern / higher low on EU"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "breaker pattern on GU"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Daily FVG / OB confirmed by double SMT",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "smt_divergence",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "double smt divergence"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "line",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Horizontal/trend lines comparing two consecutive swing lows between GU and EU"
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_gu_daily",
+          "candle_i": null,
+          "what_happens": "GBPUSD reaches a Daily fair value gap overlapping a Daily order block.",
+          "maps_to_signal_step": 1,
+          "ts": "10:23"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_overlay_gu_eu",
+          "candle_i": null,
+          "what_happens": "EURUSD candle overlay is added to evaluate swing lows against GBPUSD.",
+          "maps_to_signal_step": null,
+          "ts": "11:56"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_overlay_gu_eu",
+          "candle_i": null,
+          "what_happens": "EURUSD prints a swing failure pattern (higher low) while GBPUSD sweeps its prior swing low (breaker pattern), marking the first SMT.",
+          "maps_to_signal_step": 3,
+          "ts": "12:42"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_overlay_gu_eu",
+          "candle_i": null,
+          "what_happens": "A subsequent leg shows GBPUSD sweeping another low while EURUSD again fails to break lower, confirming a double SMT divergence.",
+          "maps_to_signal_step": 3,
+          "ts": "13:18"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_overlay_gu_eu",
+          "candle_i": null,
+          "what_happens": "Presenter notes that 'buying on strength' was challenging here because price kept drifting down without triggering buy stops until standard entry models appeared later.",
+          "maps_to_signal_step": null,
+          "ts": "14:43"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_overlay_gu_eu"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter demonstrates double bullish SMT divergence on Forex pairs (GU and EU) inside a Daily FVG/OB zone. He explains the trade-selection dilemma between buying the manipulated pair (GU) versus the stronger pair (EU), recommending execution on whichever asset exhibits greater higher-timeframe relative strength. He also highlights that turtle soup entries can require waiting for standard lower-timeframe confirmations when prices grind continuously lower.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "order_block.bullish",
+          "structural_event.liquidity_sweep_low"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.smt_divergence",
+            "reason": "Requires cross-pair correlation tracking comparing GU and EU swing lows simultaneously."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract OHLC candle values or exact price coordinates",
+          "why": "Visual frames are unresolvable. Candlestick arrays are left empty per Rule 1 and Rule 5."
+        }
+      ]
+    }
+  ]
+}

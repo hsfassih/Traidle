@@ -1,0 +1,764 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "amd_power_of_3",
+      "aliases": [
+        "PO3",
+        "OHLC",
+        "OLHC",
+        "Accumulation Manipulation Distribution"
+      ],
+      "category": "session_open_manipulation",
+      "summary": "Track the active session, daily, weekly, or monthly open, then expect an opening manipulation away from the real draw on liquidity before distribution begins. The re-entry area is the symmetric accumulation band projected from the manipulation extreme back through that active open.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": null,
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "Fractal framework. setup_tf is the active AMD profile chart (session, daily, weekly, or monthly), bias_tf is the higher profile that supplies the draw on liquidity, and entry_tf is whichever lower chart the trader later uses for execution."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.london_open_price",
+          "custom_signals.midnight_open",
+          "custom_signals.weekly_open",
+          "custom_signals.monthly_open"
+        ]
+      },
+      "glossary": {
+        "Accumulation phase": "The symmetric re-entry band between the active AMD open and the mirrored -1 Fibonacci projection from the manipulation extreme; its exact bounds depend on whether the anchor is custom_signals.london_open_price, custom_signals.midnight_open, custom_signals.weekly_open, or custom_signals.monthly_open.",
+        "Manipulation": "The opening fake move that runs liquidity away from the true distribution leg.",
+        "Distribution": "The expansion leg that carries price from the open/manipulation complex into the higher-timeframe draw on liquidity.",
+        "OHLC / OLHC": "The bearish / bullish candle footprint of one AMD cycle."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "structural_event.kind",
+          "equals": "liquidity_sweep_low",
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "05:02"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "london_open_price",
+          "kind": "level",
+          "plain_definition": "The opening price at 02:00 New York time (start of the London kill zone).",
+          "numeric_definition": "open[-((ny_minute - 02:00) / tf_minutes)]",
+          "definition_source": "presenter_stated",
+          "ts": "01:43"
+        },
+        {
+          "name": "midnight_open",
+          "kind": "level",
+          "plain_definition": "The opening price at 00:00 New York time of the current NY day.",
+          "numeric_definition": "open[-(ny_minute / tf_minutes)]",
+          "definition_source": "presenter_stated",
+          "ts": "11:00"
+        },
+        {
+          "name": "weekly_open",
+          "kind": "level",
+          "plain_definition": "The opening price at Monday 00:00 New York time of the current week.",
+          "numeric_definition": "open[-(((ny_dow - 1) * 1440 + ny_minute) / tf_minutes)]",
+          "definition_source": "presenter_stated",
+          "ts": "13:39"
+        },
+        {
+          "name": "monthly_open",
+          "kind": "level",
+          "plain_definition": "The opening price at the start of the month in New York time.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "13:39"
+        }
+      ],
+      "sequence": [
+        "Pick the active profile open and the higher-timeframe draw on liquidity.",
+        "Let price manipulate through that open and run the opposite-side liquidity.",
+        "Project the symmetric accumulation band from the manipulation extreme back to the active open.",
+        "Use the manipulation or accumulation zone as the participation area before distribution reaches the higher-timeframe target."
+      ],
+      "invalidation": [
+        {
+          "text": "For bullish setups, stand aside once price has traded completely above the symmetric accumulation band.",
+          "provenance": "presenter_stated",
+          "ts": "05:58",
+          "numeric_definition": null
+        }
+      ],
+      "filters": [
+        {
+          "text": "Never trade Power of 3 in isolation; it must be combined with higher timeframe context and PD arrays.",
+          "provenance": "presenter_stated",
+          "ts": "17:34",
+          "numeric_definition": null
+        },
+        {
+          "text": "Be careful getting involved in a new monthly or weekly profile early on, as the initial moves represent the manipulation phase.",
+          "provenance": "presenter_stated",
+          "ts": "15:16",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Participate during the manipulation leg or inside the accumulation band, keeping bullish entries below the active open.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "05:52",
+        "quote": "ideally you want to get involved in the manipulation phase... or... this accumulation phase"
+      },
+      "target_rule": {
+        "text": "Target the opposing liquidity pool or higher-timeframe PD array that the active profile is drawing toward.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "07:32",
+        "quote": "aiming for those lows right there and eventually we slowly start to take profit"
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": "Smart money slowly distributes positions (takes profit) as price moves into the opposing retail liquidity pools."
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "This strategy works identically on Forex, indices, commodities, and every single market you can name.",
+          "ts": "01:05",
+          "verified": false
+        }
+      ],
+      "notes": "Framework, not a complete execution model. The required bias is the presenter's higher-timeframe draw on liquidity / premium-discount read, not Traidle's BOS/CHoCH structure bias. The active anchor can be the London open, New York midnight open, weekly open, or monthly open; monthly_open stays not computable in the expression grammar, and the symmetric accumulation band therefore remains descriptive rather than machine-exact.",
+      "examples": [
+        "ex1_london_killzone_ohlc",
+        "ex2_london_amd_cycle",
+        "ex3_new_york_amd_cycle",
+        "ex4_daily_ohlc_amd",
+        "ex5_monthly_weekly_amd"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Missing precise entry trigger execution",
+          "why": "The presenter defines the zones (manipulation phase and accumulation range) using a Fibonacci tool, but he does not provide a specific lower-timeframe entry mechanic (like an FVG or MSS) within those zones during this video.",
+          "ts": "05:52"
+        },
+        {
+          "issue": "Active AMD anchor stays profile-dependent",
+          "why": "The lesson switches among London, daily, weekly, and monthly profiles without a deterministic rule for which anchor is active at one evaluation point, so the accumulation band cannot be reduced to one exact numeric expression.",
+          "ts": "01:43"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The macro logic (OHLC formulation matching AMD cycles to HTF arrays) is explicitly repeated and demonstrated across multiple timeframes. The only omission is granular entry-trigger mechanics."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_london_killzone_ohlc",
+      "strategy_id": "amd_power_of_3",
+      "video_span": {
+        "start": "01:43",
+        "end": "04:25",
+        "canonical_frame_ts": "04:05"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "5m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "none",
+            "kill_zone": "london"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": [
+            {
+              "name": "FX Market sessions",
+              "params": {},
+              "source": "plotted_line",
+              "values": []
+            }
+          ]
+        }
+      ],
+      "setup_walkthrough": [],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He uses the 5-minute chart to show the exact OHLC footprint of the 3-hour London Kill Zone, revealing the fractal nature of candles.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract chart data",
+          "why": "I do not have visual access to the video frames to read the OHLC values, prices, or timestamps of the candles shown.",
+          "ts": "01:43"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_london_amd_cycle",
+      "strategy_id": "amd_power_of_3",
+      "video_span": {
+        "start": "04:25",
+        "end": "09:44",
+        "canonical_frame_ts": "09:14"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "htf_context",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "1-hour taking liquidity above a high and daily reaching for previous day low",
+            "kill_zone": "london"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "fib",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Drawn from manipulation extreme to the open to project the symmetrical accumulation phase (-1 level)."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price takes liquidity above a 1-hour high to fill an FVG, representing the manipulation phase trapping retail long traders.",
+          "maps_to_signal_step": 1,
+          "ts": "08:45"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He emphasizes that the manipulation traps long traders and that the true distribution aims for the daily previous day low and a daily FVG.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_high",
+          "fvg"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract chart data",
+          "why": "I do not have visual access to the video frames to read the OHLC values, prices, or timestamps of the candles shown.",
+          "ts": "08:37"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_new_york_amd_cycle",
+      "strategy_id": "amd_power_of_3",
+      "video_span": {
+        "start": "09:44",
+        "end": "11:00",
+        "canonical_frame_ts": "10:46"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "none",
+            "kill_zone": "new_york_am"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": [
+            {
+              "name": "FX Market sessions",
+              "params": {},
+              "source": "plotted_line",
+              "values": []
+            }
+          ]
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price takes liquidity, moves down (manipulation phase), accumulates, and then distributes toward a fair value gap.",
+          "maps_to_signal_step": 1,
+          "ts": "10:09"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He notes that the New York Kill Zone produces the exact same cycle as London, moving from a discount array manipulation to a premium array distribution.",
+      "engine_check": {
+        "should_detect": [
+          "fvg"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract chart data",
+          "why": "I do not have visual access to the video frames to read the OHLC values, prices, or timestamps of the candles shown.",
+          "ts": "09:44"
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_daily_ohlc_amd",
+      "strategy_id": "amd_power_of_3",
+      "video_span": {
+        "start": "11:00",
+        "end": "13:39",
+        "canonical_frame_ts": "12:26"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "htf_context",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "expecting a bullish week",
+            "kill_zone": "none"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "midnight_open",
+              "candle_i_range": [0, 0],
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "New York midnight open"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "fib",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Symmetrical accumulation phase drawn from the manipulation low back to the midnight open."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price drops below the 00:00 midnight open, completing the manipulation phase into a discount array.",
+          "maps_to_signal_step": null,
+          "ts": "12:12"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price accumulates below the open before distributing higher throughout the week toward premium targets.",
+          "maps_to_signal_step": null,
+          "ts": "12:26"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He stresses that institutions refer to the New York midnight open because they want to accumulate positions below it on days and weeks they expect to be bullish.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract chart data",
+          "why": "I do not have visual access to the video frames to read the OHLC values, prices, or timestamps of the candles shown.",
+          "ts": "11:00"
+        }
+      ]
+    },
+    {
+      "example_id": "ex5_monthly_weekly_amd",
+      "strategy_id": "amd_power_of_3",
+      "video_span": {
+        "start": "13:39",
+        "end": "16:45",
+        "canonical_frame_ts": "15:16"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "htf_context",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1mo",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "Demonstrating weekly and monthly structural profiles.",
+            "kill_zone": "none"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "weekly_open",
+              "candle_i_range": [0, 0],
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "Weekly open"
+            },
+            {
+              "name": "monthly_open",
+              "candle_i_range": [0, 0],
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "Monthly open"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price opens the month/week, manipulates (often on Monday or Tuesday), creating the high/low wick.",
+          "maps_to_signal_step": null,
+          "ts": "14:32"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price aggressively trends (distributes) through the middle of the week/month (Wednesday and Thursday).",
+          "maps_to_signal_step": null,
+          "ts": "15:01"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price closes out the week/month (Friday), capping the distribution phase.",
+          "maps_to_signal_step": null,
+          "ts": "15:16"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": null
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": null
+      },
+      "presenter_commentary": "He extends the fractal AMD concept to weekly and monthly profiles, advising traders to avoid the opening (Monday/Tuesday) manipulation phase and instead focus on the trending 'meat in the middle'.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract chart data",
+          "why": "I do not have visual access to the video frames to read the OHLC values, prices, or timestamps of the candles shown.",
+          "ts": "13:39"
+        }
+      ]
+    }
+  ]
+}

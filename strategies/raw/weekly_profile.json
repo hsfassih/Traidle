@@ -1,0 +1,679 @@
+{
+  "strategy": {
+    "strategy_id": "weekly_profiles_tgif",
+    "aliases": [
+      "one_shot_one_kill",
+      "tuesday_high_of_week",
+      "tgif_reversal"
+    ],
+    "category": "other:weekly_profile_expansion_and_reversal",
+    "summary": "Anticipate the extreme (High or Low) of the week forming on a high-volatility news day (typically Tuesday or Wednesday) as price stings into a HTF PD array. Ride the weekly expansion until Thursday/Friday, then trade a TGIF reversal sweeping Thursday's extreme if the trend is exhausted.",
+    "direction": "both",
+    "symmetric": true,
+    "timeframes": {
+      "bias_tf": "1D",
+      "setup_tf": "4H",
+      "entry_tf": "1H",
+      "strict": false,
+      "notes": "Bias relies on Daily levels and the economic calendar. Entries can be taken on the 1H or 15m timeframes once the daily sweep occurs."
+    },
+    "requires_context": {
+      "bias": [
+        "bullish",
+        "bearish"
+      ],
+      "session": [],
+      "time_window_ny": null,
+      "day_of_week": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "other": [
+        "Economic calendar news events for volatility injection"
+      ]
+    },
+    "glossary": {
+      "TGIF": "Thank God It's Friday; a weekly profile setup where Friday sweeps Thursday's extreme and reverses back into the weekly range to cap the week.",
+      "One shot one kill": "Catching the majority of the weekly range by taking generally one macro trade per week.",
+      "Cap the week": "Establishing the final absolute low or high of the week on Thursday or Friday, concluding the weekly expansion phase.",
+      "Turtle soup": "A false breakout or liquidity sweep of a previous day's extreme (e.g., sweeping Thursday's low before reversing higher)."
+    },
+    "signals_required": [
+      {
+        "step": 1,
+        "signal": "structural_event.kind",
+        "equals": "liquidity_sweep_low",
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "10:38"
+      }
+    ],
+    "custom_signals": [
+      {
+        "name": "news_event_day",
+        "kind": "time_rule",
+        "plain_definition": "The specific day(s) of the week where major economic news is released, providing the necessary volatility to form the weekly extreme.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "03:47"
+      },
+      {
+        "name": "thursday_exhaustion",
+        "kind": "candle_pattern",
+        "plain_definition": "Thursday closes poorly relative to its wick without showing strong displacement in the direction of the weekly trend.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "02:31"
+      },
+      {
+        "name": "fibonacci_weekly_close",
+        "kind": "level",
+        "plain_definition": "The 0.2 and 0.3 Fibonacci retracement levels drawn from the low to the high of the current week's range, indicating where Friday will likely close.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "12:54"
+      }
+    ],
+    "sequence": [
+      "Check Monday's price action to see if it consolidates or stings into a HTF PD array.",
+      "Identify when high-impact news occurs on the economic calendar to anticipate the week's volatility injection.",
+      "Watch for price to sting into a HTF premium or discount array on the high-volatility day (often Tuesday or Wednesday) to form the absolute extreme (High/Low) of the week.",
+      "Trade the continuation trend (One shot one kill) on Wednesday and Thursday targeting opposite HTF liquidity pools or PD arrays.",
+      "At the end of Thursday, if the daily candle lacks displacement and closes poorly, anticipate the trend is exhausted.",
+      "On Friday, wait for a TGIF setup: a turtle soup sweep of Thursday's low/high, then enter the reversal to rebalance the weekly range."
+    ],
+    "invalidation": [
+      {
+        "text": "If Monday simply expands without coming into a premium array and Thursday is nowhere near a PD array, blindly guessing a standard weekly template is invalid.",
+        "provenance": "presenter_stated",
+        "ts": "17:14"
+      }
+    ],
+    "filters": [
+      {
+        "text": "At the end of Thursday, do not chase price or take new continuation trades in the weekly trend direction if the market has already expanded a lot of pips.",
+        "provenance": "presenter_stated",
+        "ts": "09:48"
+      },
+      {
+        "text": "Never establish a rigid weekly template on Sunday and blindly stick to it; you must react and adapt to daily closes and news.",
+        "provenance": "presenter_stated",
+        "ts": "16:09"
+      }
+    ],
+    "entry_rule": {
+      "text": "For the TGIF setup, enter on a lower timeframe (e.g., 15m) when Friday sweeps Thursday's extreme (turtle soup) and reverses back into the range.",
+      "structured": {
+        "type": "beyond",
+        "reference": "pdl",
+        "buffer_atr": null
+      },
+      "provenance": "presenter_stated",
+      "ts": "10:38",
+      "quote": "Previous day low sweep, turtle soup, boom we continue higher on the 15 minute."
+    },
+    "target_rule": {
+      "text": "For the weekly expansion, target a higher timeframe liquidity pool. For the TGIF Friday reversal, target an unmitigated fair value gap or order block to rebalance the weekly range.",
+      "structured": null,
+      "provenance": "presenter_stated",
+      "ts": "11:05",
+      "quote": "Either on a Thursday or a Friday we will target to rebalance something inside the weekly range."
+    },
+    "stop_rule": {
+      "text": "No explicit stop rule mentioned in this specific video.",
+      "structured": null,
+      "provenance": "inferred",
+      "ts": null,
+      "quote": null
+    },
+    "management": {
+      "breakeven": null,
+      "partials": null,
+      "trailing": null,
+      "notes": "Once the TGIF target (rebalancing a gap inside the range) is hit, exit completely and do not look for new setups."
+    },
+    "risk": {
+      "typical_rr": null,
+      "min_rr": null,
+      "risk_per_trade_pct": null
+    },
+    "reinforces": [
+      "ref:market_maker_buy_model",
+      "ref:market_maker_sell_model",
+      "ref:kill_zones"
+    ],
+    "conflicts_with": [],
+    "weight": 1.0,
+    "historical_stats": {
+      "occurrences": null,
+      "win_rate": null,
+      "avg_r": null,
+      "last_backtested": null
+    },
+    "presenter_claims": [
+      {
+        "claim": "Consistently catching a 2.74 R trade on a weekly basis outperforms a lot of hedge funds.",
+        "ts": "07:22",
+        "verified": false
+      }
+    ],
+    "notes": "The presenter emphasizes that structural market delivery is dynamic. The 'Tuesday High/Low' is a common profile, but CPI/News on Wednesday can easily shift the profile to a Wednesday High/Low. Traders must rely on the economic calendar rather than fixed day-of-week assumptions.",
+    "examples": [
+      "eu_weekly_profile_tgif",
+      "dxy_bullish_profile",
+      "dxy_variation_cpi_week"
+    ],
+    "uncertainties": [
+      {
+        "issue": "Lack of strict entry mechanics for the weekly expansion leg.",
+        "why": "The video focuses on predicting the macro weekly profile and daily bias rather than exact lower-timeframe entry triggers, referencing other 'A to Z' videos (e.g., Market Maker Models) for specific entries.",
+        "ts": "12:03"
+      }
+    ],
+    "confidence": {
+      "level": "high",
+      "reason": "The macro concepts, rules for assessing the economic calendar, and parameters for the TGIF reversal are explained very clearly with direct chart correlations."
+    }
+  },
+  "examples": [
+    {
+      "example_id": "eu_weekly_profile_tgif",
+      "strategy_id": "weekly_profiles_tgif",
+      "video_span": {
+        "start": "01:08",
+        "end": "14:40",
+        "canonical_frame_ts": "11:45"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "htf_context",
+          "symbol": "EURUSD",
+          "feed_as_shown": null,
+          "timeframe": "1D",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "daily fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Tuesday stinging into a Daily FVG after Monday consolidation",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "thursday_exhaustion",
+              "candle_i_range": [
+                0,
+                0
+              ],
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "Thursday doesn't have a displacement and closes pretty low"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_1h",
+          "frame_role": "setup",
+          "symbol": "EURUSD",
+          "feed_as_shown": null,
+          "timeframe": "1h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "mitigation block"
+              }
+            ],
+            "liquidity_levels": [
+              {
+                "kind": "other",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "1H continuation trades targeting a discount liquidity pool",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f3_4h",
+          "frame_role": "htf_context",
+          "symbol": "EURUSD",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "fair value gap overlapping with this old block"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "old block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "4H trend targeting the TGIF reversal rebalance area",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f4_15m",
+          "frame_role": "entry",
+          "symbol": "EURUSD",
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "previous day low sweep turtle soup"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "pdl",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "TGIF Friday reversal after Thursday's range exhaustion",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Monday establishes a range, leaving a Daily FVG. Tuesday stings into this Daily FVG to form the high of the week.",
+          "maps_to_signal_step": null,
+          "ts": "01:36"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "Price trends downward through Wednesday and Thursday, presenting 1H continuation trades targeting a discount liquidity pool.",
+          "maps_to_signal_step": null,
+          "ts": "06:10"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Thursday's daily candle closes poorly without showing strong downward displacement, signaling trend exhaustion.",
+          "maps_to_signal_step": null,
+          "ts": "02:31"
+        },
+        {
+          "step": 4,
+          "frame_id": "f4_15m",
+          "candle_i": null,
+          "what_happens": "On Friday, price sweeps Thursday's low (Previous Day Low) to create a 'turtle soup' reversal setup.",
+          "maps_to_signal_step": 1,
+          "ts": "10:38"
+        },
+        {
+          "step": 5,
+          "frame_id": "f3_4h",
+          "candle_i": null,
+          "what_happens": "The TGIF reversal trades back up into the weekly range, specifically targeting a 4H FVG/Order Block overlap to rebalance.",
+          "maps_to_signal_step": null,
+          "ts": "11:12"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f4_15m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter stresses reading the daily candles. He emphasizes that if Thursday lacks displacement, you should avoid shorting on Friday and instead look for a TGIF reversal after a previous day low sweep.",
+      "engine_check": {
+        "should_detect": [
+          "pdl",
+          "liquidity_sweep_low",
+          "fvg.bullish",
+          "fvg.bearish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "No visual chart access",
+          "why": "Without seeing the video frames, exact asset times, prices, and candlestick OHLCV data cannot be identified. All frames have been submitted with empty candle arrays.",
+          "ts": "01:08-14:40"
+        }
+      ]
+    },
+    {
+      "example_id": "dxy_bullish_profile",
+      "strategy_id": "weekly_profiles_tgif",
+      "video_span": {
+        "start": "14:40",
+        "end": "15:35",
+        "canonical_frame_ts": "15:17"
+      },
+      "example_role": "variation",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_dxy_4h",
+          "frame_role": "htf_context",
+          "symbol": "DXY",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "daily fair value gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "overlapping mitigation block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Inverse of EURUSD profile, expanding higher from a Daily FVG",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "smt_divergence",
+              "candle_i_range": [
+                0,
+                0
+              ],
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "SMT uh-huh"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_dxy_4h",
+          "candle_i": null,
+          "what_happens": "DXY trades into a Daily FVG and overlapping 4H mitigation block to establish the low of the week.",
+          "maps_to_signal_step": null,
+          "ts": "14:45"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_dxy_4h",
+          "candle_i": null,
+          "what_happens": "Price expands higher toward a clearly defined FVG target, arriving on Thursday.",
+          "maps_to_signal_step": null,
+          "ts": "15:01"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_dxy_4h",
+          "candle_i": null,
+          "what_happens": "Thursday caps the week with no huge displacement. On Friday, DXY fails to sweep Thursday's high, forming SMT divergence with EURUSD (which did sweep its extreme).",
+          "maps_to_signal_step": null,
+          "ts": "15:17"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": ""
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "explanation_only",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He uses the DXY chart to confirm the inverse EURUSD trade. He points out the SMT divergence on Friday where EU swept its low but DXY failed to sweep its high.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "order_block.mitigation"
+        ],
+        "may_differ": [
+          {
+            "signal": "smt_divergence",
+            "reason": "Traidle requires cross-asset structural comparison which is currently tracked under custom_signals rather than native dictionary structural_events."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "No visual chart access",
+          "why": "Without seeing the video frames, exact asset times, prices, and candlestick OHLCV data cannot be identified. All frames have been submitted with empty candle arrays.",
+          "ts": "14:40-15:35"
+        }
+      ]
+    }
+  ]
+}

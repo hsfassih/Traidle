@@ -1,0 +1,609 @@
+{
+  "strategy": {
+    "strategy_id": "liquidity_sweep_and_target",
+    "aliases": [
+      "Turtle Soup",
+      "Consolidation Sweep Reversal"
+    ],
+    "category": "liquidity_reversal",
+    "summary": "Wait for price to sweep a liquidity pool (such as a consolidation boundary or retail resistance) and show a strong displacement/reaction in the opposite direction. Once confirmed, target the opposing liquidity pool.",
+    "direction": "both",
+    "symmetric": true,
+    "timeframes": {
+      "bias_tf": "htf",
+      "setup_tf": "ltf",
+      "entry_tf": null,
+      "strict": false,
+      "notes": "The presenter strongly emphasizes that this must be done with higher timeframe context; trading liquidity pools strictly on lower timeframes is discouraged."
+    },
+    "requires_context": {
+      "bias": [],
+      "session": [],
+      "time_window_ny": null,
+      "day_of_week": null,
+      "other": [
+        "Higher timeframe context or PD array (e.g., a HTF breaker or order block)."
+      ]
+    },
+    "glossary": {
+      "Turtle soup": "A sweep of trend followers and breakout traders, trapping them before price reverses.",
+      "Liquidity run": "When price breaks a level and continues in that direction without sweeping/reversing.",
+      "Liquidity pool": "Clusters of resting buy stops (above highs) and sell stops (below lows) targeted by institutions to fill large orders."
+    },
+    "signals_required": [
+      {
+        "step": 1,
+        "signal": "structural_event.kind",
+        "equals": "liquidity_sweep_high",
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "12:21"
+      },
+      {
+        "step": 2,
+        "signal": "custom_signals.displacement_reaction",
+        "equals": true,
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": false,
+        "provenance": "presenter_stated",
+        "ts": "13:08"
+      }
+    ],
+    "custom_signals": [
+      {
+        "name": "displacement_reaction",
+        "kind": "candle_pattern",
+        "plain_definition": "A strong and immediate move away from the swept level, proving institutions are rejecting those prices.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "13:08"
+      },
+      {
+        "name": "consolidation_range",
+        "kind": "session_range",
+        "plain_definition": "A period of sideways price action building buy stops above and sell stops below.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "12:21"
+      }
+    ],
+    "sequence": [
+      "Identify a higher timeframe context/PD array to establish an overall bias.",
+      "Identify obvious liquidity pools (consolidation highs/lows, equal highs/lows, or retail trendlines).",
+      "Wait for price to sweep one side of the liquidity (e.g., sweeping buy stops above a consolidation).",
+      "Wait for a strong displacement or rejection in the opposite direction. Do not enter immediately upon the sweep.",
+      "Once the reaction is confirmed, enter the trade targeting the opposing liquidity pool."
+    ],
+    "invalidation": [
+      {
+        "text": "Price stays above the swept high (or below the swept low) for too long, turning the sweep into a liquidity run.",
+        "provenance": "presenter_stated",
+        "ts": "13:08"
+      }
+    ],
+    "filters": [
+      {
+        "text": "Do not instantly target the opposite side just because one side was swept; a confirmed reaction is mandatory.",
+        "provenance": "presenter_stated",
+        "ts": "12:21"
+      },
+      {
+        "text": "Must be traded with higher timeframe context to avoid confusion.",
+        "provenance": "presenter_stated",
+        "ts": "12:21"
+      }
+    ],
+    "entry_rule": {
+      "text": "Enter in the direction of the reaction/displacement after the initial liquidity sweep.",
+      "structured": null,
+      "provenance": "presenter_stated",
+      "ts": "15:01",
+      "quote": "we need some sort of reaction... because when we get that reaction we can truly Target opposite side"
+    },
+    "target_rule": {
+      "text": "Target the opposing liquidity pools such as equal highs, equal lows, or the opposite side of a consolidation.",
+      "structured": {
+        "type": "limit",
+        "reference": "liquidity_levels"
+      },
+      "provenance": "presenter_stated",
+      "ts": "11:22",
+      "quote": "what is above Price Right Here equal highs... where do we target right there relatively equal highs get taken"
+    },
+    "stop_rule": {
+      "text": "Not explicitly defined in this conceptual video.",
+      "structured": null,
+      "provenance": "inferred",
+      "ts": null,
+      "quote": null
+    },
+    "management": {
+      "breakeven": null,
+      "partials": null,
+      "trailing": null,
+      "notes": null
+    },
+    "risk": {
+      "typical_rr": null,
+      "min_rr": null,
+      "risk_per_trade_pct": null
+    },
+    "reinforces": [],
+    "conflicts_with": [],
+    "weight": 1.0,
+    "historical_stats": {
+      "occurrences": null,
+      "win_rate": null,
+      "avg_r": null,
+      "last_backtested": null
+    },
+    "presenter_claims": [
+      {
+        "claim": "The majority of traders never get past simple support/resistance and trendline patterns, providing liquidity for institutions.",
+        "ts": "02:09",
+        "verified": false
+      }
+    ],
+    "notes": "This video heavily focuses on market mechanics and the logic behind *why* SMC setups form, rather than giving a strict mechanical entry trigger. The setup relies on conceptual validation (displacement after a sweep) and contextual narrative.",
+    "examples": [
+      "ex1_retail_liquidity_concepts",
+      "ex2_dax_multi_tf_liquidity",
+      "ex3_sweep_vs_run"
+    ],
+    "uncertainties": [
+      {
+        "issue": "Specific entry trigger",
+        "why": "The presenter explains the necessity of a 'reaction' or 'displacement' after the sweep, but does not specify exactly which PD array (FVG, OB, etc.) should be used for the entry execution in this specific lesson.",
+        "ts": "14:18"
+      }
+    ],
+    "confidence": {
+      "level": "medium",
+      "reason": "The theoretical framework and targeting rules are extremely clear, but the exact mechanical entry and stop-loss rules are omitted in favor of teaching macro concepts."
+    }
+  },
+  "examples": [
+    {
+      "example_id": "ex3_fractal_bullish_breaker",
+      "strategy_id": "breaker_block_setup",
+      "video_span": {
+        "start": "07:31",
+        "end": "11:34",
+        "canonical_frame_ts": "11:00"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "4H and 5m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing high"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "we Wick below it"
+              },
+              {
+                "candle_i": null,
+                "kind": "bullish_bos",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "displacement higher taking out the swing high"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "overlapping fair value gap"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "volume imbalance / little fair value gap (5m)"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "breaker",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "breaker / up candle"
+              },
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "mitigation block (5m)"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Monthly order block",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "breaker_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "breaker pattern"
+            },
+            {
+              "name": "swing_failure_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "swing failure pattern (5m)"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": "Swing Failure / Breaker Pattern",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Text added to chart emphasizing the only two reversal patterns."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price hits a monthly order block and moves to a 4-hour timeframe. It creates a swing high, then wicks below a swing low.",
+          "maps_to_signal_step": null,
+          "ts": "08:15"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Immediate displacement higher takes out the 4-hour swing high, confirming a bullish 4-hour breaker block on the up candle.",
+          "maps_to_signal_step": 1,
+          "ts": "08:24"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price returns to the 4-hour breaker's body (since the wick doesn't overlap the FVG). An overlapping 4-hour FVG strengthens it.",
+          "maps_to_signal_step": 2,
+          "ts": "08:35"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Zooming into the 5-minute timeframe during the 4-hour return, price forms a mitigation block (swing failure pattern: fails to take low, breaks high).",
+          "maps_to_signal_step": null,
+          "ts": "09:27"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price mitigates the 5-minute mitigation block and its overlapping volume imbalance/FVG before pushing higher.",
+          "maps_to_signal_step": null,
+          "ts": "10:35"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights fractality: higher timeframe bias (Monthly OB) aligns with an intermediate setup (4H Breaker), which is entered via a lower timeframe setup (5m Mitigation Block). He emphasizes taking the body of the breaker if the wick doesn't overlap the FVG.",
+      "engine_check": {
+        "should_detect": [
+          "custom_signals.breaker_pattern",
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "order_block.subtype",
+            "reason": "The presenter dynamically chooses the 'up candle's body' as the breaker zone specifically because its wick does not overlap with an FVG. Traidle's standard logic might just use the full candle range."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing visual data",
+          "why": "Transcript only; no OHLC, exact prices, or timestamps available."
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_bullish_breaker_continuation",
+      "strategy_id": "breaker_block_setup",
+      "video_span": {
+        "start": "11:34",
+        "end": "12:43",
+        "canonical_frame_ts": "12:20"
+      },
+      "example_role": "variation",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing high"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "take the swing low"
+              },
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "Wick above this high"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "overlapping verify Gap / forefather Gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "breaker",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "bullish breaker"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "coming off previous order block / mitigation block",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "breaker_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "pattern"
+            },
+            {
+              "name": "wick_confirmation",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "as soon as we Wick above this high this breaker block gets confirmed"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price bounces off a previous order block/mitigation block, forms a swing low and a swing high.",
+          "maps_to_signal_step": null,
+          "ts": "11:34"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price drops to take the swing low, then immediately pushes up to take the swing high.",
+          "maps_to_signal_step": 1,
+          "ts": "11:51"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A body close above the high is not required; a wick above the high confirms the bullish breaker block.",
+          "maps_to_signal_step": 1,
+          "ts": "12:00"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price returns to the breaker block and its overlapping FVG, mitigates orders, and continues pushing higher.",
+          "maps_to_signal_step": 2,
+          "ts": "12:20"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He notes a specific structural nuance: you don't need a body close above the swing high to validate a breaker block. As soon as the high is wicked, the breaker is confirmed and you can expect higher prices upon return.",
+      "engine_check": {
+        "should_detect": [
+          "custom_signals.breaker_pattern",
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "structural_event.kind",
+            "reason": "Traidle generally expects a 'BOS/CHoCH' (body close) for structure shifts, but the presenter explicitly states a wick ('liquidity_sweep_high') is enough to confirm the breaker."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing visual data",
+          "why": "Transcript only; no OHLC, exact prices, or timestamps available."
+        }
+      ]
+    }
+  ]
+}

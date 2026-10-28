@@ -1,0 +1,779 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "seek_and_destroy_turtle_soup",
+      "aliases": [
+        "S&D Turtle Soup"
+      ],
+      "category": "mean_reversion",
+      "summary": "Trade from the outer quadrants (premium premium or discount discount) of a non-trending range back toward equilibrium using an ST model after a liquidity sweep.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "Daily",
+        "setup_tf": "5m",
+        "entry_tf": "5m",
+        "strict": false,
+        "notes": "Range and quadrants drawn on a HTF, setup and execution identified on a LTF (e.g., 5-minute)."
+      },
+      "requires_context": {
+        "bias": [
+          "undetermined"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "Market must be in confirmed Seek and Destroy (consolidation) conditions."
+        ]
+      },
+      "glossary": {
+        "Premium premium": "The upper quartile (0.75 to 1.0) of a defined consolidation range where shorts are sought.",
+        "Discount discount": "The lower quartile (0 to 0.25) of a defined consolidation range where longs are sought.",
+        "Close target": "A conservative take-profit level near range equilibrium, reflecting that price won't run far in consolidation."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.quadrant_extreme",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "02:17"
+        },
+        {
+          "step": 2,
+          "signal": "structural_event.kind",
+          "equals": "liquidity_sweep_high",
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "03:52"
+        },
+        {
+          "step": 3,
+          "signal": "custom_signals.st_model",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "04:16"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "quadrant_extreme",
+          "kind": "level",
+          "plain_definition": "Price reaches the 0-0.25 (discount discount) or 0.75-1.0 (premium premium) zones of the established range.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "02:17"
+        },
+        {
+          "name": "st_model",
+          "kind": "candle_pattern",
+          "plain_definition": "A two-stage displacement pattern following a sweep, where the second displacement leaves an overlapping PD array for entry.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "04:16"
+        }
+      ],
+      "sequence": [
+        "Determine the recent range that price is stuck in.",
+        "Draw Fibonacci with quadrants to identify 0-0.25 (discount discount) and 0.75-1.0 (premium premium).",
+        "Wait for price to reach one of these extreme quadrants.",
+        "Observe a Judas swing that sweeps a local liquidity pool (swing high/low).",
+        "Wait for an ST model to form (two successive displacements in the reversal direction).",
+        "Enter on the overlapping PD array (FVG/OB) left by the second displacement.",
+        "Target a short-term liquidity pool or FVG close to the range equilibrium."
+      ],
+      "invalidation": [
+        {
+          "text": "Once equilibrium is reached, everything is invalidated. Do not look for new entries until a new quadrant extreme is hit.",
+          "provenance": "presenter_stated",
+          "ts": "12:21"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not expect price to run very far; use a close, easy target as price will likely return to your entry.",
+          "provenance": "presenter_stated",
+          "ts": "05:21"
+        },
+        {
+          "text": "Wait for a failure to follow through to confirm a new range if the old one is broken.",
+          "provenance": "presenter_stated",
+          "ts": "08:33"
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the overlapping PD array (e.g., FVG) after the second displacement of the ST model.",
+        "structured": {
+          "type": "limit",
+          "reference": "fvg.ce"
+        },
+        "provenance": "presenter_stated",
+        "ts": "04:24",
+        "quote": "enter on an overlapping beat array right there covering the intermediate term high"
+      },
+      "target_rule": {
+        "text": "Target a liquidity pool (swing point) or fair value gap close to the 50% equilibrium of the range.",
+        "structured": {
+          "type": "limit",
+          "reference": "premium_discount.equilibrium"
+        },
+        "provenance": "presenter_stated",
+        "ts": "04:38",
+        "quote": "Target a liquidity pull again close to equilibrium of the range that you are trading in"
+      },
+      "stop_rule": {
+        "text": "Place stop loss beyond the intermediate term high/low. Give it room to breathe; do not suffocate it.",
+        "structured": {
+          "type": "beyond",
+          "reference": "swing_extreme",
+          "buffer_atr": null
+        },
+        "provenance": "presenter_stated",
+        "ts": "09:22",
+        "quote": "you would not suffocate your stop loss that is very important don't suffocate your stop loss give it some room to breathe"
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": "Get in and get out; expect price to likely return to entry if held too long."
+      },
+      "risk": {
+        "typical_rr": 1.75,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "ref:st_model"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "A 1.75 or 1:2 RR is a great result in Seek and Destroy conditions and you should be content with it.",
+          "ts": "12:05",
+          "verified": false
+        }
+      ],
+      "notes": "Seek and destroy setups rely on the mean-reverting nature of consolidation. The framework enforces strict entry locations (outer 25% extremes) and strict exits (equilibrium).",
+      "examples": [
+        "ex1_seek_destroy_premium",
+        "ex2_seek_destroy_discount"
+      ],
+      "uncertainties": [],
+      "confidence": {
+        "level": "high",
+        "reason": "Clear step-by-step sequence dictated directly by the presenter."
+      }
+    },
+    {
+      "strategy_id": "trending_turtle_soup_strength",
+      "aliases": [
+        "Buying on Strength",
+        "Selling on Weakness",
+        "Trending Turtle Soup"
+      ],
+      "category": "trend_following",
+      "summary": "In trending conditions, wait for a lower-timeframe liquidity sweep into a higher-timeframe PD array at a specific time (Killzone). Enter using a stop order placed above the candle that swept the low.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "4h",
+        "setup_tf": "1h",
+        "entry_tf": "5m",
+        "strict": false,
+        "notes": "Fractal application: 4H context, 1H setup array, 5m entry trigger."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [
+          "london",
+          "new_york_am"
+        ],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "Price must be stinging into a HTF PD array (e.g., 1H FVG)."
+        ]
+      },
+      "glossary": {
+        "Buying on strength": "Placing a buy stop order just above the high of the specific down-candle that swept the liquidity low.",
+        "Selling on weakness": "Placing a sell stop order just below the low of the specific up-candle that swept the liquidity high."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "fvg.state",
+          "equals": "open",
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "13:10"
+        },
+        {
+          "step": 2,
+          "signal": "structural_event.kind",
+          "equals": "liquidity_sweep_low",
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "14:21"
+        },
+        {
+          "step": 3,
+          "signal": "custom_signals.killzone_timing",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "13:55"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "killzone_timing",
+          "kind": "time_rule",
+          "plain_definition": "The sweep into the HTF array occurs specifically during a Killzone (e.g., London or NY Open) when time dictates price action.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "13:55"
+        },
+        {
+          "name": "sweep_candle",
+          "kind": "candle_pattern",
+          "plain_definition": "The specific single candle that pierces and sweeps the liquidity low/high.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "19:11"
+        }
+      ],
+      "sequence": [
+        "Establish a HTF draw on liquidity and locate a HTF PD array (e.g., 1H FVG) in that direction.",
+        "Wait for time (a Killzone) to inject volatility.",
+        "Observe price sweep a LTF swing high/low, stinging directly into the HTF PD array.",
+        "Identify the specific single candle that swept the low (for a long).",
+        "Place a buy stop order above the high of that sweeping down-candle (Buying on strength).",
+        "Once tagged in, hold until the HTF draw on liquidity is reached."
+      ],
+      "invalidation": [
+        {
+          "text": "If time (the killzone) does not align with the sweep into the discount array, there is no entry opportunity.",
+          "provenance": "presenter_stated",
+          "ts": "20:00"
+        }
+      ],
+      "filters": [
+        {
+          "text": "A LTF swing extreme inside a HTF FVG has very slim odds of holding; anticipate it being swept.",
+          "provenance": "presenter_stated",
+          "ts": "14:56"
+        },
+        {
+          "text": "Turtle soups can satisfy the ego by calling tops/bottoms, but they are not always the highest probability setups.",
+          "provenance": "presenter_stated",
+          "ts": "18:38"
+        }
+      ],
+      "entry_rule": {
+        "text": "Place a buy stop above the high of the candle that swept the low (or sell stop below the candle that swept the high).",
+        "structured": {
+          "type": "stop",
+          "reference": "custom_signals.sweep_candle.high"
+        },
+        "provenance": "presenter_stated",
+        "ts": "19:11",
+        "quote": "buying on strength you want to enter above the candle that was responsible for sweeping that low"
+      },
+      "target_rule": {
+        "text": "Target the opposing HTF liquidity pool (e.g., 4H swing low/high).",
+        "structured": {
+          "type": "limit",
+          "reference": "liquidity_levels"
+        },
+        "provenance": "presenter_stated",
+        "ts": "15:35",
+        "quote": "the discount rate that you're targeting then is a swing low on a four hour basis"
+      },
+      "stop_rule": {
+        "text": "Place the stop loss below the swept low with sufficient room to breathe (8-10 pips on ES, 20-30 pips on Forex).",
+        "structured": {
+          "type": "beyond",
+          "reference": "sweep_extreme",
+          "buffer_atr": null
+        },
+        "provenance": "presenter_stated",
+        "ts": "18:13",
+        "quote": "on Forex it's like a 20 30 pip stop loss on ES right here I would argue all right maybe an 8 to 10 pip"
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "Turtle soups look fancy and satisfy the ego, but are not the highest probability entries and don't give the best RR compared to waiting.",
+          "ts": "18:38",
+          "verified": false
+        }
+      ],
+      "notes": "This variation relies heavily on HTF alignment and Killzone timing to validate the trap, bypassing the need for a structural shift in favor of a mechanical stop-entry on the sweep candle.",
+      "examples": [
+        "ex3_trending_eu_short",
+        "ex4_trending_es_long"
+      ],
+      "uncertainties": [],
+      "confidence": {
+        "level": "high",
+        "reason": "Explicit entry criteria ('buying on strength') outlined clearly with concrete stop-loss examples."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_seek_destroy_premium",
+      "strategy_id": "seek_and_destroy_turtle_soup",
+      "video_span": {
+        "start": "03:13",
+        "end": "07:22",
+        "canonical_frame_ts": "05:48"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_5m",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "5m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing highs"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "Judas that sweeps liquidity"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "overlapping beat array / fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "other",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "Seek and Destroy consolidation",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "quadrant_extreme",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "premium premium"
+            },
+            {
+              "name": "st_model",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "first displacement lower... second one"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "fib",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Fibonacci tool dividing the range into quartiles (0.25, 0.5, 0.75) to find premium premium."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "Price reaches the premium premium zone of the established Seek and Destroy range.",
+          "maps_to_signal_step": 1,
+          "ts": "03:13"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "A Judas swing occurs, sweeping buy-side liquidity consisting of local swing highs.",
+          "maps_to_signal_step": 2,
+          "ts": "04:00"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "The ST model forms with a first displacement lower, followed by a second displacement that leaves an overlapping PD array.",
+          "maps_to_signal_step": 3,
+          "ts": "04:16"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "A short entry is taken on the second fair value gap (the higher probability overlapping array).",
+          "maps_to_signal_step": null,
+          "ts": "05:48"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "The target is set strictly to a short-term liquidity pool just above the 50% equilibrium line.",
+          "maps_to_signal_step": null,
+          "ts": "07:09"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_5m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He emphasizes targeting equilibrium or a very close objective because in Seek and Destroy conditions, price won't run far and will likely return to the entry. He advises picking one entry model and sticking to it to avoid emotional trading.",
+      "engine_check": {
+        "should_detect": [
+          "liquidity_sweep_high",
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.quadrant_extreme",
+            "reason": "Requires a custom Fibonacci quartile tool drawing logic on user-defined consolidation ranges."
+          },
+          {
+            "signal": "custom_signals.st_model",
+            "reason": "Requires logic checking for two successive displacements in the same direction."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read specific candle OHLC or price scales",
+          "why": "Relying on transcription without clear visual resolution of chart coordinates.",
+          "ts": "03:13"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_seek_destroy_discount",
+      "strategy_id": "seek_and_destroy_turtle_soup",
+      "video_span": {
+        "start": "07:22",
+        "end": "12:40",
+        "canonical_frame_ts": "11:51"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_5m",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "5m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "liquidity sweep right there on the lows"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "bullish for fire gap / bullish fagot"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order block with the fair value Gap overlapping"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "Seek and Destroy conditions re-established.",
+            "kill_zone": "new_york_pm"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "quadrant_extreme",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "discount discount discount right there"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "Price fails to follow through on the lows of the previous range, validating a new consolidation range. Quadrants are redrawn.",
+          "maps_to_signal_step": null,
+          "ts": "08:33"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "Price drops into 'discount discount'. The PM session initiates a Judas swing that sweeps a local low.",
+          "maps_to_signal_step": 1,
+          "ts": "10:17"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "Early long entries using bullish fair value gaps fail, producing up to two potential losses.",
+          "maps_to_signal_step": null,
+          "ts": "11:10"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "Later in the PM session, another sweep occurs followed by an ST model leaving a small bullish FVG.",
+          "maps_to_signal_step": 2,
+          "ts": "11:23"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "A successful long entry is taken targeting a swing high near equilibrium for a 1:2 risk-to-reward.",
+          "maps_to_signal_step": null,
+          "ts": "11:38"
+        },
+        {
+          "step": 6,
+          "frame_id": "f1_5m",
+          "candle_i": null,
+          "what_happens": "A secondary entry on an overlapping order block also successfully yields a 1:1.75 return.",
+          "maps_to_signal_step": null,
+          "ts": "11:51"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_5m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": 1.75,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He notes that early entries can produce losses, but a 1.75 or 1:2 R return late in the day during Seek and Destroy conditions is a great result to be content with.",
+      "engine_check": {
+        "should_detect": [
+          "liquidity_sweep_low",
+          "fvg.bullish",
+          "order_block.bullish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read specific candle OHLC or price scales",
+          "why": "Relying on transcription without clear visual resolution of chart coordinates.",
+          "ts": "07:22"
+        }
+      ]
+    }
+  ]
+}

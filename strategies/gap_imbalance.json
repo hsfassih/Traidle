@@ -1,0 +1,475 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "gap_and_imbalance_overlap_confluence",
+      "aliases": [
+        "imbalance_pd_array_confluence",
+        "fvg_rebalance_setup",
+        "bpr_poi_confluence"
+      ],
+      "category": "context_framework",
+      "summary": "Treat fair value gaps, balanced price ranges, liquidity voids, and volume imbalances as inefficiency-based points of interest where price may rebalance before continuing. The highest-probability subset is an imbalance overlapping another PD array, but this episode does not define a full entry-stop-target model.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": null,
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "Fractal across timeframes. The presenter also points to news shocks and TradFi-style session closures as sources of liquidity voids and body gaps, but on crypto perpetual data those patterns are rare."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.overlapping_pd_array"
+        ]
+      },
+      "glossary": {
+        "BISI": "Institutional label for a bullish fair value gap; the engine detects the displacement subset as fvg.bullish, while the presenter also accepts custom_signals.fvg_without_displacement.",
+        "SIBI": "Institutional label for a bearish fair value gap; mirror the bullish-side definitions.",
+        "BPR": "Balanced price range: the overlap of opposing fair value gaps; Traidle's closest built-in is balanced_range, but it adds a 10-candle recency rule not stated here."
+      },
+      "signals_required": [],
+      "custom_signals": [
+        {
+          "name": "fvg_without_displacement",
+          "kind": "candle_pattern",
+          "plain_definition": "A three-candle bullish fair value gap with a wick gap between candle 1 and candle 3, regardless of displacement size; mirror for bearish.",
+          "numeric_definition": "high[-2] < low",
+          "definition_source": "presenter_stated",
+          "ts": "03:48"
+        },
+        {
+          "name": "overlapping_pd_array",
+          "kind": "indicator_relation",
+          "plain_definition": "A fair value gap that shares price with another PD array (order block) on the same timeframe; the shared range is the entry zone.",
+          "numeric_definition": "max(bullish_fvg[0].gap_low, bullish_ob[0].zone_low) <= min(bullish_fvg[0].gap_high, bullish_ob[0].zone_high) AND NOT bullish_fvg[0].filled AND NOT bullish_ob[0].invalidated",
+          "definition_source": "inferred",
+          "ts": "10:34"
+        }
+      ],
+      "sequence": [],
+      "invalidation": [
+        {
+          "text": "If wicks of candle 1 and candle 3 overlap during formation, no gap exists and the fair value gap is invalid.",
+          "provenance": "presenter_stated",
+          "ts": "02:53",
+          "numeric_definition": "NOT custom_signals.fvg_without_displacement"
+        },
+        {
+          "text": "A full close through and beyond the imbalance without rejection invalidates the PD array Point of Interest.",
+          "provenance": "inferred",
+          "ts": "03:21",
+          "numeric_definition": null
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not treat three candles as an FVG if the first wick and third wick overlap, leaving no body space in between.",
+          "provenance": "presenter_stated",
+          "ts": "02:53",
+          "numeric_definition": "custom_signals.fvg_without_displacement"
+        },
+        {
+          "text": "Imbalances are strongest when overlapping with another PD array; standalone low-timeframe imbalances without context or overlap are prone to failure.",
+          "provenance": "presenter_stated",
+          "ts": "10:34",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter when price trades into ('stings into') the imbalance (FVG, BPR overlap zone, Liquidity Void, or Volume Imbalance), particularly when overlapping with another PD array.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "03:14",
+        "quote": "it can already sting into it and then just go lower it doesn't have to rebalance it fully"
+      },
+      "target_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "order_block_mitigation",
+        "breaker_block_setup",
+        "mitigation_block_setup"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "Price has a very strong tendency—even stronger than a fair value gap—to trade back into a liquidity void before continuing.",
+          "ts": "08:26",
+          "verified": false
+        },
+        {
+          "claim": "There is no premise to how big a fair value gap should be; even the smallest gap between wicks with a little body is a valid fair value gap.",
+          "ts": "03:48",
+          "verified": false
+        },
+        {
+          "claim": "All four imbalance types are strongest when overlapping with another PD array.",
+          "ts": "10:34",
+          "verified": false
+        }
+      ],
+      "notes": "Context framework, not a finished execution model. The presenter treats any wick-gap three-candle pattern as a valid FVG, so custom_signals.fvg_without_displacement captures that geometry while engine fvg.* remains the displacement-only subset. custom_signals.overlapping_pd_array is the closest supported overlap proxy, but breaker-block, mitigation-block, liquidity-void, volume-imbalance, and presenter-style BPR confluence still remain conceptual or detector backlog.",
+      "examples": [
+        "ex1_fvg_identification",
+        "ex2_bisi_sibi_identification"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Missing mechanical execution rules (entry trigger, stop loss, take profit)",
+          "why": "The presenter explains the structural definition and rebalancing behavior of imbalances as PD arrays/POIs, explicitly directing viewers to live streams and higher-timeframe confluence for full trade narrative execution.",
+          "ts": "10:34"
+        },
+        {
+          "issue": "Exact numeric threshold for BPR proximity",
+          "why": "Unlike Traidle's 10-candle rule for BPR, the presenter does not specify a maximum candle distance between the bullish and bearish FVGs.",
+          "ts": "05:51"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The presenter's structural definitions, candlestick criteria, and differences between FVG, BISI/SIBI, BPR, Liquidity Void, and Volume Imbalance are stated with extreme clarity."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_fvg_identification",
+      "strategy_id": "gap_and_imbalance_overlap_confluence",
+      "video_span": {
+        "start": "01:51",
+        "end": "04:29",
+        "canonical_frame_ts": "03:50"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "bullish fair value Gap"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": null,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "this isn't a fair value Gap (wicks overlap)"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "teaching example",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "fvg_without_displacement",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "the smallest little fair value gap"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the empty space (the body of the middle candle) between the first candle's wick and the third candle's wick."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Presenter identifies a three-candle sequence where the first candle's wick and the third candle's wick do not overlap, leaving a gap on the body of the expansive second candle.",
+          "maps_to_signal_step": null,
+          "ts": "02:21"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Presenter shows an invalid example where a candle has a body, but the preceding and following wicks overlap, leaving no actual gap.",
+          "maps_to_signal_step": null,
+          "ts": "02:53"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price later retraces to 'sting into' a valid fair value gap to rebalance the inefficiency without needing to fill it entirely before moving away.",
+          "maps_to_signal_step": null,
+          "ts": "03:14"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He strictly defines the structural geometry of a Fair Value Gap (3 candles, gap between wick 1 and wick 3) and emphasizes that size does not matter. He specifically demonstrates how an overlapping wick invalidates the gap entirely.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "fvg.bullish",
+            "reason": "Traidle requires the displacement candle's body to be >= 1.5x the rolling average. The presenter explicitly states that 'there is no premise to how big a fair value gap should be' and accepts any gap."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing exact prices and OHLC data",
+          "why": "I am operating from the video transcript without direct visual access to the chart's price axis, timestamp scale, or exact candle values."
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_bisi_sibi_identification",
+      "strategy_id": "gap_and_imbalance_overlap_confluence",
+      "video_span": {
+        "start": "04:29",
+        "end": "05:51",
+        "canonical_frame_ts": "05:30"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "BISI / buy-side imbalance"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "SIBI / sell-side imbalance"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "teaching example",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Draws boxes over bullish and bearish gaps to explain the terminology."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Presenter highlights an upward displacement gap, defining it as a Buy-Side Imbalance Sell-Side Inefficiency (BISI), equating it directly to a bullish FVG.",
+          "maps_to_signal_step": null,
+          "ts": "04:38"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Presenter highlights a downward displacement gap, defining it as a Sell-Side Imbalance Buy-Side Inefficiency (SIBI), equating it directly to a bearish FVG.",
+          "maps_to_signal_step": null,
+          "ts": "05:27"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price later returns to deliver the missing 'inefficient' price action, fulfilling the sell-side into the BISI or buy-side into the SIBI.",
+          "maps_to_signal_step": null,
+          "ts": "05:44"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": null,
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter is purely focused on nomenclature here, clarifying that 'BISI' and 'SIBI' are simply the formal institutional terms for bullish and bearish fair value gaps. He notes that if buy-side delivery creates the imbalance, sell-side delivery is subsequently required to fulfill it.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "fvg.bearish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing exact prices and OHLC data",
+          "why": "I am operating from the video transcript without direct visual access to the chart's price axis, timestamp scale, or exact candle values."
+        }
+      ]
+    }
+  ]
+}

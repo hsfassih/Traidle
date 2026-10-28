@@ -1,0 +1,452 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "judas_swing_reversal",
+      "aliases": [
+        "Judas Swing",
+        "Fake Out Avoidance"
+      ],
+      "category": "session_open_manipulation",
+      "summary": "Identify the Judas swing, which is a fake move before the real expansion, at the start of a session, day, or week. Enter on this retracement into a FLOT or LOT to ride the real expansion towards the higher timeframe draw on liquidity.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "4h",
+        "setup_tf": "15m",
+        "entry_tf": "1m",
+        "strict": false,
+        "notes": "Higher timeframe (e.g., 4H or Daily) sets the draw on liquidity and POI. The 15m is used to identify the FLOT/LOT. The 1m or 5m is used for entry, though 1m can be deceptive without higher timeframe context."
+      },
+      "requires_context": {
+        "bias": [
+          "htf_draw_on_liquidity"
+        ],
+        "session": [
+          "london",
+          "new_york_am"
+        ],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "session_open",
+          "daily_open",
+          "weekly_open"
+        ]
+      },
+      "glossary": {
+        "Judas Swing": "The fake move before the real move, designed to trick people into the market.",
+        "FLOT": "First line of defense, which is most of the time a fair value gap.",
+        "LOT": "Last line of defense, the opposing swing low/high."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "fvg.mitigated",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "04:33"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "Equities Open Judas",
+          "kind": "time_rule",
+          "plain_definition": "A volatile fake move sweeping liquidity at 08:30 or 09:30 NY time on indices.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "17:45"
+        }
+      ],
+      "sequence": [
+        "Identify the higher timeframe draw on liquidity and the premium/discount arrays (FLOT and LOT) on the setup timeframe.",
+        "Wait for the start of a session, day, or week.",
+        "Observe a counter-trend fake move (Judas swing) that reaches into the FLOT (typically an FVG) or sweeps liquidity.",
+        "Get involved in this retracement to ride the true expansion towards the higher timeframe target."
+      ],
+      "invalidation": [
+        {
+          "text": "If there is a fair value gap in the leg (FLOT), price should respect it and likely not sweep the LOT.",
+          "provenance": "presenter_stated",
+          "ts": "04:33"
+        },
+        {
+          "text": "The Judas swing should not come back below the LOT.",
+          "provenance": "presenter_stated",
+          "ts": "05:33"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not expect the Judas swing to sweep an unreasonable amount of liquidity outside the average daily volatility.",
+          "provenance": "presenter_stated",
+          "ts": "06:34"
+        },
+        {
+          "text": "Be cautious on days with no economic calendar news events (like some Mondays), as price might lack the energy to expand.",
+          "provenance": "presenter_stated",
+          "ts": "19:15"
+        }
+      ],
+      "entry_rule": {
+        "text": "Get involved in the retracement (the fake move) as it reaches into the FLOT or LOT.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "04:12",
+        "quote": "when you have that retracement you want to get involved here to write that expansion"
+      },
+      "target_rule": {
+        "text": "Target the higher timeframe draw on liquidity, such as the first opposing discount/premium array.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "09:20",
+        "quote": "what is the first discount array that we cannot reach for it it is this swing low"
+      },
+      "stop_rule": {
+        "text": "Place the stop loss beyond the LOT (Last Line of Defense).",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "05:33",
+        "quote": "it shouldn't come back below this low it should not sweep this low"
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "If you know where price is likely going higher from, you can make millions.",
+          "ts": "16:27",
+          "verified": false
+        }
+      ],
+      "notes": "Traidle requires an FVG to be mitigated at the CE (midpoint), but the presenter implies that merely reaching into the FVG (FLOT) is sufficient. Therefore, traidle_supported is flagged as false for the FVG mitigation step.",
+      "examples": [
+        "ex1_forex_ltf_trap",
+        "ex2_forex_session_judas",
+        "ex3_forex_htf_judas",
+        "ex4_forex_london_15m_sting",
+        "ex5_es_htf_context",
+        "ex6_es_equities_open_judas"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Exact lower timeframe entry trigger",
+          "why": "The presenter advises to 'get involved' during the retracement into the FLOT/LOT but does not explicitly define a rigid lower timeframe execution pattern (e.g., MSS) in this specific video.",
+          "ts": "04:12"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The transcript clearly outlines the conceptual framework of the Judas swing, FLOT/LOT usage, and invalidation rules, though it lacks an explicit mechanical trigger."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_forex_ltf_trap",
+      "strategy_id": "judas_swing_reversal",
+      "video_span": {
+        "start": "00:42",
+        "end": "02:42",
+        "canonical_frame_ts": "02:30"
+      },
+      "example_role": "counter_example_invalid",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_ltf",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "LTF trapping retail traders",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_4h",
+          "frame_role": "htf_context",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "4H FVG"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Price drawn to 4H FVG",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_ltf",
+          "candle_i": null,
+          "what_happens": "Presenter illustrates how lower timeframe patterns trap traders who do not see the larger context.",
+          "maps_to_signal_step": null,
+          "ts": "00:48"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_4h",
+          "candle_i": null,
+          "what_happens": "Presenter zooms out to the 4H timeframe to reveal that the local manipulation was simply price reaching into a higher timeframe Fair Value Gap.",
+          "maps_to_signal_step": null,
+          "ts": "01:16"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "null",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": ""
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": ""
+      },
+      "presenter_commentary": "He emphasizes that getting lost in the lower timeframes leads to falling for the Judas Swing trap. Traders must zoom out to higher timeframes like the 4H to see the true Draw on Liquidity and premium/discount arrays.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bearish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices or asset symbols",
+          "why": "Visual access to the specific chart frames is unavailable, preventing exact transcription of OHLC data.",
+          "ts": "00:42"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_forex_session_judas",
+      "strategy_id": "judas_swing_reversal",
+      "video_span": {
+        "start": "02:42",
+        "end": "07:20",
+        "canonical_frame_ts": "07:00"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_session",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "FLOT (First Line of Defense) FVG"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "HTF context",
+            "kill_zone": "new_york_am"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_session",
+          "candle_i": null,
+          "what_happens": "The New York session begins, initiating a counter-trend Judas Swing.",
+          "maps_to_signal_step": null,
+          "ts": "02:48"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_session",
+          "candle_i": null,
+          "what_happens": "The fake move trades directly into the First Line of Defense (FLOT), which is a Fair Value Gap.",
+          "maps_to_signal_step": 1,
+          "ts": "03:56"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_session",
+          "candle_i": null,
+          "what_happens": "Price respects the FLOT FVG without sweeping the Last Line of Defense (LOT) and subsequently expands in the true direction.",
+          "maps_to_signal_step": null,
+          "ts": "05:00"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_session"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": ""
+      },
+      "presenter_commentary": "He introduces the FLOT (First Line of Defense) and LOT (Last Line of Defense) concepts here. He stresses that when an FVG exists in the leg (FLOT), the Judas swing should mitigate it and protect the extreme LOT.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.mitigated"
+        ],
+        "may_differ": [
+          {
+            "signal": "kill_zone",
+            "reason": "Presenter uses generic session open times rather than strict Traidle kill_zones, though they heavily overlap."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract raw chart prices",
+          "why": "Visual access is unavailable, so exact candle coordinates, FLOT FVG bounds, and session start times cannot be transcribed.",
+          "ts": "02:42"
+        }
+      ]
+    }
+  ]
+}

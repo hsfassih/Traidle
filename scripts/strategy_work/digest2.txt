@@ -1,0 +1,388 @@
+## flod_llod.json::flod_llod [other:pd_array_matrix] TF={"bias_tf": null, "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=[]
+ G: FLOD=First Line of Defense; the first PD array (often a fair value gap) or overlapping cluster ; LLOD=Last Line of Defense; the swing extreme (high or low) that defines the origin of the curre; Price action lag=The presenter's pronunciation/term for a 'price action leg', defined as the range between 
+  SR1: {"signal": "fvg.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "order_block.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=0
+  CS FLOD (level): The first major PD array encountered in a retracement, providing the highest probability when an FVG overlaps with another array (like an order block).
+  CS LLOD (level): The swing high or swing low of the active price action leg, serving as structural invalidation.
+  INV: Price breaks and stays beyond the Last Line of Defense (the swing extreme), creating a new opposite price action leg.
+  FIL: Avoid taking setups off isolated fair value gaps. The probabilities are significantly higher when the FVG overlaps with another PD array.
+  entry: No explicit entry trigger is defined; implies anticipating a rejection upon retracement into the overlapping PD arrays (FLOD). || S=null
+  targe: No explicit target rule provided. || S=null
+  stop_: No explicit stop rule provided, though the framework dictates that price should not stay beyond the LLOD. || S=null
+  REF: [] X [] EX: ["leg_1_premium_arrays", "leg_2_discount_arrays_violation", "leg_3_new_bearish_leg", "leg_4_overlapping_arrays", "leg_5_probabilities"] FILE_EX: ["leg_1_premium_arrays->flod_llod", "leg_2_discount_arrays_violation->flod_llod"]
+## gap_imbalance.json::gap_and_imbalance_overlap_confluence [other:imbalance_and_pd_array_confluence] TF={"bias_tf": null, "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["Imbalance should preferably overlap with another PD array (such as an order block, breaker block, or mitigation block)"]
+ G: BISI=Buy-side imbalance, sell-side inefficiency; functionally identical to a bullish fair value; SIBI=Sell-side imbalance, buy-side inefficiency; functionally identical to a bearish fair value; LIQUIDITY_VOID=A complete gap in the market where neither buy-side nor sell-side liquidity was delivered ; VOLUME_IMBALANCE=A two-candle formation where a price gap exists strictly between the close of the first ca; BPR=Balanced price range; defined by the presenter strictly as the overlapping portion of a bu; FVG_SIZE_INDEPENDENCE=The presenter explicitly states there is no premise for how large an FVG must be; any gap 
+  SR1: {"signal": "fvg.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "candle.low", "lte_signal": "fvg.gap_high", "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "order_block.bullish", "equals": true, "timeframe": "setup_tf"} opt=True max=None
+  CS liquidity_void (level): A complete gap in price delivery where no trading occurred on either the buy or sell side, skipping price ticks entirely. NUM=open_t > high_{t-1} (bullish void) or open_t < low_{t-1} (bearish void) where gap = [high_{t-1}, open_t] or [open_t, low_{t-1}]
+  CS volume_imbalance (candle_pattern): A two-candle formation where a price gap exists strictly between the close of candle 1 and the open of candle 2, while wicks may overlap. NUM=candle_{t-1}.close != candle_t.open with body gap between min(candle_{t-1}.close, candle_t.open) and max(candle_{t-1}.close, candle_t.open) while candle_{t-1}.range and candle_t.range wicks overlap
+  CS bpr_overlap_zone (level): The exact overlapping price range shared by a bullish fair value gap (BISI) and a bearish fair value gap (SIBI). NUM=range = [max(fvg_bullish.gap_low, fvg_bearish.gap_low), min(fvg_bullish.gap_high, fvg_bearish.gap_high)] where max(...) < min(...)
+  CS fvg_without_displacement (candle_pattern): A 3-candle fair value gap where any gap exists between wick 1 and wick 3, regardless of candle size or displacement ratio. NUM=C1.high < C3.low (bullish) or C1.low > C3.high (bearish), without requiring body >= 1.5x rolling average body
+  INV: If wicks of candle 1 and candle 3 overlap during formation, no gap exists and the fair value gap is invalid.
+  INV: A full close through and beyond the imbalance without rejection invalidates the PD array Point of Interest.
+  FIL: Do not treat three candles as an FVG if the first wick and third wick overlap, leaving no body space in between.
+  FIL: Imbalances are strongest when overlapping with another PD array; standalone low-timeframe imbalances without context or overlap are prone to failure.
+  entry: Enter when price trades into ('stings into') the imbalance (FVG, BPR overlap zone, Liquidity Void, or Volume Imbalance), particularly when overlapping with another PD arr || S=null
+  targe: No specific target rule stated in this episode; imbalances are used as points of interest and rebalancing areas. || S=null
+  stop_: No specific stop loss placement rule is stated in this episode. || S=null
+  REF: ["ref:order_block", "ref:breaker_block", "ref:mitigation_block"] X [] EX: ["ex1_fvg_identification", "ex2_bisi_sibi_identification", "ex3_bpr_identification", "ex4_liquidity_void_identification", "ex5_volume_imbalance_identification"] FILE_EX: ["ex1_fvg_identification->gap_and_imbalance_overlap_confluence", "ex2_bisi_sibi_identification->gap_and_imbalance_overlap_confluence"]
+## intermarket_strength.json::relative_strength_filtering [trend_following] TF={"bias_tf": "HTF (Daily/Weekly)", "setup_tf": "HTF", "entry_tf": "LTF", "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["Intermarket synchronization (Bonds and Dollar moving inversely)"]
+ G: DECOUPLED=When two correlated assets are not moving as they should (e.g., Dollar and Bonds both goin; FILTERING PROCESS=The sequence of analyzing Bonds -> Dollar -> Asset Class -> Correlated Pairs to find the a; RELATIVE STRENGTH=When comparing two correlated pairs, the one that makes a bigger explosive move or fails t
+  SR1: {"signal": "bias", "equals": "established", "timeframe": "bias_tf"} opt=False max=None
+  CS decoupled_market (indicator_relation): 30-year Treasury Bonds and the US Dollar moving in the same directional trend or consolidating heavily, rather than being inversely correlated.
+  CS relatively_stronger_pair (other): Between two correlated assets (e.g., EU and GU), the one that shows a more explosive move in the bias direction or fails to break a swing low when the other does.
+  INV: If Bonds and the Dollar are decoupled, the market indicates a 50/50 bias and low probability Seek and Destroy conditions.
+  FIL: If the bonds have been consolidating heavily, take them less into account and rely more directly on the Dollar.
+  FIL: Beginners should avoid this filtering process and just focus on mastering one single pair to build patience.
+  entry: Wait for price to reach a discount/premium array on the chosen pair, then use lower timeframe confirmation (like SMT, breaker, or swing failure) as taught in previous epi || S=null
+  targe: Target the opposing draw on liquidity established on the higher timeframe. || S={"type": "target_level", "reference": "htf_liquidity_pool"}
+  stop_: Not explicitly covered in this pair-selection video. || S=null
+  REF: ["ref:smt_divergence", "ref:fair_value_gap"] X [] EX: ["ex1_bonds_correlation", "ex2_forex_filtering", "ex3_indices_filtering"] FILE_EX: ["ex1_bonds_correlation->relative_strength_filtering", "ex2_forex_filtering->relative_strength_filtering", "ex3_indices_filtering->relative_strength_filtering"]
+## liquidity_pools.json::liquidity_sweep_and_target [liquidity_reversal] TF={"bias_tf": "htf", "setup_tf": "ltf", "entry_tf": null, "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["Higher timeframe context or PD array (e.g., a HTF breaker or order block)."]
+ G: Turtle soup=A sweep of trend followers and breakout traders, trapping them before price reverses.; Liquidity run=When price breaks a level and continues in that direction without sweeping/reversing.; Liquidity pool=Clusters of resting buy stops (above highs) and sell stops (below lows) targeted by instit
+  SR1: {"signal": "structural_event.kind", "equals": "liquidity_sweep_high", "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "custom_signals.displacement_reaction", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS displacement_reaction (candle_pattern): A strong and immediate move away from the swept level, proving institutions are rejecting those prices.
+  CS consolidation_range (session_range): A period of sideways price action building buy stops above and sell stops below.
+  INV: Price stays above the swept high (or below the swept low) for too long, turning the sweep into a liquidity run.
+  FIL: Do not instantly target the opposite side just because one side was swept; a confirmed reaction is mandatory.
+  FIL: Must be traded with higher timeframe context to avoid confusion.
+  entry: Enter in the direction of the reaction/displacement after the initial liquidity sweep. || S=null
+  targe: Target the opposing liquidity pools such as equal highs, equal lows, or the opposite side of a consolidation. || S={"type": "limit", "reference": "liquidity_levels"}
+  stop_: Not explicitly defined in this conceptual video. || S=null
+  REF: [] X [] EX: ["ex1_retail_liquidity_concepts", "ex2_dax_multi_tf_liquidity", "ex3_sweep_vs_run"] FILE_EX: ["ex3_fractal_bullish_breaker->breaker_block_setup", "ex4_bullish_breaker_continuation->breaker_block_setup"]
+## london_killzone.json::london_killzone [htf_continuation] TF={"bias_tf": "4h", "setup_tf": "15m", "entry_tf": "5m", "strict": false}
+ RC: bias=["bearish", "bullish"] sess=["london"] tw=02:00-05:00 dow=null other=["Price reacting from an HTF (4-hour) premium array targeting an opposing HTF discount array (swing low)."]
+ G: ST MODEL=An entry pattern involving two consecutive same-direction fair value gaps: price forms a f; INTERMEDIATE TERM HIGH=A structural swing high that has no higher-timeframe (15m or 1h) unfilled fair value gaps ; OVERLAPPING PD ARRAY=A confluence zone where a newly formed entry-timeframe FVG directly overlaps with a pre-ex
+  SR1: {"signal": "bias", "equals": "bearish", "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "kill_zone", "equals": "london", "timeframe": "entry_tf"} opt=False max=None
+  SR3: {"signal": "fvg.bullish", "equals": false, "timeframe": "entry_tf"} opt=False max=None
+  SR4: {"signal": "fvg.mitigated", "equals": true, "timeframe": "entry_tf"} opt=False max=None
+  SR5: {"signal": "fvg.bullish", "equals": false, "timeframe": "entry_tf"} opt=True max=None
+  CS asia_expansion (session_range): Asian session expands away from the HTF PD array leaving fair value gaps in its leg, indicating that London will deliver continuation rather than sweeping Asian highs/lows.
+  CS asia_consolidation (session_range): Asian session remains in a tight range without expansion, requiring London to create the extreme of the day and print the ST model (two consecutive FVGs) before reversing.
+  CS st_model_entry (other): A two-stage displacement pattern where price forms a first FVG, retraces into it, and forms a second same-direction FVG, confirming order flow alignment.
+  CS intermediate_term_high_stop (level): A swing high that has no higher timeframe (15m or 1h) fair value gaps hovering directly above it.
+  CS overlapping_pd_array (level): A confluence zone where a new entry-timeframe FVG overlaps with an existing higher or lower timeframe PD array.
+  INV: The setup is invalidated if price closes above the intermediate term high chosen for stop loss placement.
+  INV: Do not place a tight stop loss immediately above a 5-minute high if an unmitigated 15-minute or 1-hour fair value gap hovers above it.
+  FIL: Focus primarily on Forex pairs; indices have different characteristics and require a separate strategy.
+  FIL: Do not use a 5-minute entry timeframe when executing off Daily PD arrays; scale up the entry timeframe for higher-timeframe arrays.
+  FIL: The entry timeframe must always be traded in context with the timeframes directly above it (5m in concert with 15m and 1h).
+  entry: In London, enter on an overlapping PD array upon the creation of a new bearish fair value gap (or after the second FVG in the ST model). || S={"type": "limit", "reference": "overlapping_pd_array"}
+  targe: Target the opposing 4-hour discount array, specifically the 4-hour swing low. || S={"type": "target_level", "reference": "htf_swing_low"}
+  stop_: Place the stop loss above the intermediate term high that covers any overhead 15-minute or 1-hour fair value gaps. || S={"type": "beyond", "reference": "intermediate_term_high", "buffer_atr": null}
+  REF: ["ref:turtle_soup", "ref:fair_value_gap", "ref:order_block", "ref:kill_zones", "ref:daily_profiles"] X [] EX: ["eu_asia_expansion", "gu_asia_consolidation"] FILE_EX: ["eu_asia_expansion->london_killzone", "gu_asia_consolidation->london_killzone"]
+## m3_secrets.json::m3_secrets [htf_continuation] TF={"bias_tf": "Monthly | Weekly | Daily | 1h", "setup_tf": "Daily | 4h | 1h | 15m", "entry_tf": "1h | 15m | 5m", "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow="Avoid expecting trend expansion on Friday; look for expansion on days with news drivers (e.g., Wednesday)" other=["Price moving between a HTF discount array and a HTF premium array", "Economic news drivers to deliver expansion volatility"]
+ G: CONTEXT=Understanding where a market maker model will form based on price moving from a higher-tim; ST=Sharp turn; an early entry signal marked by the first fair value gap forming off a HTF PD ; SHORT_TERM_RANGE=A directional swing containing a fair value gap, ideally originating from a discount/premi; MAGNET_AND_ROCKET=A higher-timeframe fair value gap that first pulls price toward it like a magnet, and then
+  SR1: {"signal": "custom_signals.htf_discount_array_tap", "equals": true, "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "custom_signals.short_term_range", "equals": true, "timeframe": "entry_tf"} opt=False max=None
+  CS htf_discount_array_tap (level): Price reaches a higher timeframe discount array (such as a fair value gap or an overlapping order block).
+  CS st_entry (candle_pattern): The very first fair value gap moving away from a higher timeframe PD array, providing early confirmation of an intermediate term low or high.
+  CS short_term_range (candle_pattern): A directional swing containing an unmitigated fair value gap, ideally originating from a discount array, that holds price on pullbacks.
+  CS fvg_magnet_rocket (level): A higher timeframe fair value gap acting first as a draw on liquidity (magnet) and subsequently as a launchpad for displacement (rocket).
+  INV: Price closes below the protected low that established the short-term range and mitigated the prior discount array.
+  INV: Attempting to trade inside Seek and Destroy / consolidation ranges where higher-timeframe context has not yet formed.
+  FIL: Do not follow low-timeframe (e.g., 5-minute) continuation blindly without checking higher timeframe context; deep retracements into 15m/1H PD arrays will cause stop-outs.
+  FIL: Expansion days require volatility drivers; trade when price context aligns with high-impact economic news events (e.g., USD news on Wednesdays).
+  FIL: Friday is generally not known as a trending day; avoid expecting strong multi-timeframe expansion.
+  FIL: Avoid trading during low-probability consolidation phases; wait patiently for a new retracement to create new context.
+  entry: Enter on a retracement into a short-term range containing a fair value gap, ideally overlapping with an order block or breaker block, following the ST confirmation. || S={"type": "limit", "reference": "fvg.ce"}
+  targe: Target the opposing intermediate term high / HTF premium array, or take a standard 1:2 R:R. || S={"type": "level", "reference": "htf_premium_array"}
+  stop_: Place stop loss at the protected structural low that tapped the previous fair value gap and initiated the new short-term range, where price has no reason to return. || S={"type": "beyond", "reference": "swing_low", "buffer_atr": null}
+  REF: ["ref:intermediate_term_structure", "ref:short_term_ranges", "ref:fair_value_gaps"] X [] EX: ["ex1_usdjpy_monthly_daily", "ex2_usdjpy_weekly_1h_5m", "ex3_eurgbp_market_maker_buy_model"] FILE_EX: ["ex1_usdjpy_monthly_daily->m3_secrets", "ex2_usdjpy_weekly_1h_5m->m3_secrets", "ex3_eurgbp_market_maker_buy_model->m3_secrets"]
+## mitigation_block.json::mitigation_block_setup [trend_following] TF={"bias_tf": null, "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["Requires an overlapping premium/discount array (like an FVG or Order Block)."]
+ G: Swing failure pattern=A sequence where price fails to make a higher high (or lower low), followed by a break of ; Mitigation block (bearish)=The swing low that is broken after the market fails to make a higher high in a swing failu; Mitigation block (bullish)=The swing high that is broken after the market fails to make a lower low in a swing failur
+  SR1: {"signal": "custom_signals.swing_failure_pattern", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "custom_signals.overlapping_pd_array", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS swing_failure_pattern (other): A high, a low, a lower high, and a break below the low. Not a breaker block.
+  CS overlapping_pd_array (indicator_relation): The mitigation block level shares the same price range as another PD array (FVG or Order Block).
+  CS mb_fvg_overlap_sensitivity (level): If the mitigation block wick overlaps an FVG, use the wick; if no FVG overlap, use the body.
+  INV: A candle closes beyond the mitigation block high/low without immediate rejection.
+  FIL: Only trade the mitigation block when there is something overlapping, preferably a fair value gap.
+  FIL: It must be a swing failure pattern, not a breaker pattern (where the extreme is swept first).
+  entry: Enter on the return to the mitigation block low/high. || S={"type": "limit", "reference": "custom_signals.swing_failure_pattern"}
+  targe: Not explicitly defined in this video. || S=null
+  stop_: Not explicitly defined in this video. || S=null
+  REF: ["order_block_mitigation"] X [] EX: ["ex1_mb_schematics", "ex2_bearish_mb", "ex3_bullish_mb", "ex4_bullish_mb_ob_confluence", "ex5_htf_mb_continuation"] FILE_EX: ["ex1_mb_schematics->mitigation_block_setup", "ex2_bearish_mb->mitigation_block_setup", "ex3_bullish_mb->mitigation_block_setup", "ex4_bullish_mb_ob_confluence->mitigation_block_setup"]
+## ms_secrets.json::market_structure_secrets [trend_following] TF={"bias_tf": "HTF", "setup_tf": "LTF", "entry_tf": null, "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["Price must be navigating between an ITH and an ITL"]
+ G: INTERMEDIATE_TERM_HIGH=A swing high positioned between a short-term high that is lower to its left and a short-te; INTERMEDIATE_TERM_LOW=A swing low positioned between a short-term low that is higher to its left and a short-ter; SHORT_TERM_HIGH=A swing high that leaves a fair value gap in the leg lower. It acts as a protected last li; ST_MODEL=Taking a risky, early entry on the very first fair value gap lower to catch the swing high
+  SR1: {"signal": "custom_signals.htf_premium_array_tap", "equals": true, "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bearish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS htf_premium_array_tap (level): Price retraces into a premium array (like an order block or FVG) located on the timeframe directly above the current chart.
+  CS intermediate_term_high (level): A high flanked by a lower short-term high to its left and a lower short-term high to its right.
+  CS short_term_high (level): A swing high that leaves a fair value gap in the displacement leg moving away from it.
+  INV: If a bullish fair value gap gets respected and price closes above the protecting short-term high, the high is disrespected and the setup is invalid.
+  FIL: Do not justify the existence of fair value gaps by dropping down in timeframes. Always go up in timeframes to justify context.
+  entry: Enter during the retracements into the short-term ranges, executing off the fair value gap left by the newly confirmed short-term high. || S={"type": "limit", "reference": "fvg.gap_high"}
+  targe: Target the opposing intermediate term low. || S={"type": "level", "reference": "intermediate_term_low"}
+  stop_: Place the stop loss above the confirmed short-term high, acting as the last line of defense. || S={"type": "beyond", "reference": "short_term_high", "buffer_atr": null}
+  REF: [] X [] EX: ["ex1_nasdaq_basics", "ex2_audusd_daily_1h", "ex3_nasdaq_multitimeframe"] FILE_EX: ["ex1_nasdaq_basics->market_structure_secrets", "ex2_audusd_daily_1h->market_structure_secrets", "ex3_nasdaq_multitimeframe->market_structure_secrets"]
+## newyork_killzone.json::new_york_reversal [session_open_manipulation] TF={"bias_tf": "monthly", "setup_tf": "4h", "entry_tf": "5m", "strict": false}
+ RC: bias=[] sess=["new_york_am"] tw=None dow=null other=["London session did not tap the HTF PD array and did not make the extreme of the day."]
+ G: ST model=An entry pattern involving two consecutive same-direction fair value gaps.; Suffocating the stop loss=Placing a stop loss at a level where price still has a valid structural reason to revisit,
+  SR1: {"signal": "custom_signals.london_missed_htf_poi", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "custom_signals.ny_taps_htf_poi", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "fvg.bullish", "equals": true, "timeframe": "entry_tf"} opt=False max=None
+  CS london_missed_htf_poi (time_rule): The London session fails to tap the intended higher timeframe PD array objective.
+  CS ny_taps_htf_poi (time_rule): The New York session reaches the higher timeframe PD array, completing the objective London missed.
+  CS overlapping_pd_array (level): A confluence zone where a newly formed entry-timeframe FVG directly overlaps with a pre-existing higher or lower timeframe PD array.
+  INV: If London already tapped the HTF PD array and displaced, this exact setup is invalid and shifts to a New York Retracement.
+  FIL: Check intermediate timeframes (e.g., 15m and 1H) to ensure you are not suffocating your stop loss.
+  FIL: On Mondays, aim for lower RR, high probability targets to build confidence for the week.
+  entry: Enter on a retracement into the lower timeframe overlapping PD array (Order Block + FVG) created in the New York session. || S={"type": "limit", "reference": "custom_signals.overlapping_pd_array"}
+  targe: Target the opposing premium array on the higher timeframe (e.g., the 4H intermediate term high). || S={"type": "target_level", "reference": "swing_high"}
+  stop_: Place stop loss beyond the intermediate term low in the entry timeframe, confirming price has no unmitigated PD arrays to revisit. || S={"type": "beyond", "reference": "swing_low", "buffer_atr": null}
+  REF: ["london_killzone"] X [] EX: ["usd_jpy_ny_reversal"] FILE_EX: ["usd_jpy_ny_reversal->new_york_reversal", "usd_jpy_ny_retracement->new_york_retracement"]
+## newyork_killzone.json::new_york_retracement [htf_continuation] TF={"bias_tf": "monthly", "setup_tf": "4h", "entry_tf": "5m", "strict": false}
+ RC: bias=[] sess=["new_york_am"] tw=None dow=null other=["London session already tapped the HTF PD array and displayed displacement."]
+ G: 
+  SR1: {"signal": "custom_signals.london_taps_htf_poi_and_displaces", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bullish", "equals": true, "timeframe": "entry_tf"} opt=False max=None
+  CS london_taps_htf_poi_and_displaces (time_rule): The London session reaches the higher timeframe PD array and displaces in the intended trend direction.
+  INV: If London did not reach the HTF PD array, it cannot be a New York Retracement setup.
+  FIL: Rely consistently on a single set entry pattern to prevent emotional confusion when the time comes to enter.
+  entry: Enter on the newly formed New York session fair value gap or an overlapping order block. || S={"type": "limit", "reference": "fvg.ce"}
+  targe: Target the opposing higher timeframe premium array (e.g., 4H intermediate term high). || S={"type": "target_level", "reference": "swing_high"}
+  stop_: Place stop loss beyond the intermediate term low formed in New York. || S={"type": "beyond", "reference": "swing_low", "buffer_atr": null}
+  REF: ["london_killzone"] X [] EX: ["usd_jpy_ny_retracement"] FILE_EX: ["usd_jpy_ny_reversal->new_york_reversal", "usd_jpy_ny_retracement->new_york_retracement"]
+## order_block.json::order_block_mitigation [trend_following] TF={"bias_tf": null, "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["Must align with the current directional bias (e.g., following a liquidity sweep)."]
+ G: Mean threshold=50% of the bodies of the order block candles, completely ignoring the wicks.; Order block (bullish)=A down candle (or consecutive down candles) coming off support whose high gets broken.
+  SR1: {"signal": "order_block.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "candle.low", "lte_signal": "order_block.zone_high", "timeframe": "setup_tf"} opt=False max=None
+  CS mean_threshold_bodies (level): 50% of the bodies of the order block candles, not the wicks.
+  CS ob_fvg_overlap_sensitivity (level): If the OB wick overlaps an FVG, use the wick top; if no FVG overlap, use the body open.
+  INV: A candle closes beyond the mean threshold (50% of the order block bodies).
+  FIL: The order block must align with the overall bias; not every down/up candle is an order block.
+  FIL: If the wick overlaps an FVG, the wick is sensitive; if not, the unmitigated orders are in the body.
+  entry: Enter when price returns to the order block (at the wick if overlapping an FVG, otherwise the body). || S={"type": "limit", "reference": "order_block.zone_high"}
+  targe: Not explicitly defined in this video. || S=null
+  stop_: Not explicitly defined, though implicitly relies on the mean threshold invalidation. || S=null
+  REF: [] X [] EX: ["ex1_bullish_ob_theory", "ex2_bearish_ob_sweep", "ex3_bullish_ob_sequence"] FILE_EX: ["ex1_bullish_ob_theory->order_block_mitigation", "ex2_bearish_ob_sweep->order_block_mitigation", "ex3_bullish_ob_sequence->order_block_mitigation"]
+## reclaimed_ob.json::reclaimed_order_block_overlap [trend_following] TF={"bias_tf": "htf", "setup_tf": "ltf", "entry_tf": "ltf", "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["Requires an active Market Maker Model (a sell curve followed by a buy curve, or vice versa)."]
+ G: Reclaimed order block=An order block that formed on the first curve of a market maker model, got traded through,; Market maker buy model=A market profile consisting of a sell curve (price moving down to a HTF discount array) fo; Market maker sell model=A market profile consisting of a buy curve (price moving up to a HTF premium array) follow
+  SR1: {"signal": "custom_signals.market_maker_curve_shift", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "order_block.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "custom_signals.reclaimed_trade_through", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR4: {"signal": "custom_signals.overlapping_pd_array", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS market_maker_curve_shift (other): Price reaches a HTF discount/premium array, exhibits displacement with a market structure shift, and begins the second curve of a market maker model.
+  CS reclaimed_trade_through (level): Price trades back above/below an old order block from the first curve, making it 'reclaimed'.
+  CS overlapping_pd_array (indicator_relation): The reclaimed order block shares the exact same price zone as another PD array (FVG, mitigation block, breaker block, or standard order block).
+  INV: Not explicitly defined in this video.
+  FIL: Never trade a reclaimed order block in isolation. It MUST overlap with another PD array to avoid chart clutter and low-probability random bounces.
+  entry: Enter when price retraces into the reclaimed order block that overlaps with another PD array. || S={"type": "limit", "reference": "custom_signals.overlapping_pd_array"}
+  targe: Not explicitly defined in this video. || S=null
+  stop_: Not explicitly defined in this video. || S=null
+  REF: ["order_block_mitigation", "mitigation_block_setup"] X [] EX: ["ex1_market_maker_curves_schematic", "ex2_bearish_reclaimed_ob_clutter", "ex3_bearish_reclaimed_ob_overlap", "ex4_bullish_reclaimed_ob_overlap"] FILE_EX: ["ex1_market_maker_curves_schematic->reclaimed_order_block_overlap", "ex2_bearish_reclaimed_ob_clutter->reclaimed_order_block_overlap", "ex3_bearish_reclaimed_ob_overlap->reclaimed_order_block_overlap", "ex4_bullish_reclaimed_ob_overlap->reclaimed_order_block_overlap"]
+## rejection_block.json::rejection_block_reversal [liquidity_reversal] TF={"bias_tf": null, "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["Often occurs on counter-trend moves where price respects the rejection block instead of sweeping the full wick."]
+ G: rejection_block=The highest candle (bearish) or lowest candle (bullish) featuring a long wick where price 
+  SR1: {"signal": "candle.high", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS rejection_block (candle_pattern): An outsider candle at the top or bottom with a long wick that sweeps bodies but not the extreme wick.
+  INV: Price takes out the full extreme wick of the rejection block.
+  FIL: Most reliable during counter-trend moves where price respects the rejection block without sweeping the absolute low/high of the wick.
+  entry: Enter when price sweeps the bodies inside the long wick and reverses. || S=null
+  targe: Not explicitly defined in this video. || S=null
+  stop_: Not explicitly defined in this video. || S=null
+  REF: ["order_block_mitigation", "mitigation_block_setup"] X [] EX: ["ex1_bearish_rejection_block", "ex2_bullish_rejection_block_counter_trend", "ex3_bullish_rejection_block_swing_low", "ex4_bearish_rejection_block_down_close"] FILE_EX: ["ex1_bearish_rejection_block->rejection_block_reversal", "ex2_bullish_rejection_block_counter_trend->rejection_block_reversal", "ex3_bullish_rejection_block_swing_low->rejection_block_reversal", "ex4_bearish_rejection_block_down_close->rejection_block_reversal"]
+## seek_destroy.json::seek_n_destroy [other:market_condition_filter] TF={"bias_tf": "Daily", "setup_tf": "4h", "entry_tf": null, "strict": false}
+ RC: bias=["undetermined"] sess=[] tw=None dow=null other=["Both sell-side and buy-side liquidity pools swept in a single major expansion leg"]
+ G: SEEK AND DESTROY=Market conditions characterized by price seeking liquidity on both sides, sweeping highs a; PD ARRAYS NOT FOLLOWING THROUGH=When premium or discount arrays (such as FVGs and Order Blocks) fail to produce expected p
+  SR1: {"signal": "structural_event.kind", "equals": "liquidity_sweep_low", "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "structural_event.kind", "equals": "liquidity_sweep_high", "timeframe": "setup_tf"} opt=False max=None
+  CS equilibrium_reversion (level): Price gravitating back to the 50% equilibrium midpoint of the recent range formed by the dual liquidity sweep.
+  CS pd_array_failure (other): Premium or discount arrays fail to hold or push price in their intended direction, resulting in wick-filled candles with no follow-through FVGs.
+  CS htf_range_displacement (other): A higher-timeframe expansion creating an FVG cleanly outside the consolidation boundary, confirming an exit from Seek and Destroy conditions.
+  INV: Seek and Destroy conditions terminate when price displaces cleanly out of the consolidation range on a higher timeframe leaving an FVG, and PD arrays resume following thr
+  FIL: Trend-following traders must stop trading or stay out of the market once PD arrays fail to follow through near equilibrium.
+  FIL: Do not consider lower-timeframe (e.g. 1-minute) fair value gaps as valid displacement out of the consolidation range; displacement must be on a higher timeframe.
+  entry: No execution entry taught in this video; the presenter identifies market conditions here and states actionable capitalization rules (turtle soups) will be covered in epis || S=null
+  targe: Price refers back like a magnet to the 50% equilibrium level of the expansion range after sweeping both sides. || S={"type": "target_level", "reference": "premium_discount.equilibrium"}
+  stop_: None || S=null
+  REF: [] X [] EX: ["ex1_audusd_consolidation", "ex2_dxy_consolidation_exit"] FILE_EX: ["ex1_audusd_consolidation->seek_n_destroy", "ex2_dxy_consolidation_exit->seek_n_destroy"]
+## shorterm_trading.json::swing_trading_lost_art [htf_continuation] TF={"bias_tf": "1M | 1W | 1D", "setup_tf": "4H | 1H", "entry_tf": "4H | 1H", "strict": true}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow="Monday, Tuesday, or Wednesday" other=["Must have a clear context: price moving from a Discount array to a Premium array (or vice versa) on the bias timeframe."]
+ G: Original Entry=The first entry taken on a lower timeframe after price taps the higher timeframe context a; Re-entry Opportunity=A secondary, higher-timeframe entry taken on the way to the final target, but ONLY conside; ST=A fair value gap that forms in the desired direction (used interchangeably with standard d; Overlapping Entry=Entering on a short-term range's fair value gap that overlaps with another PD array (like ; FLOD=First Line of Defense.; LLOD=Last Line of Defense.
+  SR1: {"signal": "custom_signals.htf_array_tap", "equals": true, "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "custom_signals.new_short_term_range", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS htf_array_tap (level): Price reaches the discount or premium array established on the monthly, weekly, or daily context timeframe.
+  CS new_short_term_range (session_range): The creation of a new swing low to swing high (or vice versa) within the entry timeframe that provides a retracement opportunity.
+  CS overlapping_entry_zone (indicator_relation): A fair value gap that aligns/overlaps with a breaker block, order block, mitigation block, or prior structural high.
+  INV: If a logical reason remains for price to return to your entry based on unmitigated FLOD/LLOD below current price action, do not move to breakeven yet.
+  FIL: Do not execute on multiple pairs at once; maximum 2% total account risk, meaning maximum two 1% setups simultaneously.
+  FIL: Ideally, enter trades on a Monday, Tuesday, or Wednesday to catch the weekly range expansion.
+  FIL: Do not take a Re-entry if you are not already at least Break Even on the Original Entry.
+  entry: Enter on the overlapping part of the new short-term range (a Fair Value Gap overlapping with another discount array like an Order Block or prior High). || S={"type": "limit", "reference": "overlapping_entry_zone"}
+  targe: Target a minimum of 1:2 Risk:Reward initially to build consistency. Once experienced, target the higher timeframe context high/low. || S={"type": "rr_multiple", "reference": 2.0}
+  stop_: Place the stop loss beneath the intermediate term low (or high for shorts) of the original entry. Covering just the bodies is permissible. || S={"type": "beyond", "reference": "swing_low", "buffer_atr": null}
+  REF: ["ref:Market maker models", "ref:ST model", "ref:Short-term range"] X [] EX: ["ex1_monthly_context_4h_entry", "ex2_monthly_context_daily_reentry", "ex3_weekly_context_1h_to_4h", "ex4_daily_context_1h_to_4h"] FILE_EX: ["ex1_monthly_context_4h_entry->swing_trading_lost_art", "ex2_monthly_context_daily_reentry->swing_trading_lost_art", "ex3_weekly_context_1h_to_4h->swing_trading_lost_art", "ex4_daily_context_1h_to_4h->swing_trading_lost_art"]
+## silver_bullet.json::swing_rate_silver_bullet [htf_continuation] TF={"bias_tf": "HTF", "setup_tf": "LTF", "entry_tf": "LTF", "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["An established intermediate term high and intermediate term low (the draw on liquidity) to anchor the Fibonacci tool."]
+ G: Swing rates=Fibonacci levels (0, 0.25, 0.5, 0.75, 1) drawn from the intermediate term origin to the in; Terminus=The 1.0 level on the swing rates, representing the absolute draw on liquidity / target.; Sting=A very shallow retracement into a PD array, expected near the 0.25 and 0.75 levels rather 
+  SR1: {"signal": "custom_signals.swing_rate_050_behavior", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "custom_signals.swing_rate_075", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "fvg.state", "equals": "open", "timeframe": "entry_tf"} opt=False max=None
+  CS swing_rate_075 (level): Price retraces 75% of the distance from the origin intermediate point to the target intermediate point. NUM=price >= origin_price - 0.75 * (origin_price - target_price)
+  CS swing_rate_050_behavior (price_action): Price consolidates and executes a liquidity sweep at the 50% (equilibrium) level of the range before reaching 0.75.
+  INV: If price reaches the 0.75 level but the 0.5 level did not previously feature a consolidation or liquidity sweep, ignore the 0.75 entry.
+  FIL: Because price is close to the draw on liquidity at the 0.75 level, do not expect a deep retracement into overlapping PD arrays.
+  entry: Enter on the very first fair value gap you see after the 0.75 level is hit. || S={"type": "limit", "reference": "fvg.gap_high"}
+  targe: Target the intermediate term extreme (the 1.0 Terminus). || S={"type": "limit", "reference": "swing_extreme"}
+  stop_: Use a tighter, more aggressive stop loss than usual (e.g., just above the FVG) because deep retracements are not expected here. || S={"type": "beyond", "reference": "fvg.gap_extreme", "buffer_atr": null}
+  REF: [] X [] EX: ["nasdaq_structure", "nasdaq_1m_sweep", "usdjpy_htf_context", "usdjpy_4h_to_5m"] FILE_EX: ["nasdaq_structure->swing_rate_silver_bullet", "nasdaq_1m_sweep->swing_rate_silver_bullet", "usdjpy_htf_context->swing_rate_silver_bullet", "usdjpy_4h_to_5m->swing_rate_silver_bullet"]
+## smt_divergence.json::smt_divergence_confirmation [indicator_confluence] TF={"bias_tf": null, "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["htf_pd_array"]
+ G: SMT=Smart Money Technique - a crack in correlation where two normally correlated assets fail t; Crack in correlation=When two correlated assets (e.g., ES and NQ) fail to move in sync, indicating underlying i; Buying on strength technique=An entry technique for turtle soup setups where a buy stop is placed above the high of the
+  SR1: {"signal": "structural_event.kind", "equals": "liquidity_sweep_low", "timeframe": "setup_tf"} opt=False max=None
+  CS bullish_smt_divergence (indicator_relation): Between two positively correlated instruments, one instrument makes a lower swing low (or sweeps a swing low) while the other instrument fails to sweep and makes a higher swing low. NUM=Asset_A.swing_low[1].price < Asset_A.swing_low[0].price AND Asset_B.swing_low[1].price > Asset_B.swing_low[0].price across identical time timestamps
+  CS buying_on_strength_trigger (candle_pattern): A buy stop trigger set at the high of the individual candle that swept the previous swing low. NUM=buy_stop_price = sweeping_candle.high
+  INV: If both correlated assets make symmetrical swing lows without a crack in correlation, no SMT divergence exists.
+  FIL: Do not use SMT as a directional bias tool; use it solely as a late confirmation tool after HTF bias and PD arrays are determined.
+  FIL: Only compare swing lows when bullish; only compare swing highs when bearish.
+  FIL: Execute on the strength leader on a higher-timeframe basis rather than selecting a pair based purely on SMT.
+  entry: Place a buy stop order above the high of the candle responsible for sweeping the swing low ('Buying on strength technique'), or enter on a subsequent lower-timeframe entr || S={"type": "stop", "reference": "sweeping_candle.high"}
+  targe: Target opposing swing highs or higher-timeframe discount/premium arrays (such as an order block or FVG). || S={"type": "level", "reference": "htf_order_block"}
+  stop_: Place stop loss below the low of the sweep, giving it breathing room (e.g., 6 points on NQ) rather than suffocating the stop. || S={"type": "beyond", "reference": "sweeping_candle.low", "buffer_atr": null}
+  REF: [] X [] EX: ["smt_indices_es_nq", "smt_forex_gu_eu"] FILE_EX: ["smt_indices_es_nq->smt_divergence_confirmation", "smt_forex_gu_eu->smt_divergence_confirmation"]
+## snd_turtlesoup.json::seek_and_destroy_turtle_soup [mean_reversion] TF={"bias_tf": "Daily", "setup_tf": "5m", "entry_tf": "5m", "strict": false}
+ RC: bias=["undetermined"] sess=[] tw=None dow=null other=["Market must be in confirmed Seek and Destroy (consolidation) conditions."]
+ G: Premium premium=The upper quartile (0.75 to 1.0) of a defined consolidation range where shorts are sought.; Discount discount=The lower quartile (0 to 0.25) of a defined consolidation range where longs are sought.; Close target=A conservative take-profit level near range equilibrium, reflecting that price won't run f
+  SR1: {"signal": "custom_signals.quadrant_extreme", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "structural_event.kind", "equals": "liquidity_sweep_high", "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "custom_signals.st_model", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS quadrant_extreme (level): Price reaches the 0-0.25 (discount discount) or 0.75-1.0 (premium premium) zones of the established range.
+  CS st_model (candle_pattern): A two-stage displacement pattern following a sweep, where the second displacement leaves an overlapping PD array for entry.
+  INV: Once equilibrium is reached, everything is invalidated. Do not look for new entries until a new quadrant extreme is hit.
+  FIL: Do not expect price to run very far; use a close, easy target as price will likely return to your entry.
+  FIL: Wait for a failure to follow through to confirm a new range if the old one is broken.
+  entry: Enter on the overlapping PD array (e.g., FVG) after the second displacement of the ST model. || S={"type": "limit", "reference": "fvg.ce"}
+  targe: Target a liquidity pool (swing point) or fair value gap close to the 50% equilibrium of the range. || S={"type": "limit", "reference": "premium_discount.equilibrium"}
+  stop_: Place stop loss beyond the intermediate term high/low. Give it room to breathe; do not suffocate it. || S={"type": "beyond", "reference": "swing_extreme", "buffer_atr": null}
+  REF: ["ref:st_model"] X [] EX: ["ex1_seek_destroy_premium", "ex2_seek_destroy_discount"] FILE_EX: ["ex1_seek_destroy_premium->seek_and_destroy_turtle_soup", "ex2_seek_destroy_discount->seek_and_destroy_turtle_soup"]
+## snd_turtlesoup.json::trending_turtle_soup_strength [trend_following] TF={"bias_tf": "4h", "setup_tf": "1h", "entry_tf": "5m", "strict": false}
+ RC: bias=["bullish", "bearish"] sess=["london", "new_york_am"] tw=None dow=null other=["Price must be stinging into a HTF PD array (e.g., 1H FVG)."]
+ G: Buying on strength=Placing a buy stop order just above the high of the specific down-candle that swept the li; Selling on weakness=Placing a sell stop order just below the low of the specific up-candle that swept the liqu
+  SR1: {"signal": "fvg.state", "equals": "open", "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "structural_event.kind", "equals": "liquidity_sweep_low", "timeframe": "entry_tf"} opt=False max=None
+  SR3: {"signal": "custom_signals.killzone_timing", "equals": true, "timeframe": "entry_tf"} opt=False max=None
+  CS killzone_timing (time_rule): The sweep into the HTF array occurs specifically during a Killzone (e.g., London or NY Open) when time dictates price action.
+  CS sweep_candle (candle_pattern): The specific single candle that pierces and sweeps the liquidity low/high.
+  INV: If time (the killzone) does not align with the sweep into the discount array, there is no entry opportunity.
+  FIL: A LTF swing extreme inside a HTF FVG has very slim odds of holding; anticipate it being swept.
+  FIL: Turtle soups can satisfy the ego by calling tops/bottoms, but they are not always the highest probability setups.
+  entry: Place a buy stop above the high of the candle that swept the low (or sell stop below the candle that swept the high). || S={"type": "stop", "reference": "custom_signals.sweep_candle.high"}
+  targe: Target the opposing HTF liquidity pool (e.g., 4H swing low/high). || S={"type": "limit", "reference": "liquidity_levels"}
+  stop_: Place the stop loss below the swept low with sufficient room to breathe (8-10 pips on ES, 20-30 pips on Forex). || S={"type": "beyond", "reference": "sweep_extreme", "buffer_atr": null}
+  REF: [] X [] EX: ["ex3_trending_eu_short", "ex4_trending_es_long"] FILE_EX: ["ex1_seek_destroy_premium->seek_and_destroy_turtle_soup", "ex2_seek_destroy_discount->seek_and_destroy_turtle_soup"]
+## st_model.json::st_model_standard [liquidity_reversal] TF={"bias_tf": "htf", "setup_tf": "ltf", "entry_tf": "ltf", "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["Must trade into a HTF discount or premium array first"]
+ G: ST model=Sharp Turn model; relying on fair value gaps (displacement) to identify order flow changes; overlapping PD array=When two arrays, such as a breaker block and a fair value gap, exist at the same price lev
+  SR1: {"signal": "custom_signals.htf_pd_array_tap", "equals": true, "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "fvg.mitigated", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR4: {"signal": "fvg.bullish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS htf_pd_array_tap (level): Price trades into a higher timeframe premium or discount array.
+  CS overlapping_pd_array (level): Using an overlapping PD array like a breaker and FVG combined for entry.
+  INV: If timeframes are not combined correctly, one must wait for this full displacement-retracement-displacement pattern instead of taking aggressive early entries.
+  entry: Enter on the overlapping PD array or the Fair Value Gap after the second displacement. || S={"type": "limit", "reference": "fvg.ce"}
+  targe: Target opposing draw on liquidity, such as intermediate term highs or lows. || S={"type": "limit", "reference": "liquidity_sweep_high"}
+  stop_: Place the stop loss beyond the intermediate term high/low. || S={"type": "beyond", "reference": "swing_high", "buffer_atr": null}
+  REF: [] X ["ref:traditional_market_structure_shift"] EX: ["ex1_st_model_basic"] FILE_EX: ["ex1_st_model_basic->st_model_standard", "ex2_eurgbp_advanced->st_model_advanced"]
+## st_model.json::st_model_advanced [liquidity_reversal] TF={"bias_tf": "htf", "setup_tf": "ltf", "entry_tf": "ltf", "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["Must trade into a HTF discount or premium array first"]
+ G: 
+  SR1: {"signal": "custom_signals.htf_pd_array_tap", "equals": true, "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bearish", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS htf_pd_array_tap (level): Price trades into a higher timeframe premium or discount array.
+  INV: If you do not combine timeframes correctly, this entry is lower probability.
+  FIL: Only execute on the first FVG if the higher and lower timeframes are strongly aligned.
+  entry: Enter directly on the first Fair Value Gap in the new direction after the HTF array tap. || S={"type": "limit", "reference": "fvg.ce"}
+  targe: Target opposing draw on liquidity. || S=null
+  stop_: Place stop loss beyond the intermediate term extreme formed at the HTF array. || S={"type": "beyond", "reference": "swing_high", "buffer_atr": null}
+  REF: [] X ["ref:traditional_market_structure_shift"] EX: ["ex2_eurgbp_advanced", "ex3_es_early_entry", "ex4_usdcad_htf"] FILE_EX: ["ex1_st_model_basic->st_model_standard", "ex2_eurgbp_advanced->st_model_advanced"]
+## sweep__run.json::sweep_or_run [other:liquidity_sweep_vs_run_validation] TF={"bias_tf": "htf", "setup_tf": "ltf", "entry_tf": null, "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=["A clear Draw on Liquidity (e.g., a daily/weekly premium or discount array, or opposing liquidity pools)."]
+ G: Sweep=Price takes liquidity (a high/low) and immediately reverses toward opposing liquidity, dis; Run=Price takes a high/low and continues in that direction, respecting the FVG that overlaps w; ST Model=A volatility-based reversal model that leaves behind inefficiencies (FVGs) to the opposite; Sting=A shallow retracement into only the first available FVG, purposefully avoiding deeper over; Overlapping PD Array=A PD array (like an FVG) that physically overlaps with a structural level, such as the hig
+  SR1: {"signal": "structural_event.kind", "equals": "liquidity_sweep_high", "timeframe": "setup_tf"} opt=False max=None
+  SR2: {"signal": "custom_signals.fvg_disrespected", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "custom_signals.st_model", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  CS fvg_disrespected (candle_pattern): Price immediately completely rebalances (closes back through) the Fair Value Gap that was responsible for pushing price into the swept liquidity level.
+  CS fvg_respected_overlapping (candle_pattern): Price retraces into a Fair Value Gap that overlaps with the recently broken swing high/low, respects it, and rejects higher.
+  CS st_model (other): A reversal model characterized by volatility, leaving behind new inefficiencies (FVGs) in the direction of the reversal.
+  CS sting_retracement (level): A shallow retracement into the first available FVG instead of a deep retracement to an overlapping discount/premium array, specifically when price is near the draw on liquidity.
+  INV: When expecting a 'run' on liquidity, an immediate full rebalance (disrespect) of the overlapping Fair Value Gap invalidates the run and suggests a sweep.
+  FIL: Do not expect a deep retracement into an overlapping PD array if price is relatively close to the ultimate draw on liquidity.
+  entry: Enter on the retracement into the newly formed Fair Value Gap of the ST model (for a sweep), or on the retracement into the overlapping Fair Value Gap (for a run/sting). || S={"type": "limit", "reference": "fvg.ce"}
+  targe: For a sweep, target opposing liquidity (e.g., from buy-side liquidity to sell-side equal lows). For a run, target the ultimate draw on liquidity. || S={"type": "limit", "reference": "liquidity_levels"}
+  stop_: None || S=null
+  REF: ["ref:st_model", "ref:overlapping_pd_arrays"] X [] EX: ["ex1_daily_premium_array_sweep", "ex2_eu_sweep", "ex3_es_sweep_and_run"] FILE_EX: ["ex1_daily_premium_array_sweep->sweep_or_run", "ex2_eu_sweep->sweep_or_run", "ex3_es_sweep_and_run->sweep_or_run"]
+## swing_hl.json::swings_hl [liquidity_reversal] TF={"bias_tf": "HTF (e.g., 15m, 1H, Daily)", "setup_tf": "LTF (e.g., 5m, 15m)", "entry_tf": null, "strict": false}
+ RC: bias=[] sess=[] tw=None dow=null other=[]
+ G: swing_high=A three-candle pattern where the middle candle's wick is higher than the candle to the lef; swing_low=A three-candle pattern where the middle candle's wick is lower than the candle to the left; protected=A swing point that is not expected to be traded through if the current structural trend is
+  SR1: {"signal": "fvg.state", "equals": "open", "timeframe": "bias_tf"} opt=False max=None
+  SR2: {"signal": "swing_point.is_high", "equals": true, "timeframe": "setup_tf"} opt=False max=None
+  SR3: {"signal": "structural_event.kind", "equals": "liquidity_sweep_high", "timeframe": "setup_tf"} opt=False max=None
+  CS premium_array (level): A higher timeframe point of interest, such as an FVG or PDH, that acts as a magnet for price to sweep lower timeframe liquidity into.
+  INV: Assuming a lower timeframe market structure shift is a true trend change without checking if price is just reaching for a nearby HTF array.
+  FIL: Do not trade lower timeframe market structure shifts if there is an untagged higher timeframe array just beyond the recent swing.
+  entry: Specific entry trigger is not provided in this video; the focus is entirely on context and avoiding traps. || S=null
+  targe: Target the opposite draw on liquidity, such as an opposing discount or premium array. || S=null
+  stop_: None || S=null
+  REF: [] X [] EX: ["ex_1_swing_basics", "ex_2_protected_swings_and_htf", "ex_3_daily_htf_context"] FILE_EX: ["ex_1_swing_basics->swings_hl", "ex_2_protected_swings_and_htf->swings_hl", "ex_3_daily_htf_context->swings_hl"]
+## trading_indices.json::indices_session_sequence [session_open_manipulation] TF={"bias_tf": "4h|daily", "setup_tf": "15m|5m", "entry_tf": "1m", "strict": false}
+ RC: bias=["htf_draw_on_liquidity"] sess=["london", "other:arjoio_ny_am", "other:arjoio_ny_pm"] tw=08:30-16:00 dow=null other=["Objective reached status before 08:30"]
+ G: New York AM Session=8:30 AM to 11:00 AM NY local time. (Differs from Traidle dictionary new_york_am 07:00-10:0; New York PM Session=1:30 PM to 4:00 PM NY local time.; Opening Range=9:30 AM to 10:30 AM NY local time; typically makes the high or low of the day due to volat; Closing Hour=3:00 PM to 4:00 PM NY local time (Power Hour); features high volatility as bonds close and
+  SR1: {"signal": "structural_event.kind", "equals": "liquidity_sweep_low", "timeframe": "entry_tf"} opt=False max=None
+  SR2: {"signal": "fvg.bullish", "equals": true, "timeframe": "entry_tf"} opt=False max=None
+  CS arjoio_ny_am_session (time_rule): NY local time 08:30 to 11:00
+  CS arjoio_ny_pm_session (time_rule): NY local time 13:30 to 16:00
+  CS objective_reached (level): Price taps the HTF PD array (e.g., 4H order block or intermediate term low) before the 8:30 AM NY session starts.
+  INV: Do not expect a massive AM expansion if London or the pre-8:30 timeframe already achieved the draw on liquidity.
+  FIL: Indices are liquidity hunters; prefer entering after the 9:30 AM equities open volatility has swept early session liquidity.
+  FIL: For London session trading, focus on DAX. For AM/PM sessions, focus on ES/NQ.
+  entry: Enter on a 1-minute fair value gap following a session liquidity sweep. || S={"type": "limit", "reference": "fvg.ce"}
+  targe: Target the higher timeframe objective (premium or discount array) identified before the session. || S=null
+  stop_: Place stop loss beyond the extreme of the liquidity sweep. || S={"type": "beyond", "reference": "sweep_extreme", "buffer_atr": null}
+  REF: [] X [] EX: ["ex1_nq_consolidation_expansion", "ex2_es_expansion_consolidation", "ex3_es_am_fake_move"] FILE_EX: ["ex1_nq_consolidation_expansion->indices_session_sequence", "ex2_es_expansion_consolidation->indices_session_sequence", "ex3_es_am_fake_move->indices_session_sequence"]
+## trading_probabilities.json::hp_lp_conditions_filter [other:conditions_filter] TF={"bias_tf": "4h_and_above", "setup_tf": null, "entry_tf": null, "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=null other=["Must take less than 10 seconds (up to 1 minute maximum) to identify the clear draw on liquidity."]
+ G: Clear One-Sidedness=When you can only make arguments on one side of the market (e.g., 100% bullish, 0% bearish; 50/50 Bias=When both bullish and bearish arguments exist (even if weighted 70/30 or 90/10), making th; Low Probability Conditions=A state where the odds are not heavily in your favor, commonly occurring during 50/50 bias
+  CS obvious_draw_on_liquidity (other): A higher timeframe target (swing high/low) that is immediately recognizable within 10 seconds of opening the chart.
+  CS failed_rejection (other): Price sweeps a level but fails to displace immediately in the opposite direction, instead slowly climbing or dropping.
+  CS consolidation_expansion_consolidation (candle_pattern): A 3-candle sequence where candle 1 is consolidation (or expansion), candle 2 is an expansion creating an FVG, and candle 3 is unpredictable consolidation.
+  CS major_expansion_dol_swept (level): A major expansion to either side that has just taken out the higher timeframe draw on liquidity.
+  CS pre_major_news (time_rule): The time window on the day of a CPI, FOMC, or NFP release, prior to the actual release time.
+  INV: If you need to convince yourself to take the trade or force the price action, the setup is invalid.
+  INV: If price sweeps a level but fails to immediately reject and instead slowly climbs/drops, it becomes a 50/50 bias and is invalid.
+  FIL: Do not trade ahead of CPI, FOMC, and NFP; wait until after the release.
+  FIL: Do not chase price or try to call a top/bottom immediately after a major expansion has taken the draw on liquidity. Wait for clear 4H+ structure.
+  entry: Wait for price to deliver exactly to your pre-planned 'if/then' demands based on the obvious draw on liquidity. || S=null
+  targe: Target the stupidly obvious draw on liquidity (e.g., a major swing high or low). || S=null
+  stop_: Not specified in this conceptual video. || S=null
+  REF: [] X [] EX: ["ex1_gu_high_probability", "ex2_usdcad_obvious_draw", "ex3_dollar_50_50_bias", "ex4_dollar_post_expansion"] FILE_EX: ["ex1_gu_high_probability->hp_lp_conditions_filter", "ex2_usdcad_obvious_draw->hp_lp_conditions_filter", "ex3_dollar_50_50_bias->hp_lp_conditions_filter", "ex4_dollar_post_expansion->hp_lp_conditions_filter"]
+## weekly_profile.json::weekly_profiles_tgif [other:weekly_profile_expansion_and_reversal] TF={"bias_tf": "1D", "setup_tf": "4H", "entry_tf": "1H", "strict": false}
+ RC: bias=["bullish", "bearish"] sess=[] tw=None dow=["Tuesday", "Wednesday", "Thursday", "Friday"] other=["Economic calendar news events for volatility injection"]
+ G: TGIF=Thank God It's Friday; a weekly profile setup where Friday sweeps Thursday's extreme and r; One shot one kill=Catching the majority of the weekly range by taking generally one macro trade per week.; Cap the week=Establishing the final absolute low or high of the week on Thursday or Friday, concluding ; Turtle soup=A false breakout or liquidity sweep of a previous day's extreme (e.g., sweeping Thursday's
+  SR1: {"signal": "structural_event.kind", "equals": "liquidity_sweep_low", "timeframe": "setup_tf"} opt=False max=None
+  CS news_event_day (time_rule): The specific day(s) of the week where major economic news is released, providing the necessary volatility to form the weekly extreme.
+  CS thursday_exhaustion (candle_pattern): Thursday closes poorly relative to its wick without showing strong displacement in the direction of the weekly trend.
+  CS fibonacci_weekly_close (level): The 0.2 and 0.3 Fibonacci retracement levels drawn from the low to the high of the current week's range, indicating where Friday will likely close.
+  INV: If Monday simply expands without coming into a premium array and Thursday is nowhere near a PD array, blindly guessing a standard weekly template is invalid.
+  FIL: At the end of Thursday, do not chase price or take new continuation trades in the weekly trend direction if the market has already expanded a lot of pips.
+  FIL: Never establish a rigid weekly template on Sunday and blindly stick to it; you must react and adapt to daily closes and news.
+  entry: For the TGIF setup, enter on a lower timeframe (e.g., 15m) when Friday sweeps Thursday's extreme (turtle soup) and reverses back into the range. || S={"type": "beyond", "reference": "pdl", "buffer_atr": null}
+  targe: For the weekly expansion, target a higher timeframe liquidity pool. For the TGIF Friday reversal, target an unmitigated fair value gap or order block to rebalance the wee || S=null
+  stop_: No explicit stop rule mentioned in this specific video. || S=null
+  REF: ["ref:market_maker_buy_model", "ref:market_maker_sell_model", "ref:kill_zones"] X [] EX: ["eu_weekly_profile_tgif", "dxy_bullish_profile", "dxy_variation_cpi_week"] FILE_EX: ["eu_weekly_profile_tgif->weekly_profiles_tgif", "dxy_bullish_profile->weekly_profiles_tgif"]

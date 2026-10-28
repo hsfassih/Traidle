@@ -1,0 +1,445 @@
+{
+  "strategy": {
+    "strategy_id": "bias_independent",
+    "aliases": [
+      "1h_structure_killzone_entry",
+      "1h_pd_array_strategy"
+    ],
+    "category": "htf_continuation",
+    "summary": "Identify 1-hour intermediate term structure to establish the draw on liquidity, wait for price to reach a 1-hour PD array during a New York killzone, and enter using a 1-minute or 5-minute pattern.",
+    "direction": "both",
+    "symmetric": true,
+    "timeframes": {
+      "bias_tf": "1h",
+      "setup_tf": "1h",
+      "entry_tf": "1m | 5m",
+      "strict": true,
+      "notes": "Uses 1-hour intermediate term highs/lows for direction and PD arrays. Entry is strictly executed on either the 1-minute or 5-minute timeframe."
+    },
+    "requires_context": {
+      "bias": [
+        "bullish",
+        "bearish"
+      ],
+      "session": [
+        "new_york_am",
+        "new_york_pm"
+      ],
+      "time_window_ny": "08:30-16:00",
+      "day_of_week": null,
+      "other": [
+        "Equities open volatility"
+      ]
+    },
+    "glossary": {
+      "8:30/9:30 rule": "If 8:30 AM already taps a PD array and displaces away, 9:30 AM will likely not sweep whatever 8:30 created.",
+      "1-minute entry pattern": "Requires two consecutive fair value gaps in the direction of the trade before entering on the second one.",
+      "5-minute entry pattern": "Requires only one fair value gap in the direction of the trade to enter."
+    },
+    "signals_required": [
+      {
+        "step": 1,
+        "signal": "fvg.mitigated",
+        "equals": true,
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "07:20"
+      }
+    ],
+    "custom_signals": [
+      {
+        "name": "two_fvg_entry_1m",
+        "kind": "candle_pattern",
+        "plain_definition": "On the 1-minute chart, price must print two consecutive FVGs in the direction of the trade. The entry is on the second FVG.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "07:31"
+      },
+      {
+        "name": "one_fvg_entry_5m",
+        "kind": "candle_pattern",
+        "plain_definition": "On the 5-minute chart, price must print one FVG in the direction of the trade to enter.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "07:58"
+      },
+      {
+        "name": "830_expansion_rule",
+        "kind": "time_rule",
+        "plain_definition": "If price displaces from a PD array at 8:30, 9:30 will not sweep the 8:30 extreme.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "04:47"
+      }
+    ],
+    "sequence": [
+      "Identify intermediate term highs and lows on the 1-hour timeframe to determine the structural draw on liquidity.",
+      "Wait for price to retrace into a 1-hour PD array (e.g., a fair value gap) in a premium or discount relative to the range.",
+      "Wait for time to align with a Killzone (8:30 AM, 9:30 AM equities open, or PM session).",
+      "Apply the 8:30/9:30 rule: if 8:30 already taps the PD array and displaces, 9:30 will not sweep what 8:30 created.",
+      "Drop down to a lower timeframe (1-minute or 5-minute) when inside the 1-hour PD array during the Killzone.",
+      "For the 1-minute timeframe, wait for two consecutive fair value gaps to form in the trade direction and enter on the second one.",
+      "For the 5-minute timeframe, wait for one fair value gap to form in the trade direction and enter on it."
+    ],
+    "invalidation": [
+      {
+        "text": "If the 1-hour intermediate term structure high/low is violated, the setup and bias are invalidated.",
+        "provenance": "presenter_stated",
+        "ts": "02:32"
+      }
+    ],
+    "filters": [
+      {
+        "text": "Do not trade London session for US indices like ES, NQ, or YM; wait for New York sessions.",
+        "provenance": "presenter_stated",
+        "ts": "03:06"
+      },
+      {
+        "text": "Choose either the 1-minute or 5-minute entry model and stick to it; do not use both simultaneously.",
+        "provenance": "presenter_stated",
+        "ts": "11:42"
+      }
+    ],
+    "entry_rule": {
+      "text": "Enter on the second FVG on the 1-minute chart, or the first FVG on the 5-minute chart, after tapping the 1H PD array.",
+      "structured": {
+        "type": "limit",
+        "reference": "fvg.ce"
+      },
+      "provenance": "presenter_stated",
+      "ts": "07:44",
+      "quote": "once you have that second fair value Gap lower that is exactly when you want to get involved"
+    },
+    "target_rule": {
+      "text": "Target the 1-hour intermediate term low (for shorts) or high (for longs).",
+      "structured": {
+        "type": "target_level",
+        "reference": "intermediate_term_low"
+      },
+      "provenance": "presenter_stated",
+      "ts": "03:35",
+      "quote": "the obvious draw liquidity is what it's this low right it's that intermediate term low that is our first Target"
+    },
+    "stop_rule": {
+      "text": "Place stop loss beyond the short-term high/low that formed during the entry.",
+      "structured": {
+        "type": "beyond",
+        "reference": "swing_high",
+        "buffer_atr": null
+      },
+      "provenance": "presenter_stated",
+      "ts": "08:41",
+      "quote": "what do you cover you can cover that high why that high that is a shortterm high that should hold"
+    },
+    "management": {
+      "breakeven": "Move to breakeven based on structural displacements and short-term highs holding.",
+      "partials": null,
+      "trailing": null,
+      "notes": null
+    },
+    "risk": {
+      "typical_rr": 2.0,
+      "min_rr": null,
+      "risk_per_trade_pct": null
+    },
+    "reinforces": [
+      "ref:intermediate_term_high",
+      "ref:intermediate_term_low",
+      "ref:fair_value_gap",
+      "ref:kill_zones"
+    ],
+    "conflicts_with": [],
+    "weight": 1.0,
+    "historical_stats": {
+      "occurrences": null,
+      "win_rate": null,
+      "avg_r": null,
+      "last_backtested": null
+    },
+    "presenter_claims": [
+      {
+        "claim": "You can get a 1 to 2 Risk:Reward ratio in less than 10 minutes using the 1-minute entry pattern.",
+        "ts": "08:54",
+        "verified": false
+      }
+    ],
+    "notes": "The strategy acts as a standalone system eliminating the need for a daily bias, relying strictly on 1H structure to define the immediate draw on liquidity.",
+    "examples": [
+      "ex_1_es_1m_strategy_walkthrough",
+      "ex_2_es_5m_advanced_entry"
+    ],
+    "uncertainties": [],
+    "confidence": {
+      "level": "high",
+      "reason": "The presenter outlines exact structural parameters, time windows (8:30 vs 9:30), and exact FVG occurrence counts required for execution on specific timeframes."
+    }
+  },
+  "examples": [
+    {
+      "example_id": "ex_1_es_1m_strategy_walkthrough",
+      "strategy_id": "bias_independent",
+      "video_span": {
+        "start": "00:02:08",
+        "end": "00:09:28",
+        "canonical_frame_ts": "08:42"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "1m",
+          "chart_timezone": "New York",
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "1-hour intermediate term highs showing bearish structure",
+            "kill_zone": "new_york_am"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price stings into the 1H FVG at 9:23 AM.",
+          "maps_to_signal_step": 1,
+          "ts": "08:08"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price pushes into the premium array again at the 9:30 AM open and displaces lower.",
+          "maps_to_signal_step": null,
+          "ts": "08:26"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The first 1-minute FVG forms.",
+          "maps_to_signal_step": null,
+          "ts": "08:31"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A second 1-minute FVG forms lower; price retraces into it for the entry.",
+          "maps_to_signal_step": null,
+          "ts": "08:32"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": 2.0,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He emphasizes how the 8:30 expansion rule kept us out of early chop, and 9:30 created the proper entry. The setup yielded a 1:2 RR in less than 10 minutes.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.mitigated"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.two_fvg_entry_1m",
+            "reason": "Traidle's core dictionary does not natively check for two consecutive FVGs before entry; it requires custom logic."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract exact OHLC data or drawn annotations.",
+          "why": "I do not have visual access to the video frames to read the chart prices and visual timestamps. Outputting empty candle array to prevent hallucination.",
+          "ts": "07:12"
+        }
+      ]
+    },
+    {
+      "example_id": "ex_2_es_5m_advanced_entry",
+      "strategy_id": "bias_independent",
+      "video_span": {
+        "start": "00:09:28",
+        "end": "00:12:18",
+        "canonical_frame_ts": "11:15"
+      },
+      "example_role": "variation",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "5m",
+          "chart_timezone": "New York",
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "1H structure and a sweep of a daily PD array high",
+            "kill_zone": "new_york_am"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price pushes higher at 9:30 AM to sweep a swing high into a daily PD array.",
+          "maps_to_signal_step": null,
+          "ts": "10:44"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Immediate rejection lower, showing that bullish FVGs are not being respected.",
+          "maps_to_signal_step": null,
+          "ts": "10:49"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The first 5-minute FVG forms but does not get tapped by a retracement.",
+          "maps_to_signal_step": null,
+          "ts": "10:56"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A new 5-minute FVG forms lower; price retraces into it, triggering the entry.",
+          "maps_to_signal_step": 1,
+          "ts": "11:08"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_shown",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "Demonstrates the 5-minute variant where only one FVG is needed for entry. He emphasizes that if the first FVG isn't tapped, wait to enter on the next valid one that forms.",
+      "engine_check": {
+        "should_detect": [
+          "liquidity_sweep_high",
+          "fvg.mitigated"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.one_fvg_entry_5m",
+            "reason": "Traidle would record this as a standard FVG entry, whereas the presenter categorizes it strictly as a 5-minute specific rule."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract exact OHLC data or drawn annotations.",
+          "why": "I do not have visual access to the video frames to read the chart prices and visual timestamps. Outputting empty candle array to prevent hallucination.",
+          "ts": "10:35"
+        }
+      ]
+    }
+  ]
+}

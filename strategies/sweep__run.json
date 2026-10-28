@@ -1,0 +1,748 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "sweep_or_run",
+      "aliases": [
+        "FVG Secret Story",
+        "Sting Retracement"
+      ],
+      "category": "context_framework",
+      "summary": "Differentiate a reversal sweep from a continuation run by what price does with the fair value gap that drives the breach into liquidity. A sweep closes back through the taken level and resolves into the ST model, while a run keeps the break accepted with a displaced BOS and a respected overlapping continuation FVG.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": null,
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "Fractal framework. bias_tf is the higher-timeframe draw on liquidity or PD array; setup_tf and entry_tf are the execution chart used to read the breach and the follow-through, and resolve at evaluation time via the contract ladder. The walkthroughs use daily/weekly or 4h context down to 15m execution."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.obvious_draw_on_liquidity"
+        ]
+      },
+      "glossary": {
+        "Sweep": "A liquidity grab that closes back through the taken level instead of accepting beyond it; see custom_signals.pure_sweep.",
+        "Run": "A continuation breach accepted with a displaced BOS and a respected overlapping continuation FVG; see custom_signals.liquidity_run_continuation.",
+        "Sting": "A shallow first-FVG retracement when price is already very close to the obvious draw on liquidity; this proximity test remains discretionary here."
+      },
+      "signals_required": [],
+      "custom_signals": [
+        {
+          "name": "obvious_draw_on_liquidity",
+          "kind": "other",
+          "plain_definition": "A higher-timeframe target that is recognisable within about 10 seconds of opening the chart.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "00:13"
+        },
+        {
+          "name": "pure_sweep",
+          "kind": "price_action",
+          "plain_definition": "Price trades through a swing low (sell-side liquidity) and the sweeping candle closes back above it (turtle soup).",
+          "numeric_definition": "structural_event.kind == liquidity_sweep_low AND structural_event.candle_close >= structural_event.reference_price",
+          "definition_source": "presenter_stated",
+          "ts": "01:29"
+        },
+        {
+          "name": "st_model",
+          "kind": "candle_pattern",
+          "plain_definition": "Displacement, retracement, displacement: a first FVG forms, price retraces into it without closing through it, then a second same-direction FVG forms; entry is on the second.",
+          "numeric_definition": "bullish_fvg[0].formed AND bullish_fvg[1].confirmed_at >= open_time - K_ST_MAX_CANDLES * (tf_minutes * 60000) AND lowest(low[-1], (open_time - bullish_fvg[1].confirmed_at) / (tf_minutes * 60000) - 1) <= bullish_fvg[1].gap_high AND NOT bullish_fvg[1].filled",
+          "definition_source": "inferred",
+          "ts": "03:17"
+        },
+        {
+          "name": "displacement_candle",
+          "kind": "candle_pattern",
+          "plain_definition": "A strong expansion candle in the trade direction.",
+          "numeric_definition": "close > open AND body >= K_DISPLACEMENT_BODY_MULT * avg(body[-1], K_DISPLACEMENT_LOOKBACK)",
+          "definition_source": "inferred",
+          "ts": "09:46"
+        },
+        {
+          "name": "fvg_respected",
+          "kind": "price_action",
+          "plain_definition": "Price wicks into the fair value gap without a candle body closing through it.",
+          "numeric_definition": "low <= fvg.gap_high AND close >= fvg.gap_low",
+          "definition_source": "presenter_stated",
+          "ts": "02:58"
+        },
+        {
+          "name": "liquidity_run_continuation",
+          "kind": "price_action",
+          "plain_definition": "A bullish BOS displacement leaves a bullish fair value gap across the broken high, and the retracement respects that gap for continuation.",
+          "numeric_definition": "count(structural_event.kind == bullish_bos AND custom_signals.displacement_candle AND bullish_fvg[0].formed AND bullish_fvg[0].gap_low <= structural_event.reference_price AND bullish_fvg[0].gap_high >= structural_event.reference_price, K_REACTION_WINDOW_CANDLES) >= 1 AND custom_signals.fvg_respected",
+          "definition_source": "inferred",
+          "ts": "02:58"
+        }
+      ],
+      "sequence": [],
+      "invalidation": [
+        {
+          "text": "When expecting a 'run' on liquidity, an immediate full rebalance (disrespect) of the overlapping Fair Value Gap invalidates the run and suggests a sweep.",
+          "provenance": "presenter_stated",
+          "ts": "02:23",
+          "numeric_definition": "count(structural_event.kind == bullish_bos AND custom_signals.displacement_candle AND bullish_fvg[0].formed AND bullish_fvg[0].gap_low <= structural_event.reference_price AND bullish_fvg[0].gap_high >= structural_event.reference_price, K_REACTION_WINDOW_CANDLES) >= 1 AND fvg.filled"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not expect a deep retracement into an overlapping PD array if price is relatively close to the ultimate draw on liquidity.",
+          "provenance": "presenter_stated",
+          "ts": "07:15",
+          "numeric_definition": null
+        },
+        {
+          "text": "Classify the breach as a sweep only when a pure sweep resolves into the ST model; otherwise require the displaced BOS continuation read with the overlapping FVG.",
+          "provenance": "inferred",
+          "ts": "02:58",
+          "numeric_definition": "(count(custom_signals.pure_sweep, K_REACTION_WINDOW_CANDLES) >= 1 AND count(custom_signals.st_model, K_ST_MAX_CANDLES) >= 1) OR custom_signals.liquidity_run_continuation"
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the retracement into the ST model's continuation gap for the sweep branch, or into the continuation FVG that overlaps the broken high for the run branch.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "06:22",
+        "quote": "we have an immediate retracement into that fair value Gap and we are slowly climbing higher right there and that right there is your ST entry"
+      },
+      "target_rule": {
+        "text": "For a sweep, target the opposing draw on liquidity; for a run, target the still-open higher-timeframe draw on liquidity.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "04:42",
+        "quote": "price will Target opposing liquidity buy side liquidity to now sell side liquidity"
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "When you understand the story that fair value gaps are trying to tell you, you can get to a draw on liquidity way easier.",
+          "ts": "00:13",
+          "verified": false
+        }
+      ],
+      "notes": "Context framework, not one fixed trigger. On the bullish canonical side, a pure_sweep of sell-side liquidity that develops into the ST model is the reversal branch; a displaced bullish BOS that leaves and later respects a bullish FVG across the broken high is the continuation run branch. When price is already close to the obvious draw on liquidity, the presenter only expects a first-FVG sting rather than a deeper overlapping-array retracement.",
+      "examples": [
+        "ex1_daily_premium_array_sweep",
+        "ex2_eu_sweep",
+        "ex3_es_sweep_and_run"
+      ],
+      "uncertainties": [
+        {
+          "issue": "How close price must be to the draw on liquidity for a 'sting' retracement",
+          "why": "The presenter contrasts shallow first-FVG reactions with deeper overlap retracements but gives no numeric proximity threshold.",
+          "ts": "07:15"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "reason": "The theoretical framework distinguishing a sweep from a run via FVG respect/disrespect is clearly explained. However, the exact mechanical entry relies on the 'ST model' which is undefined in this specific transcript."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_daily_premium_array_sweep",
+      "strategy_id": "sweep_or_run",
+      "video_span": {
+        "start": "01:48",
+        "end": "04:56",
+        "canonical_frame_ts": "04:50"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_sweep_characteristics",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "high"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweeping that high"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "inverted",
+                "presenter_calls_it": "bullish fair value Gap that was responsible for coming into that premium array"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Traded into a daily premium array and formed a reversal ST model.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "fvg_disrespected",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "disrespecting a bullish fair value gap"
+            },
+            {
+              "name": "st_model",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "beautiful St right there"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_sweep_characteristics",
+          "candle_i": null,
+          "what_happens": "Price trades upward into a Daily premium array, identified previously on the weekly forecast.",
+          "maps_to_signal_step": null,
+          "ts": "01:48"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_sweep_characteristics",
+          "candle_i": null,
+          "what_happens": "The specific bullish fair value gap that pushed price into the premium array is immediately disrespected and completely rebalanced downwards.",
+          "maps_to_signal_step": null,
+          "ts": "02:15"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_sweep_characteristics",
+          "candle_i": null,
+          "what_happens": "This immediate disrespect and the high volatility left behind forms an ST model, confirming the prior high was swept, not run.",
+          "maps_to_signal_step": null,
+          "ts": "03:58"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_sweep_characteristics"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He contrasts a sweep and a run. If it were a run, the price would respect the overlapping FVG and 'stumble higher'. Because it immediately rebalanced the bullish FVG that caused the break, it validates the sweep and targets opposing sell-side liquidity.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_high"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.fvg_disrespected",
+            "reason": "Traidle tracks FVG 'inverted' state, which maps to the presenter's concept of 'disrespected/rebalanced completely'."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact chart data.",
+          "why": "I do not have direct visual access to the video frames to extract OHLC prices, exact dates, or visually confirm the structural drawings.",
+          "ts": "01:48"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_eu_sweep",
+      "strategy_id": "sweep_or_run",
+      "video_span": {
+        "start": "04:56",
+        "end": "09:07",
+        "canonical_frame_ts": "08:50"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_eu_stings",
+          "frame_role": "full",
+          "symbol": "EU",
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "previous week low"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweeping that low"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "first fair value Gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "equal_highs",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Swept previous week low into a weekly FVG.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "fvg_touched",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "only demand off of price to come into that first fair value gap"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_eu_stings",
+          "candle_i": null,
+          "what_happens": "EU sweeps a previous week low down into a weekly fair value gap.",
+          "maps_to_signal_step": null,
+          "ts": "05:52"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_eu_stings",
+          "candle_i": null,
+          "what_happens": "A bullish ST model forms on the 15-minute timeframe, confirming the sweep. The draw on liquidity shifts to the opposing equal highs.",
+          "maps_to_signal_step": null,
+          "ts": "06:17"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_eu_stings",
+          "candle_i": null,
+          "what_happens": "Price begins to run highs. Because it is a run, it respects the FVGs overlapping with the taken highs and slowly climbs higher.",
+          "maps_to_signal_step": null,
+          "ts": "06:43"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_eu_stings",
+          "candle_i": null,
+          "what_happens": "Because price has had a huge expansion and is now close to the ultimate draw on liquidity, it stops giving deep retracements to overlapping arrays and instead gives shallow 'stings' into the first available FVG before continuing higher.",
+          "maps_to_signal_step": null,
+          "ts": "08:10"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_eu_stings"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights that when price is very close to its ultimate draw on liquidity (the equal highs), you should no longer expect deep retracements into overlapping PD arrays. You should only expect a 'sting' into the very first fair value gap before continuation.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_low",
+          "fvg.bullish",
+          "fvg.mitigated"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.fvg_touched",
+            "reason": "Traidle tracks FVG mitigation natively but does not contextually score whether an FVG was a 'sting' versus a deep retracement based on proximity to a draw on liquidity pool."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact chart data.",
+          "why": "I lack visual access to the video, so I cannot extract exact prices, OHLC values, or dates for the EU chart.",
+          "ts": "04:56"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_es_sweep_and_run",
+      "strategy_id": "sweep_or_run",
+      "video_span": {
+        "start": "09:07",
+        "end": "12:13",
+        "canonical_frame_ts": "11:28"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_es_cycle",
+          "frame_role": "full",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "low"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "high"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweeping that low"
+              },
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "went Above This high"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value Gap that is overlapping with the high"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "mitigation block with that fair value Gap"
+              }
+            ],
+            "liquidity_levels": [
+              {
+                "kind": "other",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Swept a low, formed an ST model, shifted bias to opposing highs.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "fvg_disrespected",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "disrespecting that fair value Gap"
+            },
+            {
+              "name": "liquidity_run_continuation",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "respected that fair value Gap so we traded into that fair value Gap and respect that high"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_es_cycle",
+          "candle_i": null,
+          "what_happens": "Price sweeps a low, disrespects the bearish FVG that pushed it there, and forms a bullish ST model (Sweep).",
+          "maps_to_signal_step": null,
+          "ts": "09:20"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_es_cycle",
+          "candle_i": null,
+          "what_happens": "Price breaks above a prior high, forming a bullish FVG overlapping the broken high. Price retraces into it and rejects higher (Run).",
+          "maps_to_signal_step": null,
+          "ts": "09:46"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_es_cycle",
+          "candle_i": null,
+          "what_happens": "The process repeats. Price breaks another high, creates another ST-like structure, and respects the FVG overlapping the newly broken high.",
+          "maps_to_signal_step": null,
+          "ts": "10:36"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_es_cycle",
+          "candle_i": null,
+          "what_happens": "As price approaches the ultimate draw on liquidity, it no longer makes a deep retracement, but instead just 'stings' a mitigation block overlapping a fair value gap before hitting the target.",
+          "maps_to_signal_step": null,
+          "ts": "11:14"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_es_cycle"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He notes ES perfectly illustrates this cycle: sweep the low (disrespecting FVG), then consecutively run highs (respecting overlapping FVGs) until getting very close to the draw, where it only stings the first PD array before completion.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_low",
+          "structural_event.liquidity_sweep_high",
+          "fvg.bullish",
+          "fvg.mitigated"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.liquidity_run_continuation",
+            "reason": "The continuation proxy needs a displaced BOS plus an overlapping bullish FVG that later holds; it still cannot prove every discretionary 'stumble higher' reading the presenter sees."
+          },
+          {
+            "signal": "custom_signals.swing_failure_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact chart data.",
+          "why": "No visual access to extract OHLC, dates, or confirm the timeframe of the ES chart.",
+          "ts": "09:07"
+        }
+      ]
+    }
+  ]
+}

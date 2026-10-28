@@ -1,0 +1,790 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "rejection_block_reversal",
+      "aliases": [
+        "Rejection Block Setup"
+      ],
+      "category": "liquidity_reversal",
+      "summary": "Mark a bullish rejection block: a swing-low outsider candle with a dominant lower wick that later sees its body swept without losing the wick low. Enter the reversal away from that wick; bearish setups are the mirror.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": null,
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "No explicit timeframe is given. The rejection block and its retest are read on the same presenter-chosen execution timeframe, so setup_tf and entry_tf resolve together at evaluation time."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": []
+      },
+      "glossary": {},
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.rejection_block",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "01:17"
+        },
+        {
+          "step": 2,
+          "signal": "custom_signals.rejection_block_body_sweep",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "02:21"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "rejection_block",
+          "kind": "candle_pattern",
+          "plain_definition": "An outsider candle at a swing extreme with a long wick; price later sweeps the bodies inside the wick but not the wick extreme.",
+          "numeric_definition": "bullish_ob[0].formed AND bullish_ob[0].subtype == rejection",
+          "definition_source": "inferred",
+          "ts": "01:17"
+        },
+        {
+          "name": "rejection_block_body_sweep",
+          "kind": "price_action",
+          "plain_definition": "Price trades into the rejection block's wick (sweeping the bodies) without taking out the wick extreme.",
+          "numeric_definition": "low < order_block.zone_high AND low >= order_block.zone_low AND order_block.subtype == rejection",
+          "definition_source": "presenter_stated",
+          "ts": "02:21"
+        }
+      ],
+      "sequence": [
+        "Mark the bullish rejection block at a swing low.",
+        "Wait for price to sweep the body area inside its wick without taking the wick low, then buy the reversal."
+      ],
+      "invalidation": [
+        {
+          "text": "Price takes out the full extreme wick of the rejection block.",
+          "provenance": "presenter_stated",
+          "ts": "01:23",
+          "numeric_definition": "low < order_block.zone_low"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Most reliable during counter-trend moves where price respects the rejection block without sweeping the absolute low/high of the wick.",
+          "provenance": "presenter_stated",
+          "ts": "03:41",
+          "numeric_definition": "custom_signals.rejection_block_body_sweep"
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter after price sweeps the body area inside the wick and reverses away from the rejection block.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "02:21",
+        "quote": "price here swept above this body and then drop lower"
+      },
+      "target_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "order_block_mitigation",
+        "mitigation_block_setup"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "this is literally all you need to know about rejection blocks",
+          "ts": "05:08",
+          "verified": false
+        }
+      ],
+      "notes": "Written on the canonical bullish side; bearish rejection blocks are the mirror. The machine reading reuses the registry's rejection-block judgment (engine rejection order block at a swing extreme with a long wick) and adds the body-sweep retest, while the presenter's counter-trend emphasis and adjacent-candle outsider nuance remain discretionary.",
+      "examples": [
+        "ex1_bearish_rejection_block",
+        "ex2_bullish_rejection_block_counter_trend",
+        "ex3_bullish_rejection_block_swing_low",
+        "ex4_bearish_rejection_block_down_close"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Trade parameters (Stop Loss and Take Profit)",
+          "why": "The video focuses purely on conceptual identification of rejection blocks without detailing specific risk management or trade execution targets.",
+          "ts": "00:00"
+        },
+        {
+          "issue": "Counter-trend emphasis is not machine-tested",
+          "why": "The presenter says rejection blocks often matter on counter-trend reactions, but the video gives no exact rule for measuring the larger trend context.",
+          "ts": "03:41"
+        },
+        {
+          "issue": "The final 'outsider candle' nuance is only approximated",
+          "why": "The engine rejection subtype enforces a swing extreme with a dominant wick, but it does not compare neighboring candle opens/closes the way the final bearish example informally does.",
+          "ts": "04:54"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The identification criteria (outsider candle, long wick, body sweep vs wick preservation) are explicitly and clearly defined."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_bearish_rejection_block",
+      "strategy_id": "rejection_block_reversal",
+      "video_span": {
+        "start": "01:10",
+        "end": "03:13",
+        "canonical_frame_ts": "02:03"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "highest candle / swing high"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "swept above this body"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "inferred from bearish rejection block setup",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "rejection_block",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "bearish rejection block"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the highest candle with a long wick at the top where price sweeps the bodies but not the extreme wick."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price forms an outsider candle at the top with a long wick.",
+          "maps_to_signal_step": 1,
+          "ts": "01:17"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price sweeps above the candle bodies (trapping breakout traders), but does not exceed the absolute high of the wick.",
+          "maps_to_signal_step": 2,
+          "ts": "02:21"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price drops lower away from the rejection block.",
+          "maps_to_signal_step": null,
+          "ts": "02:25"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter explains that retail breakout traders get long when the body is breached, and their stop losses above the bodies get trapped before price reverses downwards. Wicks are described as manipulation tools where liquidity rests above bodies rather than the absolute wicks.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bearish",
+          "order_block.rejection"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.rejection_block",
+            "reason": "The registry maps the presenter’s outsider candle to the engine rejection-order-block subtype, which captures the swing extreme and long wick but not every discretionary body comparison."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact price data or OHLC values.",
+          "why": "Operating from the video transcript and lack direct visual access to frame candlestick values.",
+          "ts": "01:10"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_bullish_rejection_block_counter_trend",
+      "strategy_id": "rejection_block_reversal",
+      "video_span": {
+        "start": "03:13",
+        "end": "04:02",
+        "canonical_frame_ts": "03:22"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "lowest candle / swing low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "counter-trend move against the main downtrend",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "rejection_block",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "bullish rejection block"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the lowest candle during a bearish trend where price sweeps bodies but respects the long lower wick."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "During a bearish trend, price forms a lowest candle with a long lower wick.",
+          "maps_to_signal_step": 1,
+          "ts": "03:22"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price sweeps below the candle bodies but does not take out the extreme low of the wick.",
+          "maps_to_signal_step": 2,
+          "ts": "03:26"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price respects the rejection block and moves higher in a counter-trend reaction.",
+          "maps_to_signal_step": null,
+          "ts": "03:55"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights that during counter-trend moves, price will generally not sweep the absolute low of the wick, choosing instead to respect the rejection block formed by the lowest candle body sweep.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bullish",
+          "order_block.rejection"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.rejection_block_body_sweep",
+            "reason": "The wick-held body sweep is machine-defined, but the presenter’s 'counter-trend respect' framing depends on discretionary higher-context reading."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact price data or OHLC values.",
+          "why": "Operating from the video transcript and lack direct visual access to frame candlestick values.",
+          "ts": "03:13"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_bullish_rejection_block_swing_low",
+      "strategy_id": "rejection_block_reversal",
+      "video_span": {
+        "start": "04:02",
+        "end": "04:44",
+        "canonical_frame_ts": "04:20"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "swing low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "counter-trend swing low reaction",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "rejection_block",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "bullish rejection block at swing low"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights an outside candle at the bottom swing low respecting the long wick."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price forms an outsider candle at the bottom swing low with a long lower wick.",
+          "maps_to_signal_step": 1,
+          "ts": "04:02"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price sweeps below the candle bodies but respects the absolute wick low.",
+          "maps_to_signal_step": 2,
+          "ts": "04:11"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price continues higher away from the rejection block.",
+          "maps_to_signal_step": null,
+          "ts": "04:39"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter reinforces that rejection blocks located at outside swing lows do not necessarily need to sweep the absolute wick low, especially in counter-trend scenarios, but instead respect the rejection block.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bullish",
+          "order_block.rejection"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.rejection_block",
+            "reason": "The engine match is the rejection-order-block subtype; the presenter’s language remains more visual than the stored engine state."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact price data or OHLC values.",
+          "why": "Operating from the video transcript and lack direct visual access to frame candlestick values.",
+          "ts": "04:02"
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_bearish_rejection_block_down_close",
+      "strategy_id": "rejection_block_reversal",
+      "video_span": {
+        "start": "04:44",
+        "end": "05:14",
+        "canonical_frame_ts": "04:54"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "highest down-close candle"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweeps bodies and continues lower"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "bearish continuation setup",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "rejection_block",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "bearish down-close rejection block"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights a down-close candle whose open is slightly higher than the preceding up candle close, featuring a long wick."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A down-close candle forms at the highest point where its open is slightly higher than the adjacent up candle close.",
+          "maps_to_signal_step": 1,
+          "ts": "04:54"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price sweeps the candle bodies within the long wick without breaking the absolute wick high.",
+          "maps_to_signal_step": 2,
+          "ts": "05:03"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price drops lower, completing the setup.",
+          "maps_to_signal_step": null,
+          "ts": "05:08"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter concludes with a final bearish example showing that even when a down-close candle's open is slightly higher than the preceding up candle, the long wick and body sweep mechanics of the rejection block remain identical.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bearish",
+          "order_block.rejection"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.rejection_block",
+            "reason": "The last example adds an adjacent-candle open/close nuance that the engine does not encode beyond the long-wick swing-extreme rejection subtype."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact price data or OHLC values.",
+          "why": "Operating from the video transcript and lack direct visual access to frame candlestick values.",
+          "ts": "04:44"
+        }
+      ]
+    }
+  ]
+}

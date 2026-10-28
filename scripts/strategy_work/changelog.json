@@ -1,0 +1,5707 @@
+{
+ "order_block.json": [
+  {
+   "file": "order_block.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "order_block.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "order_block.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "order_block.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "order_block.json",
+   "category": "legacy_signal",
+   "detail": "ex3_bullish_ob_sequence: may_differ 'order_block.invalidation' -> 'order_block.invalidated'"
+  },
+  {
+   "file": "order_block.json",
+   "category": "semantic",
+   "detail": "order_block_mitigation.summary rewritten"
+  },
+  {
+   "file": "order_block.json",
+   "category": "requires_context",
+   "detail": "order_block_mitigation: prose 'Must align with the current directional bias (e.g., following a liquidity sweep)' moved to notes (presenter bias, not computable)"
+  },
+  {
+   "file": "order_block.json",
+   "category": "signals_required",
+   "detail": "step1 order_block.bullish (engine OB needs FVG+BOS; presenter does not) -> custom_signals.presenter_order_block"
+  },
+  {
+   "file": "order_block.json",
+   "category": "signals_required",
+   "detail": "step2 lte_signal order_block.zone_high -> custom_signals.ob_fvg_overlap_sensitivity (wick top vs body open rule)"
+  },
+  {
+   "file": "order_block.json",
+   "category": "rules",
+   "detail": "order_block_mitigation: target_rule and stop_rule placeholders ('Not explicitly defined...') -> null"
+  }
+ ],
+ "london_killzone.json": [
+  {
+   "file": "london_killzone.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:00:00' -> '00:00'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:04:07' -> '04:07'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:04:08' -> '04:08'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:06:05' -> '06:05'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "legacy_signal",
+   "detail": "eu_asia_expansion: engine_check 'bearish_fvg' -> ['fvg.bearish']"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "legacy_signal",
+   "detail": "eu_asia_expansion: engine_check 'fvg_mitigation' -> ['fvg.mitigated']"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "custom_alias",
+   "detail": "gu_asia_consolidation: custom_signals_observed 'st_model_entry' -> canonical 'st_model'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "legacy_signal",
+   "detail": "gu_asia_consolidation: engine_check 'bearish_fvg' -> ['fvg.bearish']"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "legacy_signal",
+   "detail": "gu_asia_consolidation: engine_check 'fvg_mitigation' -> ['fvg.mitigated']"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "semantic",
+   "detail": "london_killzone.summary rewritten"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "requires_context",
+   "detail": "london_killzone: prose HTF premium/discount condition -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "glossary",
+   "detail": "london_killzone: 'ST MODEL' and 'OVERLAPPING PD ARRAY' removed (registry: st_model, overlapping_pd_array); 'INTERMEDIATE TERM HIGH' kept because this presenter means the covering stop extreme"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "mirror",
+   "detail": "london_killzone: written bearish by the presenter; signals/rules rewritten on the canonical bullish side (symmetric: true)"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "signals_required",
+   "detail": "london_killzone: step1 engine bias==bearish -> custom htf_pd_array_tap (presenter bias = 4h array reaction, not engine structure bias); kill_zone + Asia scenario folded into custom london_kz_entry_trigger; fvg.mitigated (engine CE) -> custom fvg_touched; optional second-FVG step folded into st_model"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "custom_signals",
+   "detail": "london_killzone: st_model_entry -> st_model, intermediate_term_high_stop -> intermediate_term_low_stop (canonical side), overlapping_pd_array dropped (entry uses the new FVG edge)"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ref_removed",
+   "detail": "london_killzone.reinforces: 'ref:turtle_soup' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ref_removed",
+   "detail": "london_killzone.reinforces: 'ref:fair_value_gap' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ref_resolved",
+   "detail": "london_killzone.reinforces: 'ref:order_block' -> 'order_block_mitigation'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ref_removed",
+   "detail": "london_killzone.reinforces: 'ref:kill_zones' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "ref_resolved",
+   "detail": "london_killzone.reinforces: 'ref:daily_profiles' -> 'daily_profiles'"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "example_precision",
+   "detail": "eu_asia_expansion: reverse-engineered candles and trade prices marked precision 'schematic' (never backtest ground truth)"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "example_precision",
+   "detail": "gu_asia_consolidation: reverse-engineered candles and trade prices marked precision 'schematic' (never backtest ground truth)"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "walkthrough_map",
+   "detail": "eu_asia_expansion[1]: maps_to_signal_step 3 -> 2"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "walkthrough_renumber",
+   "detail": "eu_asia_expansion: walkthrough steps [1, 4, 4] -> [1, 2, 3]"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "walkthrough_map",
+   "detail": "gu_asia_consolidation[1]: maps_to_signal_step 4 -> 3"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "walkthrough_map",
+   "detail": "gu_asia_consolidation[2]: maps_to_signal_step 5 -> 2"
+  },
+  {
+   "file": "london_killzone.json",
+   "category": "walkthrough_renumber",
+   "detail": "gu_asia_consolidation: walkthrough steps [5, 5, 5, 5] -> [1, 2, 3, 4]"
+  }
+ ],
+ "trading_probabilities.json": [
+  {
+   "file": "trading_probabilities.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "asr",
+   "detail": "\\bdraw liquidity\\b x1"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "asr",
+   "detail": "\\bdrawn liquidity\\b x3"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts",
+   "detail": ".examples[0].uncertainties[0].ts: range '01:14-05:11' -> start '01:14'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '01:14-05:11' -> '01:14'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts",
+   "detail": ".examples[1].uncertainties[0].ts: range '05:11-06:16' -> start '05:11'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '05:11-06:16' -> '05:11'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts",
+   "detail": ".examples[2].uncertainties[0].ts: range '06:16-08:38' -> start '06:16'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '06:16-08:38' -> '06:16'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts",
+   "detail": ".examples[3].uncertainties[0].ts: range '08:38-11:46' -> start '08:38'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "ts_format",
+   "detail": ".examples[3].uncertainties[0].ts: '08:38-11:46' -> '08:38'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "example_enum",
+   "detail": "ex2_usdcad_obvious_draw: frame timeframe '1W' -> \"1w\""
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "engine_check",
+   "detail": "ex2_usdcad_obvious_draw: 'order_block.mitigation' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "legacy_signal",
+   "detail": "ex3_dollar_50_50_bias: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "legacy_signal",
+   "detail": "ex4_dollar_post_expansion: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "category",
+   "detail": "hp_lp_conditions_filter: 'other:conditions_filter' -> 'market_condition_filter'"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "semantic",
+   "detail": "hp_lp_conditions_filter.summary rewritten"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "timeframes",
+   "detail": "hp_lp_conditions_filter: bias_tf '4h_and_above' -> '4h|1d|1w|1mo' (ladder rungs >= 4h)"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "requires_context",
+   "detail": "hp_lp_conditions_filter: prose '10-second rule' -> custom_signals.obvious_draw_on_liquidity; news dependency tagged"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "sequence",
+   "detail": "hp_lp_conditions_filter: no signals_required steps, so the 5-line procedure moved into notes"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "rules",
+   "detail": "hp_lp_conditions_filter: stop_rule placeholder -> null"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "placeholder_null",
+   "detail": "hp_lp_conditions_filter.management.notes 'No management rules discussed.' -> null"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "walkthrough_map",
+   "detail": "ex4_dollar_post_expansion[0]: maps_to_signal_step 3 -> None"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "walkthrough_map",
+   "detail": "ex4_dollar_post_expansion[1]: maps_to_signal_step 3 -> None"
+  },
+  {
+   "file": "trading_probabilities.json",
+   "category": "walkthrough_map",
+   "detail": "ex4_dollar_post_expansion: maps_to_signal_step 3 pointed to a step that never existed (signals_required is empty)"
+  }
+ ],
+ "st_model.json": [
+  {
+   "file": "st_model.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "st_model.json",
+   "category": "example_missing",
+   "detail": "st_model_advanced: listed but absent ['ex3_es_early_entry', 'ex4_usdcad_htf']"
+  },
+  {
+   "file": "st_model.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x1"
+  },
+  {
+   "file": "st_model.json",
+   "category": "asr",
+   "detail": "\\bPD Ray\\b x1"
+  },
+  {
+   "file": "st_model.json",
+   "category": "asr",
+   "detail": "\\bDrone liquidity\\b x1"
+  },
+  {
+   "file": "st_model.json",
+   "category": "asr",
+   "detail": "\\bfor Value Gap\\b x1"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[0].ts: '00:03:36' -> '03:36'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[1].ts: '00:03:42' -> '03:42'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[2].ts: '00:03:49' -> '03:49'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[3].ts: '00:03:54' -> '03:54'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[0].ts: '00:03:30' -> '03:30'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[1].ts: '00:04:10' -> '04:10'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[0].ts: '00:06:13' -> '06:13'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].entry_rule.ts: '00:06:28' -> '06:28'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].target_rule.ts: '00:04:17' -> '04:17'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].stop_rule.ts: '00:10:17' -> '10:17'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].presenter_claims[0].ts: '00:02:51' -> '02:51'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].signals_required[0].ts: '00:05:10' -> '05:10'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].signals_required[1].ts: '00:05:54' -> '05:54'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].custom_signals[0].ts: '00:05:10' -> '05:10'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].invalidation[0].ts: '00:06:13' -> '06:13'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].filters[0].ts: '00:05:46' -> '05:46'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].entry_rule.ts: '00:05:46' -> '05:46'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].stop_rule.ts: '00:10:17' -> '10:17'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].presenter_claims[0].ts: '00:06:03' -> '06:03'"
+  },
+  {
+   "file": "st_model.json",
+   "category": "semantic",
+   "detail": "st_model_standard.summary rewritten"
+  },
+  {
+   "file": "st_model.json",
+   "category": "timeframes",
+   "detail": "st_model_standard: HTF/LTF placeholders -> null role labels with contract-ladder note"
+  },
+  {
+   "file": "st_model.json",
+   "category": "requires_context",
+   "detail": "st_model_standard: prose HTF premium/discount prerequisite -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "st_model.json",
+   "category": "glossary",
+   "detail": "st_model_standard: registry-backed jargon ('ST model', 'overlapping PD array') removed from glossary"
+  },
+  {
+   "file": "st_model.json",
+   "category": "signals_required",
+   "detail": "st_model_standard: HTF tap kept; first FVG bound on an engine step; helper step first_fvg_after_array_tap added; retrace fvg.mitigated -> custom fvg_touched; final bullish FVG binds the entry gap"
+  },
+  {
+   "file": "st_model.json",
+   "category": "rules",
+   "detail": "st_model_standard: entry ce -> second FVG near edge; target liquidity_sweep_high -> intermediate_term_high; stop swing_high -> intermediate_term_low (canonical long side)"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ref_removed",
+   "detail": "st_model_standard.conflicts_with: 'ref:traditional_market_structure_shift' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "st_model.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_st_model_basic[2]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "st_model.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_st_model_basic[3]: maps_to_signal_step 4 -> 5"
+  },
+  {
+   "file": "st_model.json",
+   "category": "semantic",
+   "detail": "st_model_advanced.summary rewritten"
+  },
+  {
+   "file": "st_model.json",
+   "category": "timeframes",
+   "detail": "st_model_advanced: HTF/LTF placeholders -> null role labels with contract-ladder note"
+  },
+  {
+   "file": "st_model.json",
+   "category": "requires_context",
+   "detail": "st_model_advanced: prose HTF premium/discount prerequisite -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "st_model.json",
+   "category": "mirror",
+   "detail": "st_model_advanced: written bearish in the transcript examples; normalized on the canonical bullish side because the model is symmetric"
+  },
+  {
+   "file": "st_model.json",
+   "category": "signals_required",
+   "detail": "st_model_advanced: bearish first-FVG entry -> canonical bullish side; helper step first_fvg_after_array_tap added; retracement into the bound first FVG uses custom fvg_touched"
+  },
+  {
+   "file": "st_model.json",
+   "category": "rules",
+   "detail": "st_model_advanced: raw target_rule (inferred, no quote) kept as text; no structured form (opposing draw on liquidity is not a catalog price reference)"
+  },
+  {
+   "file": "st_model.json",
+   "category": "rules",
+   "detail": "st_model_advanced: entry ce -> first FVG near edge; inferred target removed to null; stop swing_high -> intermediate_term_low (canonical long side)"
+  },
+  {
+   "file": "st_model.json",
+   "category": "ref_removed",
+   "detail": "st_model_advanced.conflicts_with: 'ref:traditional_market_structure_shift' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "st_model.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_eurgbp_advanced[2]: maps_to_signal_step 2 -> 3"
+  }
+ ],
+ "entry_patterns.json": [
+  {
+   "file": "entry_patterns.json",
+   "category": "envelope",
+   "detail": "shape [pass_2_strategies,pass_3_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "legacy_signal",
+   "detail": "ex1_es_overlapping_pd: engine_check 'order_blocks' -> ['order_block']"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "legacy_signal",
+   "detail": "ex2_gbpaud_overlapping_pd: engine_check 'order_blocks' -> ['order_block']"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "semantic",
+   "detail": "overlapping_pd_array_entry.summary rewritten"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "timeframes",
+   "detail": "overlapping_pd_array_entry: bias_tf '1h' -> '1h|1d' (examples cite 1h context; narration also cites Daily context)"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "timeframes",
+   "detail": "overlapping_pd_array_entry: entry_tf '1m' -> '1m|5m' (examples use 1m and 5m execution)"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "requires_context",
+   "detail": "overlapping_pd_array_entry: prose HTF 'boundary/context' -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "glossary",
+   "detail": "overlapping_pd_array_entry: glossary cleared because overlapping_pd_array/intermediate_term levels already exist in the registry"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "mirror",
+   "detail": "overlapping_pd_array_entry: symmetric strategy written on the canonical bullish side; bearish cases follow the catalog mirror table"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "signals_required",
+   "detail": "overlapping_pd_array_entry: raw FVG + optional order block steps -> HTF boundary context plus canonical custom_signals.overlapping_pd_array entry trigger"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "custom_signals",
+   "detail": "overlapping_pd_array_entry: first_overlapping_pd_array -> canonical overlapping_pd_array; added intermediate_term_high/low rule references"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "rules",
+   "detail": "overlapping_pd_array_entry: entry reference canonicalized; first stated target anchored to intermediate_term_high; stop reference 'swing_low' -> custom_signals.intermediate_term_low"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "ref_removed",
+   "detail": "overlapping_pd_array_entry.reinforces: 'ref:order_block' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "ref_removed",
+   "detail": "overlapping_pd_array_entry.reinforces: 'ref:fvg' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "ref_removed",
+   "detail": "overlapping_pd_array_entry.reinforces: 'ref:breaker' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "engine_check",
+   "detail": "ex1_es_overlapping_pd: may_differ 'first_overlapping_pd_array' -> 'custom_signals.overlapping_pd_array'"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_es_overlapping_pd[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_es_overlapping_pd[1]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_es_overlapping_pd[3]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_es_overlapping_pd[4]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "engine_check",
+   "detail": "ex2_gbpaud_overlapping_pd: may_differ 'stop_loss_placement' -> 'custom_signals.intermediate_term_low'"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_gbpaud_overlapping_pd[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "entry_patterns.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_gbpaud_overlapping_pd[2]: maps_to_signal_step 1 -> 2"
+  }
+ ],
+ "gap_imbalance.json": [
+  {
+   "file": "gap_imbalance.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "example_missing",
+   "detail": "gap_and_imbalance_overlap_confluence: listed but absent ['ex3_bpr_identification', 'ex4_liquidity_void_identification', 'ex5_volume_imbalance_identification']"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x1"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "category",
+   "detail": "gap_and_imbalance_overlap_confluence: 'other:imbalance_and_pd_array_confluence' -> 'context_framework'"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "semantic",
+   "detail": "gap_and_imbalance_overlap_confluence.summary rewritten"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "requires_context",
+   "detail": "gap_and_imbalance_overlap_confluence: overlap preference prose -> custom_signals.overlapping_pd_array (supported FVG+OB subset)"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "sequence",
+   "detail": "gap_and_imbalance_overlap_confluence: conceptual masterclass -> no executable step chain; procedure moved into notes"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "rules",
+   "detail": "gap_and_imbalance_overlap_confluence: target_rule and stop_rule placeholders -> null; entry_rule kept as conceptual text only"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "placeholder_null",
+   "detail": "gap_and_imbalance_overlap_confluence.management.notes conceptual placeholder -> null"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "ref_resolved",
+   "detail": "gap_and_imbalance_overlap_confluence.reinforces: 'ref:order_block' -> 'order_block_mitigation'"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "ref_resolved",
+   "detail": "gap_and_imbalance_overlap_confluence.reinforces: 'ref:breaker_block' -> 'breaker_block_setup'"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "ref_resolved",
+   "detail": "gap_and_imbalance_overlap_confluence.reinforces: 'ref:mitigation_block' -> 'mitigation_block_setup'"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_fvg_identification[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_fvg_identification[2]: maps_to_signal_step 2 -> None"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bisi_sibi_identification[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bisi_sibi_identification[2]: maps_to_signal_step 2 -> None"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "asr",
+   "detail": "ex2_bisi_sibi_identification: 'SIBI / cell site imbalance' -> 'SIBI / sell-side imbalance'"
+  },
+  {
+   "file": "gap_imbalance.json",
+   "category": "walkthrough_map",
+   "detail": "gap_and_imbalance_overlap_confluence: walkthrough step mappings cleared because signals_required is empty"
+  }
+ ],
+ "flod_llod.json": [
+  {
+   "file": "flod_llod.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "example_missing",
+   "detail": "flod_llod: listed but absent ['leg_3_new_bearish_leg', 'leg_4_overlapping_arrays', 'leg_5_probabilities']"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "legacy_signal",
+   "detail": "leg_1_premium_arrays: engine_check 'swing_point.is_high' -> ['swing_high']"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "legacy_signal",
+   "detail": "leg_2_discount_arrays_violation: engine_check 'swing_point' -> ['swing_high', 'swing_low']"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "category",
+   "detail": "flod_llod: 'other:pd_array_matrix' -> 'context_framework'"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "semantic",
+   "detail": "flod_llod.summary rewritten"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "timeframes",
+   "detail": "flod_llod: notes rewritten to treat setup_tf as the analysed leg timeframe and to state the bullish-side mirror convention"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "glossary",
+   "detail": "flod_llod: canonicalized FLOD/LLOD terms, folded FLOT/LOT into aliases, and corrected 'price action lag' -> 'price action leg'"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "signals_required",
+   "detail": "flod_llod: raw FVG + OB overlap kept as steps, with llod added to define the active bullish leg and overlapping_pd_array naming the FLOD zone"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "custom_signals",
+   "detail": "flod_llod: custom signals 'FLOD'/'LLOD' -> registry names flod/llod; added overlapping_pd_array for the overlap condition the presenter calls highest probability"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "rules",
+   "detail": "flod_llod: placeholder entry/target rules -> null; stop_rule rewritten from generic LLOD prose to structured beyond custom_signals.llod"
+  },
+  {
+   "file": "flod_llod.json",
+   "category": "mirror",
+   "detail": "flod_llod: presenter examples are bearish; summary, sequence, invalidation and stop were rewritten on the canonical bullish side"
+  }
+ ],
+ "reclaimed_ob.json": [
+  {
+   "file": "reclaimed_ob.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "asr",
+   "detail": "\\bvery very Gap\\b x1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "asr",
+   "detail": "\\bdiscount race\\b x1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "asr",
+   "detail": "\\bBD arrays\\b x1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "asr",
+   "detail": "\\bor block\\b x2"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "semantic",
+   "detail": "reclaimed_order_block_overlap.summary rewritten"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "timeframes",
+   "detail": "reclaimed_order_block_overlap: bias_tf/setup_tf/entry_tf htf/ltf/ltf -> 4h/15m/15m from the presenter's named example"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "requires_context",
+   "detail": "reclaimed_order_block_overlap: prose market-maker-model requirement moved into step2 custom_signals.market_maker_curve_shift and notes"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "signals_required",
+   "detail": "reclaimed_order_block_overlap: steps reordered to the presenter's chronology (left-curve bullish OB -> curve shift -> reclaim above the block -> overlap filter)"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "signals_required",
+   "detail": "reclaimed_order_block_overlap: overlapping_pd_array replaced with reclaimed_pd_array_overlap so breaker/mitigation partners stay in-scope instead of narrowing the meaning to FVG+OB only"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "custom_signals",
+   "detail": "reclaimed_order_block_overlap: added registry-backed market_maker_curve_shift, reclaimed_trade_through, breaker_pattern, swing_failure_pattern, and reclaimed_pd_array_overlap"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "invalidation",
+   "detail": "reclaimed_order_block_overlap: placeholder invalidation item 'Not explicitly defined in this video.' removed (no presenter content; same rule as rule placeholders)"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "rules",
+   "detail": "reclaimed_order_block_overlap: target_rule and stop_rule placeholders ('Not explicitly defined...') -> null; entry structured at the reclaimed OB near edge because the transcript names the overlap zone but not a finer edge"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_market_maker_curves_schematic[0]: maps_to_signal_step 2 -> 1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_market_maker_curves_schematic[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bearish_reclaimed_ob_clutter[0]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bearish_reclaimed_ob_clutter[1]: maps_to_signal_step 2 -> 1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "custom_alias",
+   "detail": "ex3_bearish_reclaimed_ob_overlap: custom_signals_observed 'overlapping_pd_array' -> 'reclaimed_pd_array_overlap'"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "walkthrough_map",
+   "detail": "ex4_bullish_reclaimed_ob_overlap[0]: maps_to_signal_step 2 -> 1"
+  },
+  {
+   "file": "reclaimed_ob.json",
+   "category": "custom_alias",
+   "detail": "ex4_bullish_reclaimed_ob_overlap: custom_signals_observed 'overlapping_pd_array' -> 'reclaimed_pd_array_overlap'"
+  }
+ ],
+ "advanced_ms.json": [
+  {
+   "file": "advanced_ms.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "ts",
+   "detail": ".examples[0].uncertainties[0].ts: range '01:33-21:13' -> start '01:33'"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '01:33-21:13' -> '01:33'"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "example_enum",
+   "detail": "fractal_ms_daily_to_1m: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "legacy_signal",
+   "detail": "fractal_ms_daily_to_1m: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "engine_check",
+   "detail": "fractal_ms_daily_to_1m: 'order_block.mitigation' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "category_kept",
+   "detail": "advanced_market_structure: worker proposed 'context_framework'; original category 'trend_following' kept (valid entry category, entry rule present)"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "semantic",
+   "detail": "advanced_market_structure.summary rewritten"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "timeframes",
+   "detail": "advanced_market_structure: timeframe roles grounded by the contract ladder instead of free-form Daily/1H/15m/1m prose"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "requires_context",
+   "detail": "advanced_market_structure: prose premium-array context -> custom_signals.htf_opposing_pd_array"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "glossary",
+   "detail": "advanced_market_structure: registry-covered STH/STL/ITH/ITL entries removed; only draw on liquidity remains as presenter jargon"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "signals_required",
+   "detail": "advanced_market_structure: raw bearish liquidity-sweep premise kept as step 1; higher-timeframe premium-array retracement grounded as candle.high gte_signal custom_signals.htf_opposing_pd_array"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "custom_signals",
+   "detail": "advanced_market_structure: local ITH/ITL/STH definitions replaced by canonical registry copies; short_term_high removed because it stays descriptive and never becomes a rule input"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "rules",
+   "detail": "advanced_market_structure: htf_premium_array -> custom_signals.htf_opposing_pd_array; intermediate-term rule references normalized to custom_signals.*"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "walkthrough_map",
+   "detail": "fractal_ms_daily_to_1m[3]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "advanced_ms.json",
+   "category": "engine_check",
+   "detail": "fractal_ms_daily_to_1m: may_differ swing_point -> custom_signals.intermediate_term_high because the lesson uses a multi-swing ITH/ITL hierarchy rather than raw swing-point detections"
+  }
+ ],
+ "breaker_block.json": [
+  {
+   "file": "breaker_block.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x1"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "asr",
+   "detail": "\\bverify again\\b x1"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "asr",
+   "detail": "\\b[Ff]orefather [Gg]ap\\b x1"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "engine_check",
+   "detail": "ex1_breaker_schematics: 'custom_signals.breaker_pattern' moved from should_detect to may_differ as 'custom_signals.breaker_pattern' (not an engine detection)"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "example_enum",
+   "detail": "ex2_bearish_breaker_unicorn: frame timeframe '1 hour' -> \"1h\""
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "custom_alias",
+   "detail": "ex2_bearish_breaker_unicorn: custom_signals_observed 'mean_threshold' -> canonical 'breaker_mean_threshold'"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "engine_check",
+   "detail": "ex2_bearish_breaker_unicorn: 'custom_signals.breaker_pattern' moved from should_detect to may_differ as 'custom_signals.breaker_pattern' (not an engine detection)"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "example_enum",
+   "detail": "ex3_fractal_bullish_breaker: frame timeframe '4 hour' -> \"4h\""
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "engine_check",
+   "detail": "ex3_fractal_bullish_breaker: 'custom_signals.breaker_pattern' moved from should_detect to may_differ as 'custom_signals.breaker_pattern' (not an engine detection)"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "engine_check",
+   "detail": "ex4_bullish_breaker_continuation: 'custom_signals.breaker_pattern' moved from should_detect to may_differ as 'custom_signals.breaker_pattern' (not an engine detection)"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "semantic",
+   "detail": "breaker_block_setup.summary rewritten"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "timeframes",
+   "detail": "breaker_block_setup: bias_tf 'HTF (e.g., Monthly/Weekly/Daily/4H)' -> '4h|1d|1w|1mo', setup_tf 'LTF (e.g., 1H, 5m)' -> '5m|1h|4h', entry_tf None -> null"
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "requires_context",
+   "detail": "breaker_block_setup: prose higher-timeframe bias requirement moved to notes (presenter narrative, not a fixed computable rule)."
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "signals_required",
+   "detail": "breaker_block_setup: presenter breaker kept as registry breaker_pattern (sweep/failure structure), not engine order_block.breaker."
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "signals_required",
+   "detail": "breaker_block_setup: optional FVG confluence split into custom_signals.unicorn_overlap on the breaker-confirmation candle."
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "rules",
+   "detail": "breaker_block_setup: entry_rule kept as text with structured null because the wick-vs-body breaker level is presenter-specific and not a stable catalog reference; target/stop placeholders -> null."
+  },
+  {
+   "file": "breaker_block.json",
+   "category": "legacy_signal",
+   "detail": "ex4_bullish_breaker_continuation: engine_check.may_differ 'bullish_bos' -> 'structural_event.bullish_bos'"
+  }
+ ],
+ "mitigation_block.json": [
+  {
+   "file": "mitigation_block.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "example_missing",
+   "detail": "mitigation_block_setup: listed but absent ['ex5_htf_mb_continuation']"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x1"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "legacy_signal",
+   "detail": "ex1_mb_schematics: may_differ 'order_block.mitigation' -> 'custom_signals.swing_failure_pattern'"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "engine_check",
+   "detail": "ex1_mb_schematics: 'custom_signals.swing_failure_pattern' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "engine_check",
+   "detail": "ex2_bearish_mb: 'custom_signals.swing_failure_pattern' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "engine_check",
+   "detail": "ex3_bullish_mb: 'custom_signals.swing_failure_pattern' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "engine_check",
+   "detail": "ex4_bullish_mb_ob_confluence: 'custom_signals.swing_failure_pattern' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "semantic",
+   "detail": "mitigation_block_setup.summary rewritten"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "requires_context",
+   "detail": "mitigation_block_setup: free-prose overlap requirement removed from requires_context.other because step2/filter1 now use custom_signals.mitigation_block_pd_array_overlap"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "glossary",
+   "detail": "mitigation_block_setup: glossary terms removed because swing_failure_pattern and mitigation_block are already covered by registry names/aliases"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "mirror",
+   "detail": "mitigation_block_setup: rewritten on the canonical bullish side; the raw file and examples include bearish explanations and are kept as examples only"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "signals_required",
+   "detail": "mitigation_block_setup: engine order_block.mitigation rejected because the engine never assigns subtype mitigation; step1 stays the registry swing_failure_pattern alias for 'mitigation block'"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "signals_required",
+   "detail": "mitigation_block_setup: generic overlapping_pd_array replaced with mitigation_block_pd_array_overlap because this setup needs the swing-failure mitigation level inside an FVG or order block, not FVG+OB overlap"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "signals_required",
+   "detail": "mitigation_block_setup: added explicit retracement step via candle.low <= custom_signals.mb_fvg_overlap_sensitivity so walkthrough step 3 is machine-addressable"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "invalidation",
+   "detail": "mitigation_block_setup: invalidation left non-computable because 'without immediate rejection' gives no candle-count or close-back rule"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "rules",
+   "detail": "mitigation_block_setup: target_rule and stop_rule placeholders ('Not explicitly defined...') -> null"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "engine_check",
+   "detail": "ex2_bearish_mb: engine_check.may_differ 'entry_level' -> 'custom_signals.mb_fvg_overlap_sensitivity'"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "engine_check",
+   "detail": "ex3_bullish_mb: engine_check.may_differ 'entry_level' -> 'custom_signals.mb_fvg_overlap_sensitivity'"
+  },
+  {
+   "file": "mitigation_block.json",
+   "category": "custom_signals_observed",
+   "detail": "ex4_bullish_mb_ob_confluence: overlapping_pd_array -> mitigation_block_pd_array_overlap"
+  }
+ ],
+ "ms_secrets.json": [
+  {
+   "file": "ms_secrets.json",
+   "category": "envelope",
+   "detail": "shape [strategy_id,aliases,category,summary,direction,symmetric,timeframes,requires_con] -> {strategies, examples}"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "envelope",
+   "detail": "market_structure_secrets: full example objects in 'examples' moved to top level"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:00:52' -> '00:52'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:11:03' -> '11:03'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:09:42' -> '09:42'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:11:03' -> '11:03'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:16:08' -> '16:08'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:14:45' -> '14:45'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_flagged",
+   "detail": ".examples[1].setup_walkthrough[0].ts: impossible '01:11:23' (video length ~18 min) -> null"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:12:36' -> '12:36'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[2].ts: '00:13:22' -> '13:22'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[3].ts: '00:14:45' -> '14:45'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[4].ts: '00:15:05' -> '15:05'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:16:08' -> '16:08'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:18:46' -> '18:46'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:16:41' -> '16:41'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:16:15' -> '16:15'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[1].ts: '00:16:33' -> '16:33'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[2].ts: '00:16:38' -> '16:38'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[3].ts: '00:16:49' -> '16:49'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "example_enum",
+   "detail": "ex2_audusd_daily_1h: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "example_enum",
+   "detail": "ex2_audusd_daily_1h: frame timeframe '1H' -> \"1h\""
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "custom_alias",
+   "detail": "ex2_audusd_daily_1h: may_differ 'custom_signals.htf_premium_array_tap' -> canonical 'custom_signals.htf_pd_array_tap'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "custom_alias",
+   "detail": "ex2_audusd_daily_1h: custom_signals_observed 'htf_premium_array_tap' -> canonical 'htf_pd_array_tap'"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "example_enum",
+   "detail": "ex3_nasdaq_multitimeframe: frame timeframe '1H' -> \"1h\""
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "example_enum",
+   "detail": "ex3_nasdaq_multitimeframe: frame timeframe '4H' -> \"4h\""
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "legacy_signal",
+   "detail": "ex3_nasdaq_multitimeframe: engine_check 'swing_point' -> ['swing_high', 'swing_low']"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "semantic",
+   "detail": "market_structure_secrets.summary rewritten"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "timeframes",
+   "detail": "market_structure_secrets: HTF/LTF placeholders -> null role labels with timeframe-above contract-ladder note"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "requires_context",
+   "detail": "market_structure_secrets: prose 'navigating between an ITH and an ITL' grounded by higher-timeframe array context -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "glossary",
+   "detail": "market_structure_secrets: glossary cleared because ST model, short-term range, and intermediate-term levels already exist in the registry"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "mirror",
+   "detail": "market_structure_secrets: transcript is taught on the bearish side; strategy rewritten on the canonical bullish side because the range logic is symmetric"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "signals_required",
+   "detail": "market_structure_secrets: presenter market-structure hierarchy kept as custom signals; no BOS/CHoCH/MSS step added because the presenter treats lower-timeframe structure shifts as subordinate to the higher-timeframe PD-array context"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "signals_required",
+   "detail": "market_structure_secrets: optional first_fvg_after_array_tap captures the risky ST-model entry; preferred continuation entries use the confirmed short_term_range plus a retracement into its FVG"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "semantic",
+   "detail": "market_structure_secrets.invalidation[0] text mirrored to the canonical bullish side and aligned with the protected short-term low rule"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "rules",
+   "detail": "market_structure_secrets: bearish target/stop references mirrored to custom_signals.intermediate_term_high and the protected low of custom_signals.short_term_range; entry remains an inferred FVG near-edge retracement"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_nasdaq_basics[2]: maps_to_signal_step 2 -> 4"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_nasdaq_basics[3]: maps_to_signal_step None -> 5"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_audusd_daily_1h[2]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_audusd_daily_1h[4]: maps_to_signal_step 2 -> 5"
+  },
+  {
+   "file": "ms_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex3_nasdaq_multitimeframe[1]: maps_to_signal_step 1 -> None"
+  }
+ ],
+ "rejection_block.json": [
+  {
+   "file": "rejection_block.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "engine_check",
+   "detail": "ex1_bearish_rejection_block: 'custom_signals.rejection_block' moved from should_detect to may_differ as 'custom_signals.rejection_block' (not an engine detection)"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "engine_check",
+   "detail": "ex2_bullish_rejection_block_counter_trend: 'custom_signals.rejection_block' moved from should_detect to may_differ as 'custom_signals.rejection_block' (not an engine detection)"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "engine_check",
+   "detail": "ex3_bullish_rejection_block_swing_low: 'custom_signals.rejection_block' moved from should_detect to may_differ as 'custom_signals.rejection_block' (not an engine detection)"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "engine_check",
+   "detail": "ex4_bearish_rejection_block_down_close: 'custom_signals.rejection_block' moved from should_detect to may_differ as 'custom_signals.rejection_block' (not an engine detection)"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "semantic",
+   "detail": "rejection_block_reversal.summary rewritten"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "timeframes",
+   "detail": "rejection_block_reversal: no explicit timeframe -> fractal same-timeframe execution note"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "requires_context",
+   "detail": "rejection_block_reversal: generic bullish/bearish bias and counter-trend prose removed from requires_context (pattern is symmetric; counter-trend emphasis kept in notes)"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "glossary",
+   "detail": "rejection_block_reversal: registry term 'rejection_block' removed from glossary"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "signals_required",
+   "detail": "rejection_block_reversal: candle.high placeholder -> custom_signals.rejection_block, then custom_signals.rejection_block_body_sweep for the body-sweep retest"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "mirror",
+   "detail": "rejection_block_reversal: written on the canonical bullish side; bearish examples are the mirror"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "custom_signals",
+   "detail": "rejection_block_reversal: raw rejection_block replaced with the canonical registry entries rejection_block and rejection_block_body_sweep"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "rules",
+   "detail": "rejection_block_reversal: target_rule and stop_rule placeholders -> null; entry_rule kept as text-only because no exact price trigger is stated"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_bearish_rejection_block[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_bearish_rejection_block[2]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bullish_rejection_block_counter_trend[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bullish_rejection_block_counter_trend[2]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex3_bullish_rejection_block_swing_low[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex3_bullish_rejection_block_swing_low[2]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex4_bearish_rejection_block_down_close[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "walkthrough_map",
+   "detail": "ex4_bearish_rejection_block_down_close[2]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "rejection_block.json",
+   "category": "examples",
+   "detail": "rejection_block examples: walkthroughs remapped to the 2-step sequence and may_differ signals normalized to valid custom signal names"
+  }
+ ],
+ "swing_hl.json": [
+  {
+   "file": "swing_hl.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "legacy_signal",
+   "detail": "ex_1_swing_basics: engine_check 'swing_points' -> ['swing_high', 'swing_low']"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "legacy_signal",
+   "detail": "ex_2_protected_swings_and_htf: engine_check 'fvg on 15m' -> ['fvg']"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "legacy_signal",
+   "detail": "ex_2_protected_swings_and_htf: engine_check 'liquidity_sweep_high on 5m' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "example_enum",
+   "detail": "ex_3_daily_htf_context: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "engine_check",
+   "detail": "ex_3_daily_htf_context: 'daily fvg' moved from should_detect to may_differ as 'custom_signals.daily fvg' (not an engine detection)"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "category_kept",
+   "detail": "swings_hl: worker proposed 'context_framework'; original category 'liquidity_reversal' kept (valid entry category, entry rule present)"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "semantic",
+   "detail": "swings_hl.summary rewritten"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "timeframes",
+   "detail": "swings_hl: bias_tf/setup_tf vague HTF/LTF labels -> '15m|1h|4h|1d' and '5m|15m|1h'; notes kept as the ladder explanation"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "requires_context",
+   "detail": "swings_hl: valid structural shift requires the higher-timeframe array to be tagged first -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "signals_required",
+   "detail": "swings_hl: swing_point.is_high -> custom_signals.short_term_high (presenter hierarchy reused); higher-timeframe-array context moved out of steps because 'array just beyond the swing' is only proxied elsewhere"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "custom_signals",
+   "detail": "swings_hl: custom_signals.premium_array replaced by registry short_term_high + htf_pd_array_tap"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "rules",
+   "detail": "swings_hl: entry_rule kept as descriptive context only; target_rule text kept and structured left null because the post-reversal array type/timeframe is not fixed"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_protected_swings_and_htf[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_protected_swings_and_htf[1]: maps_to_signal_step 2 -> 1"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_protected_swings_and_htf[2]: maps_to_signal_step 3 -> 2"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_daily_htf_context[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_daily_htf_context[1]: maps_to_signal_step 2 -> None"
+  },
+  {
+   "file": "swing_hl.json",
+   "category": "engine_check",
+   "detail": "ex_3_daily_htf_context: 'daily fvg' canonicalized to engine detection 'fvg'; unresolved custom may_differ removed"
+  }
+ ],
+ "amd_po3.json": [
+  {
+   "file": "amd_po3.json",
+   "category": "envelope",
+   "detail": "shape [strategies,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[0].ts: '00:05:02' -> '05:02'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[0].ts: '00:01:43' -> '01:43'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[1].ts: '00:05:17' -> '05:17'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[0].ts: '00:05:58' -> '05:58'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[0].ts: '00:17:34' -> '17:34'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[1].ts: '00:15:16' -> '15:16'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].entry_rule.ts: '00:05:52' -> '05:52'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].target_rule.ts: '00:07:32' -> '07:32'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].presenter_claims[0].ts: '00:01:05' -> '01:05'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].uncertainties[0].ts: '00:05:52' -> '05:52'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:01:43' -> '01:43'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:04:25' -> '04:25'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:04:05' -> '04:05'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:01:43' -> '01:43'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:04:25' -> '04:25'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:09:44' -> '09:44'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:09:14' -> '09:14'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:08:45' -> '08:45'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:08:37' -> '08:37'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:09:44' -> '09:44'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:11:00' -> '11:00'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:10:46' -> '10:46'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:10:09' -> '10:09'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '00:09:44' -> '09:44'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.start: '00:11:00' -> '11:00'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.end: '00:13:39' -> '13:39'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.canonical_frame_ts: '00:12:26' -> '12:26'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[0].ts: '00:12:12' -> '12:12'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[1].ts: '00:12:26' -> '12:26'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[3].uncertainties[0].ts: '00:11:00' -> '11:00'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.start: '00:13:39' -> '13:39'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.end: '00:16:45' -> '16:45'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.canonical_frame_ts: '00:15:16' -> '15:16'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[0].ts: '00:14:32' -> '14:32'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[1].ts: '00:15:01' -> '15:01'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[2].ts: '00:15:16' -> '15:16'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "ts_format",
+   "detail": ".examples[4].uncertainties[0].ts: '00:13:39' -> '13:39'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "legacy_signal",
+   "detail": "ex2_london_amd_cycle: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "example_enum",
+   "detail": "ex5_monthly_weekly_amd: frame timeframe '1M' -> \"1mo\""
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "category_kept",
+   "detail": "amd_power_of_3: worker proposed 'context_framework'; original category 'session_open_manipulation' kept (valid entry category, entry rule present)"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "semantic",
+   "detail": "amd_power_of_3.summary rewritten"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "timeframes",
+   "detail": "amd_power_of_3.timeframes rewritten"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "requires_context",
+   "detail": "amd_power_of_3: free-text opening anchors/context -> custom_signals.london_open_price, midnight_open, weekly_open, monthly_open"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "glossary",
+   "detail": "amd_power_of_3: opening_price/accumulation_phase_range moved out of raw custom_signals and preserved as glossary/context concepts"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "custom_signals",
+   "detail": "amd_power_of_3: opening_price -> london_open_price/midnight_open/weekly_open/monthly_open; accumulation_phase_range left as a glossary-only, profile-dependent concept"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "mirror",
+   "detail": "amd_power_of_3: short-side invalidation rewritten on the canonical bullish side; bearish examples remain unmirrored"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "rules",
+   "detail": "amd_power_of_3: placeholder stop_rule -> null; entry/target stay textual because the active opening anchor is profile-dependent"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "custom_alias",
+   "detail": "ex4_daily_ohlc_amd: custom_signals_observed 'opening_price' -> canonical 'midnight_open'"
+  },
+  {
+   "file": "amd_po3.json",
+   "category": "custom_alias",
+   "detail": "ex5_monthly_weekly_amd: mixed opening_price observation split into canonical weekly_open and monthly_open"
+  }
+ ],
+ "avoid_fakouts.json": [
+  {
+   "file": "avoid_fakouts.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "example_missing",
+   "detail": "judas_swing_reversal: listed but absent ['ex3_forex_htf_judas', 'ex4_forex_london_15m_sting', 'ex5_es_htf_context', 'ex6_es_equities_open_judas']"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "semantic",
+   "detail": "judas_swing_reversal.summary rewritten"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "timeframes",
+   "detail": "judas_swing_reversal: bias_tf '4h' -> '4h|1d' and entry_tf '1m' -> '1m|5m' to match the stated 4H-or-daily context and 1m-or-5m execution"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "requires_context",
+   "detail": "judas_swing_reversal: presenter draw-on-liquidity moved out of requires_context.bias into custom_signals.htf_opposing_pd_array; news caution kept as a market tag"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "glossary",
+   "detail": "judas_swing_reversal: FLOT/LOT canonicalized to the registry-backed flod/llod concepts"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "signals_required",
+   "detail": "judas_swing_reversal: engine fvg.mitigated replaced with custom judas_reversal_zone_tap so the setup means a FLOT touch or LOT sweep/reclaim during the opening Judas swing"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "custom_signals",
+   "detail": "judas_swing_reversal: dropped the raw one-off 'Equities Open Judas' object, reused registry open/line-of-defense signals, and added opening_judas_swing + judas_reversal_zone_tap for the combined session/day/week setup"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "asr",
+   "detail": "judas_swing_reversal.entry_rule.quote: 'write that expansion' -> 'ride that expansion'"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "rules",
+   "detail": "judas_swing_reversal: entry/target kept as text because the presenter allows FLOT or LOT entries and multiple higher-timeframe objectives; stop_rule structured to custom_signals.llod"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "mirror",
+   "detail": "judas_swing_reversal: normalized on the canonical bullish side while keeping the bearish examples as mirrors"
+  },
+  {
+   "file": "avoid_fakouts.json",
+   "category": "engine_check",
+   "detail": "ex2_forex_session_judas: fvg.mitigated moved out of should_detect because the setup is a touch into FLOT, not necessarily an engine CE mitigation"
+  }
+ ],
+ "daily_profile.json": [
+  {
+   "file": "daily_profile.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "asr",
+   "detail": "\\bLondon clothes\\b x1"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "asr",
+   "detail": "\\bfor Value Gap\\b x2"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ts",
+   "detail": ".examples[0].uncertainties[0].ts: range '01:58-09:14' -> start '01:58'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '01:58-09:14' -> '01:58'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ts",
+   "detail": ".examples[1].uncertainties[0].ts: range '09:15-14:35' -> start '09:15'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '09:15-14:35' -> '09:15'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ts",
+   "detail": ".examples[2].uncertainties[0].ts: range '14:36-20:46' -> start '14:36'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '14:36-20:46' -> '14:36'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "example_enum",
+   "detail": "eu_london_continuation: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "legacy_signal",
+   "detail": "eu_london_continuation: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "legacy_signal",
+   "detail": "gu_new_york_reversal: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "legacy_signal",
+   "detail": "gu_new_york_reversal: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "category",
+   "detail": "daily_profiles: 'other:session_profile_continuation_and_reversal' -> 'context_framework'"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "semantic",
+   "detail": "daily_profiles.summary rewritten"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "timeframes",
+   "detail": "daily_profiles: bias_tf '1D' -> '1h|4h|1d' (presenter names 1H, 4H and Daily as valid higher-timeframe contexts)"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "requires_context",
+   "detail": "daily_profiles: free-prose economic-calendar dependency -> market:needs_news_calendar; session-array interaction -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "signals_required",
+   "detail": "daily_profiles: raw sweep-only step replaced with session-agnostic HTF-array tap + immediate displacement, which is the common core across London continuation and New York reversal branches"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "custom_signals",
+   "detail": "daily_profiles: killzone_interaction_with_htf_array -> htf_pd_array_tap; opposing_premium_array -> htf_opposing_pd_array; prior_session_expansion kept as a new registry signal"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "rules",
+   "detail": "daily_profiles: target_rule opposing_premium_array -> custom_signals.htf_opposing_pd_array; stop_rule kept as text because the tapping session's exact extreme is not a catalog/reference object"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ref_removed",
+   "detail": "daily_profiles.reinforces: 'ref:kill_zones' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "ref_removed",
+   "detail": "daily_profiles.reinforces: 'ref:fair_value_gap' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "mirror",
+   "detail": "daily_profiles: kept on the canonical bullish side; bearish New York-reversal and continuation examples remain as shown and are interpreted through the mirror table"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "example_custom_signal",
+   "detail": "eu_london_continuation: added htf_pd_array_tap to the London setup frame"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "eu_london_continuation[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "eu_london_continuation[1]: maps_to_signal_step None -> 2"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "custom_alias",
+   "detail": "au_asian_expansion: kept prior_session_expansion as the canonical session-expansion signal"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "au_asian_expansion[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "au_asian_expansion[1]: maps_to_signal_step None -> 2"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "custom_alias",
+   "detail": "gu_new_york_reversal: killzone_interaction_with_htf_array -> htf_pd_array_tap"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "gu_new_york_reversal[0]: maps_to_signal_step 3 -> None"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "gu_new_york_reversal[1]: maps_to_signal_step 5 -> None"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "gu_new_york_reversal[2]: maps_to_signal_step 5 -> 2"
+  },
+  {
+   "file": "daily_profile.json",
+   "category": "walkthrough_map",
+   "detail": "gu_new_york_reversal[3]: maps_to_signal_step 5 -> None"
+  }
+ ],
+ "newyork_killzone.json": [
+  {
+   "file": "newyork_killzone.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "asr",
+   "detail": "\\bfor Value Gap\\b x2"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "asr",
+   "detail": "\\bor block\\b x2"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "asr",
+   "detail": "\\bPD Rays\\b x1"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "asr",
+   "detail": "\\bPD Ray\\b x1"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "semantic",
+   "detail": "new_york_reversal.summary rewritten"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "timeframes",
+   "detail": "new_york_reversal: monthly/4h/5m placeholders -> 1h|4h|1d|1mo bias, 15m setup, 1m|5m entry with paired-fractal note"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "requires_context",
+   "detail": "new_york_reversal: prose London-session prerequisite -> custom_signals.london_missed_htf_poi; bias set to presenter HTF context, not engine structure bias"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "glossary",
+   "detail": "new_york_reversal: registry-backed jargon ('ST model', 'overlapping PD array') removed from glossary; stop-loss phrase kept as presenter wording"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "mirror",
+   "detail": "new_york_reversal: symmetric strategy normalized on the canonical bullish side; bearish examples follow the catalog mirror table"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "signals_required",
+   "detail": "new_york_reversal: raw session prose -> London-missed custom context, New-York tap confirmation, bullish FVG, then same-candle overlapping PD array entry zone"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "custom_signals",
+   "detail": "new_york_reversal: overlap reused from the registry; added reciprocal London-tapped signal for the invalidation that hands the day to New York Retracement"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "rules",
+   "detail": "new_york_reversal: target 'swing_high' -> scoped bias-timeframe swing_high[0].price; stop 'swing_low' -> custom_signals.intermediate_term_low; overlap kept as the limit entry zone"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "walkthrough_map",
+   "detail": "usd_jpy_ny_reversal[3]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "semantic",
+   "detail": "new_york_retracement.summary rewritten"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "timeframes",
+   "detail": "new_york_retracement: monthly/4h/5m placeholders -> 1h|4h|1d|1mo bias, 15m setup, 1m|5m entry with London-to-New-York continuation note"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "requires_context",
+   "detail": "new_york_retracement: prose London-tapped-and-displaced prerequisite -> custom_signals.london_taps_htf_poi_and_displaces; bias set to presenter HTF context"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "mirror",
+   "detail": "new_york_retracement: symmetric strategy normalized on the canonical bullish side; bearish examples follow the mirror table"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "signals_required",
+   "detail": "new_york_retracement: London tap/displacement condensed into one custom context step, followed by the New-York continuation FVG with an optional same-candle overlap refinement"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "custom_signals",
+   "detail": "new_york_retracement: added reciprocal London-missed signal for invalidation; overlapping_pd_array kept only as an optional refinement"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "rules",
+   "detail": "new_york_retracement: entry fvg.ce -> fvg.gap_high (near-edge retracement style); target 'swing_high' -> scoped bias-timeframe swing_high[0].price; stop 'swing_low' -> custom_signals.intermediate_term_low"
+  },
+  {
+   "file": "newyork_killzone.json",
+   "category": "walkthrough_map",
+   "detail": "usd_jpy_ny_retracement[2]: maps_to_signal_step None -> 3"
+  }
+ ],
+ "trading_indices.json": [
+  {
+   "file": "trading_indices.json",
+   "category": "envelope",
+   "detail": "shape [pass_2_strategies,pass_3_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "asr",
+   "detail": "\\b[Ss]urvey [Gg]ap\\b x1"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "ts",
+   "detail": ".examples[2].uncertainties[0].ts: range '14:05-17:32' -> start '14:05'"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '14:05-17:32' -> '14:05'"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "legacy_signal",
+   "detail": "ex1_nq_consolidation_expansion: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "example_enum",
+   "detail": "ex2_es_expansion_consolidation: kill_zone 'new_york_pm' -> 'none'"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "legacy_signal",
+   "detail": "ex2_es_expansion_consolidation: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "example_enum",
+   "detail": "ex3_es_am_fake_move: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "semantic",
+   "detail": "indices_session_sequence.summary rewritten"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "timeframes",
+   "detail": "indices_session_sequence: '4h|daily' -> '4h|1d'; setup_tf reordered to '5m|15m'"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "requires_context",
+   "detail": "indices_session_sequence: presenter AM/PM windows moved to registry time_rule signals; HTF draw/objective kept as custom context instead of an engine bias/session enum"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "glossary",
+   "detail": "indices_session_sequence: registry-backed AM/PM session terms removed; kept only non-registry presenter jargon"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "mirror",
+   "detail": "indices_session_sequence: normalized on the canonical bullish side; bearish PM examples rely on the catalog mirror table"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "signals_required",
+   "detail": "indices_session_sequence: executable trigger rewritten as sweep -> pure_sweep -> bullish FVG; AM/PM branch selection stays in context via objective_reached and custom session windows"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "filters",
+   "detail": "indices_session_sequence: opening-range preference -> equities_open_judas; instrument preference kept text-only because symbol scope is not available in the contract"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "rules",
+   "detail": "indices_session_sequence: entry/target kept as text (exact FVG edge and HTF target type are not always stated); stop sweep_extreme -> structural_event.candle_low on the canonical long side"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "uncertainty_dropped",
+   "detail": "indices_session_sequence: 'Specific entry parameters for the 'ST model'' dropped (this rewrite keeps only the stated sweep-and-FVG trigger, not the full mentorship model)"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_nq_consolidation_expansion[4]: maps_to_signal_step 2 -> 3"
+  },
+  {
+   "file": "trading_indices.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_es_expansion_consolidation[3]: maps_to_signal_step 2 -> 3"
+  }
+ ],
+ "weekly_profile.json": [
+  {
+   "file": "weekly_profile.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "example_missing",
+   "detail": "weekly_profiles_tgif: listed but absent ['dxy_variation_cpi_week']"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ts",
+   "detail": ".examples[0].uncertainties[0].ts: range '01:08-14:40' -> start '01:08'"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '01:08-14:40' -> '01:08'"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ts",
+   "detail": ".examples[1].uncertainties[0].ts: range '14:40-15:35' -> start '14:40'"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '14:40-15:35' -> '14:40'"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "example_enum",
+   "detail": "eu_weekly_profile_tgif: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "legacy_signal",
+   "detail": "eu_weekly_profile_tgif: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "example_enum",
+   "detail": "dxy_bullish_profile: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "engine_check",
+   "detail": "dxy_bullish_profile: 'order_block.mitigation' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "category",
+   "detail": "weekly_profiles_tgif: 'other:weekly_profile_expansion_and_reversal' -> 'context_framework'"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "semantic",
+   "detail": "weekly_profiles_tgif.summary rewritten"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "timeframes",
+   "detail": "weekly_profiles_tgif: bias/setup/entry normalized to 1d, 4h, 15m|1h and notes updated for intraday weekly_open derivation"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "requires_context",
+   "detail": "weekly_profiles_tgif: day_of_week lower-cased; HTF PD-array tap, weekly_open, and news-calendar dependency made explicit"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "glossary",
+   "detail": "weekly_profiles_tgif: Turtle soup removed (registry alias of pure_sweep); weekly-profile jargon kept"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "mirror",
+   "detail": "weekly_profiles_tgif: rewritten on the bullish canonical side; bearish weekly-profile variants are obtained via the mirror table"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "signals_required",
+   "detail": "weekly_profiles_tgif: weekly context captured as HTF PD-array tap; TGIF trigger specialized to a Friday sweep/reclaim of Thursday's low"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "custom_signals",
+   "detail": "weekly_profiles_tgif: dropped raw news_event_day, thursday_exhaustion, and fibonacci_weekly_close in favor of registry weekly_open, HTF array context, and reportable discretion"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "rules",
+   "detail": "weekly_profiles_tgif: entry/target kept as text-only because the exact reclaim edge and rebalance target are discretionary; placeholder stop_rule -> null"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ref_removed",
+   "detail": "weekly_profiles_tgif.reinforces: 'ref:market_maker_buy_model' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ref_removed",
+   "detail": "weekly_profiles_tgif.reinforces: 'ref:market_maker_sell_model' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "ref_removed",
+   "detail": "weekly_profiles_tgif.reinforces: 'ref:kill_zones' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "example_cleanup",
+   "detail": "eu_weekly_profile_tgif: removed thursday_exhaustion from custom_signals_observed because the exhaustion test stays discretionary and is no longer a strategy custom signal"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "walkthrough_map",
+   "detail": "eu_weekly_profile_tgif[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "walkthrough_map",
+   "detail": "eu_weekly_profile_tgif[3]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "walkthrough_map",
+   "detail": "dxy_bullish_profile[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "weekly_profile.json",
+   "category": "engine_check",
+   "detail": "dxy_bullish_profile: restored mitigation-block custom mismatch and normalized smt_divergence -> custom_signals.smt_divergence"
+  }
+ ],
+ "dealing_ranges.json": [
+  {
+   "file": "dealing_ranges.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "example_enum",
+   "detail": "ex_1_concept_definition: trade.direction 'both' -> null"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "example_enum",
+   "detail": "ex_1_concept_definition: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "legacy_signal",
+   "detail": "ex_1_concept_definition: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "legacy_signal",
+   "detail": "ex_1_concept_definition: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "example_enum",
+   "detail": "ex_2_first_trading_example: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "legacy_signal",
+   "detail": "ex_2_first_trading_example: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "legacy_signal",
+   "detail": "ex_2_first_trading_example: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "example_enum",
+   "detail": "ex_3_eurusd_losing_curve_simulation: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "legacy_signal",
+   "detail": "ex_3_eurusd_losing_curve_simulation: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "legacy_signal",
+   "detail": "ex_3_eurusd_losing_curve_simulation: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "semantic",
+   "detail": "dealing_range_reversal.summary rewritten"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "mirror",
+   "detail": "dealing_range_reversal: rewritten on the canonical bullish side; the walkthrough examples remain mostly bearish"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "timeframes",
+   "detail": "dealing_range_reversal: bias_tf '1D' -> '1d'"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "requires_context",
+   "detail": "dealing_range_reversal: invalid requires_context.bias value replaced with engine-allowed bias set; daily premium/discount-array context moved to custom_signals.htf_pd_array_tap as a proxy"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "signals_required",
+   "detail": "dealing_range_reversal: two raw sweep events collapsed into custom_signals.dealing_range; return to the range boundary modeled with custom_signals.quadrant_extreme; optional FVG confluence uses custom_signals.fvg_without_displacement"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "rules",
+   "detail": "dealing_range_reversal: entry/target kept text-only because the presenter gives a boundary idea and daily objective, not one exact machine-fill or target reference; stop anchored to custom_signals.dealing_range_low on the canonical bullish side"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "uncertainty_dropped",
+   "detail": "dealing_range_reversal: 'Which dealing range extreme to enter on' dropped (replaced by the canonical bullish-side reading with the return checked via quadrant_extreme)"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_1_concept_definition[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_1_concept_definition[4]: maps_to_signal_step None -> 4"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_first_trading_example[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_first_trading_example[2]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_first_trading_example[3]: maps_to_signal_step None -> 3"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_first_trading_example[5]: maps_to_signal_step 1 -> 3"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "custom_alias",
+   "detail": "ex_2_first_trading_example: custom_signals_observed 'daily_premium_discount_array' -> 'htf_pd_array_tap'"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_eurusd_losing_curve_simulation[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_eurusd_losing_curve_simulation[1]: maps_to_signal_step None -> 2"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_eurusd_losing_curve_simulation[2]: maps_to_signal_step None -> 2"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_eurusd_losing_curve_simulation[3]: maps_to_signal_step None -> 2"
+  },
+  {
+   "file": "dealing_ranges.json",
+   "category": "walkthrough_map",
+   "detail": "ex_3_eurusd_losing_curve_simulation[5]: maps_to_signal_step 1 -> 3"
+  }
+ ],
+ "external_internal.json": [
+  {
+   "file": "external_internal.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "placeholder_null",
+   "detail": ".strategies[].stop_rule.quote: '' -> null"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "asr",
+   "detail": "\\bpremium race\\b x1"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:00:19' -> '00:19'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:03:32' -> '03:32'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:03:13' -> '03:13'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:00:31' -> '00:31'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[1].ts: '00:01:25' -> '01:25'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[2].ts: '00:02:03' -> '02:03'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[3].ts: '00:02:40' -> '02:40'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[4].ts: '00:03:13' -> '03:13'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:00:19' -> '00:19'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:03:32' -> '03:32'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:06:43' -> '06:43'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:05:09' -> '05:09'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:03:36' -> '03:36'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:04:03' -> '04:03'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[2].ts: '00:04:36' -> '04:36'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[3].ts: '00:05:09' -> '05:09'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:03:32' -> '03:32'"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "example_enum",
+   "detail": "ex1_bullish_daily_15m: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "external_internal.json",
+   "category": "legacy_signal",
+   "detail": "ex1_bullish_daily_15m: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "legacy_signal",
+   "detail": "ex1_bullish_daily_15m: engine_check 'bullish_choch' -> ['structural_event.bullish_choch']"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "legacy_signal",
+   "detail": "ex2_bearish_es_5m: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "legacy_signal",
+   "detail": "ex2_bearish_es_5m: engine_check 'bearish_choch' -> ['structural_event.bearish_choch']"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "semantic",
+   "detail": "external_internal.summary rewritten"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "timeframes",
+   "detail": "external_internal: explicit Daily/15m/5m labels generalized to a fractal ladder; the demonstrated 1d->15m and 1h/15m->5m pairings stay in notes"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "requires_context",
+   "detail": "external_internal: prose HTF line-of-defense condition -> custom_signals.htf_pd_array_tap; presenter directional context kept out of engine bias"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "glossary",
+   "detail": "external_internal: glossary rewritten around the HTF line-of-defense tap, the sweep, and the FVG-confirmed rebalancing leg"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "mirror",
+   "detail": "external_internal: written on the canonical bullish side (HTF discount array, liquidity_sweep_low, wick above swing_high, bullish FVG); bearish examples are mirror cases"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "signals_required",
+   "detail": "external_internal: HTF prose condition -> custom_signals.htf_pd_array_tap; bullish_choch replaced with candle.high gt_signal custom_signals.short_term_high because the presenter accepts a wick break, not an engine body-close CHoCH"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "signals_required",
+   "detail": "external_internal: fvg.state == mitigated -> custom_signals.fvg_touched so the entry uses the presenter's loose respect/touch semantics instead of engine CE mitigation"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ref_removed",
+   "detail": "external_internal.reinforces: 'ref:turtle_soup' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ref_removed",
+   "detail": "external_internal.reinforces: 'ref:market_structure_shift' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ref_removed",
+   "detail": "external_internal.reinforces: 'ref:fair_value_gap' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ref_removed",
+   "detail": "external_internal.reinforces: 'ref:order_block' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "ref_removed",
+   "detail": "external_internal.reinforces: 'ref:breaker' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_bullish_daily_15m[1]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_bullish_daily_15m[2]: maps_to_signal_step 2 -> 3"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_bullish_daily_15m[3]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_bullish_daily_15m[4]: maps_to_signal_step 4 -> 5"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bearish_es_5m[0]: maps_to_signal_step 1 -> 2"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bearish_es_5m[2]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "external_internal.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_bearish_es_5m[3]: maps_to_signal_step 4 -> 5"
+  }
+ ],
+ "liquidity_pools.json": [
+  {
+   "file": "liquidity_pools.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "example_dropped",
+   "detail": "ex3_fractal_bullish_breaker: strategy_id 'breaker_block_setup' does not resolve in this file; not carried"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "example_dropped",
+   "detail": "ex4_bullish_breaker_continuation: strategy_id 'breaker_block_setup' does not resolve in this file; not carried"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "example_missing",
+   "detail": "liquidity_sweep_and_target: listed but absent ['ex1_retail_liquidity_concepts', 'ex2_dax_multi_tf_liquidity', 'ex3_sweep_vs_run']"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "semantic",
+   "detail": "liquidity_sweep_and_target.summary rewritten"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "timeframes",
+   "detail": "liquidity_sweep_and_target: bias_tf 'htf' and setup_tf 'ltf' -> null; kept as a fractal HTF-context/LTF-execution concept in notes"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "requires_context",
+   "detail": "liquidity_sweep_and_target: generic prose HTF-context requirement moved to notes because no exact detector is stated"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "glossary",
+   "detail": "liquidity_sweep_and_target: 'Turtle soup' removed from glossary because it is already the registry alias of custom_signals.pure_sweep"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "mirror",
+   "detail": "liquidity_sweep_and_target: raw bullish-side sweep-high narrative rewritten on the canonical bullish side (sell-side sweep -> buy-side target); bearish setups mirror"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "signals_required",
+   "detail": "liquidity_sweep_and_target: engine liquidity_sweep_* fires on any breach, so the setup now requires the sweep event, same-candle pure_sweep reclaim, then displacement_reaction"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "custom_signals",
+   "detail": "liquidity_sweep_and_target: reused registry pure_sweep, displacement_candle, displacement_reaction and failed_rejection; dropped orphan raw consolidation_range"
+  },
+  {
+   "file": "liquidity_pools.json",
+   "category": "rules",
+   "detail": "liquidity_sweep_and_target: target_rule reference liquidity_levels -> text-only; stop_rule placeholder -> null"
+  }
+ ],
+ "seek_destroy.json": [
+  {
+   "file": "seek_destroy.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "asr",
+   "detail": "\\bMagnus\\b x1"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "example_enum",
+   "detail": "ex1_audusd_consolidation: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "legacy_signal",
+   "detail": "ex1_audusd_consolidation: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "legacy_signal",
+   "detail": "ex1_audusd_consolidation: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "legacy_signal",
+   "detail": "ex2_dxy_consolidation_exit: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "category",
+   "detail": "seek_n_destroy: 'other:market_condition_filter' -> 'market_condition_filter'"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "semantic",
+   "detail": "seek_n_destroy.summary rewritten"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "timeframes",
+   "detail": "seek_n_destroy: bias_tf 'Daily' -> '1d'; setup_tf '4h' -> '4h|1d' to reflect the daily/4h higher-timeframe regime examples"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "requires_context",
+   "detail": "seek_n_destroy: prose range context -> custom_signals.consolidation; the dual sweep itself is captured by steps 1-2"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "glossary",
+   "detail": "seek_n_destroy: kept only the presenter jargon term 'Seek and Destroy'; PD-array failure now points to the custom signal"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "signals_required",
+   "detail": "seek_n_destroy: added equilibrium-return and PD-array-failure steps; kept the dual sweep as engine structural_event kinds"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "rules",
+   "detail": "seek_n_destroy: target_rule structured premium_discount.equilibrium -> null because the presenter means the current dual-sweep range midpoint, not the engine latest-swing equilibrium"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "rules",
+   "detail": "seek_n_destroy: stop_rule null text with inferred provenance -> full null rule"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_audusd_consolidation[2]: maps_to_signal_step None -> 3"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_audusd_consolidation[3]: maps_to_signal_step None -> 4"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_dxy_consolidation_exit[0]: maps_to_signal_step None -> 3"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_dxy_consolidation_exit[1]: maps_to_signal_step None -> 4"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "engine_check",
+   "detail": "ex1_audusd_consolidation: may_differ signal 'pd_array_failure' -> 'custom_signals.pd_array_failure'"
+  },
+  {
+   "file": "seek_destroy.json",
+   "category": "engine_check",
+   "detail": "ex2_dxy_consolidation_exit: may_differ signal 'htf_range_displacement' -> 'custom_signals.htf_range_displacement'"
+  }
+ ],
+ "snd_turtlesoup.json": [
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "example_missing",
+   "detail": "trending_turtle_soup_strength: listed but absent ['ex3_trending_eu_short', 'ex4_trending_es_long']"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "asr",
+   "detail": "\\bbeat array\\b x2"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "asr",
+   "detail": "\\bfor fire gap\\b x1"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "asr",
+   "detail": "\\bbullish fagot\\b x1"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "legacy_signal",
+   "detail": "ex1_seek_destroy_premium: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "example_enum",
+   "detail": "ex2_seek_destroy_discount: kill_zone 'new_york_pm' -> 'none'"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "legacy_signal",
+   "detail": "ex2_seek_destroy_discount: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "semantic",
+   "detail": "seek_and_destroy_turtle_soup.summary rewritten"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "timeframes",
+   "detail": "seek_and_destroy_turtle_soup: bias_tf 'Daily' -> '1d'; notes clarified the daily range anchor and bullish canonical rewrite"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "requires_context",
+   "detail": "seek_and_destroy_turtle_soup: prose Seek-and-Destroy condition -> custom_signals.dealing_range"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "mirror",
+   "detail": "seek_and_destroy_turtle_soup: generalized premium-premium / discount-discount narration rewritten on the canonical bullish side; bearish setups are mirror cases"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "signals_required",
+   "detail": "seek_and_destroy_turtle_soup: step2 liquidity_sweep_high -> liquidity_sweep_low and step3 pure_sweep added because turtle soup requires the sweep candle to close back on the original side"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "rules",
+   "detail": "seek_and_destroy_turtle_soup: entry anchored to the ST model retracement FVG, target kept text-only because the presenter means the current dealing-range midpoint rather than engine premium_discount.equilibrium, stop anchored to intermediate_term_low"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "ref_removed",
+   "detail": "seek_and_destroy_turtle_soup.reinforces: 'ref:st_model' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_seek_destroy_premium[2]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_seek_destroy_discount[3]: maps_to_signal_step 2 -> 4"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "semantic",
+   "detail": "trending_turtle_soup_strength.summary rewritten"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "timeframes",
+   "detail": "trending_turtle_soup_strength: notes clarified the 4h draw, 1h setup context, 5m execution, and bullish canonical side"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "requires_context",
+   "detail": "trending_turtle_soup_strength: prose HTF-array requirement -> custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "signals_required",
+   "detail": "trending_turtle_soup_strength: fvg.state=open -> custom htf_pd_array_tap, killzone_timing removed in favor of requires_context.session, and pure_sweep replaces the undefined sweep_candle concept"
+  },
+  {
+   "file": "snd_turtlesoup.json",
+   "category": "rules",
+   "detail": "trending_turtle_soup_strength: sweep_candle.* / liquidity_levels / sweep_extreme replaced by structural_event.candle_high, swing_high[0].price@bias_tf, and structural_event.candle_low + K_STOP_BUFFER_ATR"
+  }
+ ],
+ "sweep__run.json": [
+  {
+   "file": "sweep__run.json",
+   "category": "envelope",
+   "detail": "shape [list] -> {strategies, examples}"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "asr",
+   "detail": "\\bSD entry\\b x2"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "asr",
+   "detail": "\\b[Ff]errari [Gg]ap\\b x2"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "asr",
+   "detail": "\\b[Ff]ry [Gg]ap\\b x1"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "asr",
+   "detail": "\\bdrawn liquidity\\b x1"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_enum",
+   "detail": "ex1_daily_premium_array_sweep: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_enum",
+   "detail": "ex1_daily_premium_array_sweep: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "legacy_signal",
+   "detail": "ex1_daily_premium_array_sweep: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_enum",
+   "detail": "ex2_eu_sweep: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "legacy_signal",
+   "detail": "ex2_eu_sweep: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_enum",
+   "detail": "ex3_es_sweep_and_run: frame timeframe 'unknown' -> null"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_enum",
+   "detail": "ex3_es_sweep_and_run: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "legacy_signal",
+   "detail": "ex3_es_sweep_and_run: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "legacy_signal",
+   "detail": "ex3_es_sweep_and_run: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "engine_check",
+   "detail": "ex3_es_sweep_and_run: 'order_block.mitigation' moved from should_detect to may_differ as 'custom_signals.swing_failure_pattern' (not an engine detection)"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "category",
+   "detail": "sweep_or_run: 'other:liquidity_sweep_vs_run_validation' -> 'context_framework'"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "semantic",
+   "detail": "sweep_or_run.summary rewritten"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "timeframes",
+   "detail": "sweep_or_run: placeholder 'htf'/'ltf' timeframes -> null roles resolved by the contract ladder"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "requires_context",
+   "detail": "sweep_or_run: prose draw-on-liquidity prerequisite -> custom_signals.obvious_draw_on_liquidity"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "glossary",
+   "detail": "sweep_or_run: registry-backed ST model / overlap terms removed; kept only sweep, run, and sting jargon"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "sequence",
+   "detail": "sweep_or_run: no single linear step chain because the framework branches between sweep-reversal and run-continuation readings"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "mirror",
+   "detail": "sweep_or_run: normalized on the canonical bullish side; bearish sweep examples rely on the catalog mirror table"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "custom_signals",
+   "detail": "sweep_or_run: raw fvg_disrespected / fvg_respected_overlapping / sting_retracement replaced with registry signals plus the new liquidity_run_continuation proxy"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "filters",
+   "detail": "sweep_or_run: sting proximity left text-only; added a machine classifier filter for sweep-reversal vs run-continuation"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "invalidation",
+   "detail": "sweep_or_run: run invalidation proxied as a recent continuation FVG being filled"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "rules",
+   "detail": "sweep_or_run: entry/target kept text-only because branch-specific levels differ; unstated stop placeholder -> null"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "ref_removed",
+   "detail": "sweep_or_run.reinforces: 'ref:st_model' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "ref_removed",
+   "detail": "sweep_or_run.reinforces: 'ref:overlapping_pd_arrays' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "uncertainty_dropped",
+   "detail": "sweep_or_run: 'Exact definition of the ST Model' dropped (registry st_model now supplies the mechanical proxy used here)"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_signal",
+   "detail": "ex2_eu_sweep: sting_retracement observed/may_differ -> custom_signals.fvg_touched (machine can only detect the first-FVG touch, not the proximity judgement)"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "example_signal",
+   "detail": "ex3_es_sweep_and_run: fvg_respected_overlapping observed/may_differ -> custom_signals.liquidity_run_continuation"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_eu_sweep[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_eu_sweep[1]: maps_to_signal_step 3 -> None"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_daily_premium_array_sweep[1]: maps_to_signal_step 2 -> None"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_daily_premium_array_sweep[2]: maps_to_signal_step 3 -> None"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "walkthrough_map",
+   "detail": "ex3_es_sweep_and_run[0]: maps_to_signal_step 3 -> None"
+  },
+  {
+   "file": "sweep__run.json",
+   "category": "walkthrough_map",
+   "detail": "sweep_or_run: walkthrough step mappings cleared because signals_required is empty and the framework branches between two incompatible trigger paths"
+  }
+ ],
+ "advanced_scalping.json": [
+  {
+   "file": "advanced_scalping.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erify [Gg]aps\\b x1"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x1"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "asr",
+   "detail": "\\bFairfax app\\b x1"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[0].ts: '00:09:18' -> '09:18'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[1].ts: '00:12:08' -> '12:08'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[2].ts: '00:12:13' -> '12:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[0].ts: '00:09:18' -> '09:18'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[1].ts: '00:12:08' -> '12:08'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[0].ts: '00:09:00' -> '09:00'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[0].ts: '00:17:41' -> '17:41'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].entry_rule.ts: '00:12:20' -> '12:20'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].target_rule.ts: '00:12:40' -> '12:40'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].stop_rule.ts: '00:12:27' -> '12:27'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].presenter_claims[0].ts: '00:03:14' -> '03:14'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].presenter_claims[1].ts: '00:13:44' -> '13:44'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:05:19' -> '05:19'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:06:13' -> '06:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:06:07' -> '06:07'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:05:43' -> '05:43'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:05:19' -> '05:19'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:06:13' -> '06:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:10:38' -> '10:38'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:07:30' -> '07:30'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:07:24' -> '07:24'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:07:30' -> '07:30'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts",
+   "detail": ".examples[1].uncertainties[0].ts: range '00:06:13-00:10:38' -> start '00:06:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:06:13-00:10:38' -> '06:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:10:38' -> '10:38'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:14:11' -> '14:11'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:13:33' -> '13:33'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:11:23' -> '11:23'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[1].ts: '00:12:13' -> '12:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[2].ts: '00:13:22' -> '13:22'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.start: '00:14:11' -> '14:11'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.end: '00:16:33' -> '16:33'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.canonical_frame_ts: '00:15:13' -> '15:13'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[0].ts: '00:14:24' -> '14:24'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[1].ts: '00:14:58' -> '14:58'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.start: '00:16:33' -> '16:33'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.end: '00:18:54' -> '18:54'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.canonical_frame_ts: '00:18:24' -> '18:24'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[0].ts: '00:17:10' -> '17:10'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[1].ts: '00:17:55' -> '17:55'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[2].ts: '00:18:24' -> '18:24'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_enum",
+   "detail": "daily_bias_context: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "custom_alias",
+   "detail": "one_minute_vs_five_minute_entry: custom_signals_observed 'st_formation' -> canonical 'st_model'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "custom_alias",
+   "detail": "one_minute_vs_five_minute_entry: custom_signals_observed 'st_formation' -> canonical 'st_model'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "custom_alias",
+   "detail": "fifteen_minute_boundary: custom_signals_observed 'st_formation' -> canonical 'st_model'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_enum",
+   "detail": "nfp_scalp: kill_zone 'news' -> 'unknown'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_enum",
+   "detail": "nfp_scalp: kill_zone 'news' -> 'unknown'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_enum",
+   "detail": "nfp_scalp: kill_zone 'news' -> 'unknown'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "custom_alias",
+   "detail": "nfp_scalp: custom_signals_observed 'st_formation' -> canonical 'st_model'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "custom_alias",
+   "detail": "nfp_scalp: custom_signals_observed 'st_formation' -> canonical 'st_model'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "category",
+   "detail": "htf_boundary_scalping: 'other:htf_context_scalping' -> 'htf_continuation'"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "semantic",
+   "detail": "htf_boundary_scalping.summary rewritten"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "timeframes",
+   "detail": "htf_boundary_scalping: normalized 1D / 1H or 15m / 1m or 5m -> 1d / 15m|1h / 1m|5m"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "requires_context",
+   "detail": "htf_boundary_scalping: daily bias kept as presenter context; news-events prose moved from session enum to market:needs_news_calendar"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "mirror",
+   "detail": "htf_boundary_scalping: raw narration/examples are mostly bearish; machine rewrite kept the canonical bullish side because the strategy is symmetric"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "signals_required",
+   "detail": "htf_boundary_scalping: boundary_pd_array -> setup_tf_pd_array_tap; st_formation -> short_term_swing_point; fvg -> fvg.bullish"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "rules",
+   "detail": "htf_boundary_scalping: entry -> new FVG near edge, target -> rr_multiple 2.0, stop -> intermediate_term_low"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "ref_removed",
+   "detail": "htf_boundary_scalping.reinforces: 'st_model' names a concept spanning multiple strategies, not one unambiguous strategy_id"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_signal",
+   "detail": "one_minute_vs_five_minute_entry: custom_signals_observed 'st_model' -> 'short_term_swing_point' (raw ST here is the swing point, not the full ST model)"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_signal",
+   "detail": "one_minute_vs_five_minute_entry: custom_signals_observed 'st_model' -> 'short_term_swing_point' (raw ST here is the swing point, not the full ST model)"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_signal",
+   "detail": "fifteen_minute_boundary: custom_signals_observed 'st_model' -> 'short_term_swing_point' (raw ST here is the swing point, not the full ST model)"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_signal",
+   "detail": "nfp_scalp: custom_signals_observed 'st_model' -> 'short_term_swing_point' (raw ST here is the swing point, not the full ST model)"
+  },
+  {
+   "file": "advanced_scalping.json",
+   "category": "example_signal",
+   "detail": "nfp_scalp: custom_signals_observed 'st_model' -> 'short_term_swing_point' (raw ST here is the swing point, not the full ST model)"
+  }
+ ],
+ "bias_independance.json": [
+  {
+   "file": "bias_independance.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "asr",
+   "detail": "\\bdraw liquidity\\b x1"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:02:08' -> '02:08'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:09:28' -> '09:28'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:09:28' -> '09:28'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:12:18' -> '12:18'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "example_enum",
+   "detail": "ex_1_es_1m_strategy_walkthrough: chart_timezone 'New York' -> 'America/New_York'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "custom_alias",
+   "detail": "ex_1_es_1m_strategy_walkthrough: may_differ 'custom_signals.two_fvg_entry_1m' -> canonical 'custom_signals.two_consecutive_fvgs'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "example_enum",
+   "detail": "ex_2_es_5m_advanced_entry: chart_timezone 'New York' -> 'America/New_York'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "custom_alias",
+   "detail": "ex_2_es_5m_advanced_entry: may_differ 'custom_signals.one_fvg_entry_5m' -> canonical 'custom_signals.first_fvg_after_array_tap'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "legacy_signal",
+   "detail": "ex_2_es_5m_advanced_entry: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "semantic",
+   "detail": "bias_independent.summary rewritten"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "timeframes",
+   "detail": "bias_independent.entry_tf: 1m | 5m -> '1m|5m'"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "requires_context",
+   "detail": "bias_independent: New York AM/PM moved from engine session enums/free prose to custom equity-session rules + market:needs_equity_session; 1h context kept as custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "mirror",
+   "detail": "bias_independent: raw narration/examples are bearish; context, target and stop rewritten on the canonical bullish side via the mirror table"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "signals_required",
+   "detail": "bias_independent: raw step fvg.mitigated@1h -> step1 htf_pd_array_tap on bias_tf, step2 lower-timeframe fvg_touched; the 1m second-gap requirement stays descriptive rather than silently equated with an engine bias or FVG state"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ref_removed",
+   "detail": "bias_independent.reinforces: 'ref:intermediate_term_high' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ref_removed",
+   "detail": "bias_independent.reinforces: 'ref:intermediate_term_low' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ref_removed",
+   "detail": "bias_independent.reinforces: 'ref:fair_value_gap' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "ref_removed",
+   "detail": "bias_independent.reinforces: 'ref:kill_zones' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "walkthrough_map",
+   "detail": "ex_1_es_1m_strategy_walkthrough[3]: maps_to_signal_step None -> 2"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_es_5m_advanced_entry[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "bias_independance.json",
+   "category": "walkthrough_map",
+   "detail": "ex_2_es_5m_advanced_entry[3]: maps_to_signal_step 1 -> 2"
+  }
+ ],
+ "daily_bias.json": [
+  {
+   "file": "daily_bias.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "example_dropped",
+   "detail": "ex2_1h_entry_model: strategy_id 'htf_bias_with_ltf_entry' does not resolve in this file; not carried"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "example_dropped",
+   "detail": "ex3_gn_multi_timeframe: strategy_id 'htf_bias_with_ltf_entry' does not resolve in this file; not carried"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "asr",
+   "detail": "\\bfair value cups\\b x1"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[0].ts: '00:01:45' -> '01:45'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[1].ts: '00:04:05' -> '04:05'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[0].ts: '00:03:27' -> '03:27'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[1].ts: '00:04:42' -> '04:42'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[0].ts: '00:10:57' -> '10:57'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[1].ts: '00:07:05' -> '07:05'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[0].ts: '00:10:32' -> '10:32'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[1].ts: '00:08:48' -> '08:48'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].entry_rule.ts: '00:00:32' -> '00:32'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].target_rule.ts: '00:03:27' -> '03:27'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].presenter_claims[0].ts: '00:08:36' -> '08:36'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:01:45' -> '01:45'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:13:16' -> '13:16'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:12:11' -> '12:11'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:02:16' -> '02:16'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[1].ts: '00:03:52' -> '03:52'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[2].ts: '00:05:05' -> '05:05'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[3].ts: '00:11:36' -> '11:36'"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "example_enum",
+   "detail": "ex1_daily_bias_fvg_reading: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "category_kept",
+   "detail": "daily_bias_via_fvg_reading: worker proposed 'context_framework'; original category 'htf_continuation' kept (valid entry category, entry rule present)"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "semantic",
+   "detail": "daily_bias_via_fvg_reading.summary rewritten"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "timeframes",
+   "detail": "daily_bias_via_fvg_reading: bias_tf/setup_tf 'weekly'/'daily' -> '1w'/'1d'; notes clarify UTC-aligned 1d/1w candles"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "requires_context",
+   "detail": "daily_bias_via_fvg_reading: removed invalid requires_context.bias 'weekly_fvg'; weekly PD-array context now uses custom_signals.htf_pd_array_tap"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "glossary",
+   "detail": "daily_bias_via_fvg_reading: removed glossary terms 'respect'/'disrespect' because registry signals already define them"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "signals_required",
+   "detail": "daily_bias_via_fvg_reading: weekly context made explicit with custom_signals.htf_pd_array_tap; raw close>gap_high proxy -> custom_signals.fvg_touched + custom_signals.fvg_respected for the first-reaction confirmation"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "custom_signals",
+   "detail": "daily_bias_via_fvg_reading: raw custom signals leg_strength/context_conflict replaced with shared registry signals for weekly context, first touch/respect, and the weekly objective"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "rules",
+   "detail": "daily_bias_via_fvg_reading: stop_rule placeholder -> null; target_rule anchored to custom_signals.htf_opposing_pd_array as the machine-usable weekly objective"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_daily_bias_fvg_reading[1]: maps_to_signal_step 2 -> None"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_daily_bias_fvg_reading[2]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "daily_bias.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_daily_bias_fvg_reading[3]: maps_to_signal_step 1 -> 4"
+  }
+ ],
+ "dol_fibonacci.json": [
+  {
+   "file": "dol_fibonacci.json",
+   "category": "envelope",
+   "detail": "shape [strategies,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "asr",
+   "detail": "\\b[Ff]arewell [Gg]ap\\b x1"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[0].ts: '00:00:46' -> '00:46'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[1].ts: '00:02:58' -> '02:58'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[0].ts: '00:00:31' -> '00:31'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[1].ts: '00:02:17' -> '02:17'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[2].ts: '00:03:43' -> '03:43'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[3].ts: '00:02:58' -> '02:58'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[0].ts: '00:06:09' -> '06:09'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[0].ts: '00:12:10' -> '12:10'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[1].ts: '00:12:41' -> '12:41'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].target_rule.ts: '00:03:02' -> '03:02'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].uncertainties[0].ts: '00:01:54' -> '01:54'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].signals_required[0].ts: '00:13:45' -> '13:45'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].signals_required[1].ts: '00:14:05' -> '14:05'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].custom_signals[0].ts: '00:13:45' -> '13:45'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].custom_signals[1].ts: '00:13:15' -> '13:15'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].custom_signals[2].ts: '00:14:05' -> '14:05'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].filters[0].ts: '00:15:50' -> '15:50'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".strategies[1].target_rule.ts: '00:14:26' -> '14:26'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:01:00' -> '01:00'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:05:07' -> '05:07'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:04:40' -> '04:40'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:01:02' -> '01:02'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[1].ts: '00:01:17' -> '01:17'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[2].ts: '00:01:47' -> '01:47'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[3].ts: '00:02:48' -> '02:48'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts",
+   "detail": ".examples[0].uncertainties[0].ts: range '00:01:00-00:05:07' -> start '00:01:00'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:01:00-00:05:07' -> '01:00'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:05:08' -> '05:08'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:07:02' -> '07:02'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:06:40' -> '06:40'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:05:28' -> '05:28'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:05:36' -> '05:36'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[2].ts: '00:05:56' -> '05:56'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[3].ts: '00:06:40' -> '06:40'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts",
+   "detail": ".examples[1].uncertainties[0].ts: range '00:05:08-00:07:02' -> start '00:05:08'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:05:08-00:07:02' -> '05:08'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:07:03' -> '07:03'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:09:18' -> '09:18'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:08:12' -> '08:12'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:07:36' -> '07:36'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[1].ts: '00:07:44' -> '07:44'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[2].ts: '00:08:05' -> '08:05'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[3].ts: '00:08:51' -> '08:51'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts",
+   "detail": ".examples[2].uncertainties[0].ts: range '00:07:03-00:09:18' -> start '00:07:03'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '00:07:03-00:09:18' -> '07:03'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.start: '00:09:19' -> '09:19'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.end: '00:12:53' -> '12:53'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.canonical_frame_ts: '00:11:48' -> '11:48'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[0].ts: '00:09:28' -> '09:28'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[1].ts: '00:11:02' -> '11:02'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[2].ts: '00:11:20' -> '11:20'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[3].ts: '00:11:35' -> '11:35'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts",
+   "detail": ".examples[3].uncertainties[0].ts: range '00:09:19-00:12:53' -> start '00:09:19'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[3].uncertainties[0].ts: '00:09:19-00:12:53' -> '09:19'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.start: '00:12:54' -> '12:54'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.end: '00:16:01' -> '16:01'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].video_span.canonical_frame_ts: '00:14:26' -> '14:26'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[0].ts: '00:13:51' -> '13:51'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[1].ts: '00:13:08' -> '13:08'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[2].ts: '00:14:05' -> '14:05'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[3].ts: '00:14:26' -> '14:26'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].setup_walkthrough[4].ts: '00:15:02' -> '15:02'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts",
+   "detail": ".examples[4].uncertainties[0].ts: range '00:12:54-00:16:01' -> start '00:12:54'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ts_format",
+   "detail": ".examples[4].uncertainties[0].ts: '00:12:54-00:16:01' -> '12:54'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex1_london_session_projection: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex2_daily_projection: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex3_weekly_projection: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex4_monthly_projection: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex4_monthly_projection: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex4_monthly_projection: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_enum",
+   "detail": "ex5_indices_standard_deviation: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "category",
+   "detail": "measured_swing_projections: 'other:target_projection' -> 'target_projection'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "semantic",
+   "detail": "measured_swing_projections.summary rewritten"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "timeframes",
+   "detail": "measured_swing_projections: raw profile labels -> intraday setup_tf with 4h|1d|1w bias_tf for machine-readable opening anchors and target arrays"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "requires_context",
+   "detail": "measured_swing_projections: prose context -> registry Judas Swing, overlap proxy, and eligible London/daily/weekly/monthly opening anchors"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "signals_required",
+   "detail": "measured_swing_projections: pd_array_overlap -> registry overlapping_pd_array; steps keep the presenter sequence while the exact Fibonacci family remains target-only"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "rules",
+   "detail": "measured_swing_projections: stop_rule placeholder -> null; target_rule kept as the projection family because one exact overlapping level is chosen case by case"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ref_removed",
+   "detail": "measured_swing_projections.reinforces: 'ref:power_of_3' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "ref_resolved",
+   "detail": "measured_swing_projections.reinforces: 'ref:daily_profiles' -> 'daily_profiles'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "category",
+   "detail": "standard_deviations_indices: 'other:target_projection' -> 'target_projection'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "semantic",
+   "detail": "standard_deviations_indices.summary rewritten"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "timeframes",
+   "detail": "standard_deviations_indices: raw session/daily/weekly wording -> intraday setup_tf with 15m-1w target-array charts"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "requires_context",
+   "detail": "standard_deviations_indices: prose context -> registry Judas Swing plus overlap proxy; index/futures market restriction moved to notes"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "rules",
+   "detail": "standard_deviations_indices: stop_rule placeholder -> null; target_rule kept as the standard-deviation family because one exact overlapping level is chosen case by case"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_signal",
+   "detail": "ex1_london_session_projection: engine_check.may_differ 'measured_swing_projection' -> 'custom_signals.measured_swing_projection'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_signal",
+   "detail": "ex2_daily_projection: engine_check.may_differ 'measured_swing_projection' -> 'custom_signals.measured_swing_projection'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_signal",
+   "detail": "ex3_weekly_projection: engine_check.may_differ 'measured_swing_projection' -> 'custom_signals.measured_swing_projection'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_signal",
+   "detail": "ex4_monthly_projection: engine_check.may_differ 'measured_swing_projection' -> 'custom_signals.measured_swing_projection'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "example_signal",
+   "detail": "ex5_indices_standard_deviation: engine_check.may_differ 'standard_deviations' -> 'custom_signals.standard_deviations'"
+  },
+  {
+   "file": "dol_fibonacci.json",
+   "category": "asr",
+   "detail": "ex4_monthly_projection: 'beautiful rare value Gap' -> 'beautiful fair value gap'"
+  }
+ ],
+ "intermarket_strength.json": [
+  {
+   "file": "intermarket_strength.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".strategies[].stop_rule.quote: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.direction: 'null' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.entry.frame_id: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "placeholder_null",
+   "detail": ".examples[].trade.precision: '' -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].signals_required[0].ts: '00:07:34' -> '07:34'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[0].ts: '00:03:04' -> '03:04'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].custom_signals[1].ts: '00:09:35' -> '09:35'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].invalidation[0].ts: '00:04:15' -> '04:15'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[0].ts: '00:05:38' -> '05:38'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].filters[1].ts: '00:10:48' -> '10:48'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].entry_rule.ts: '00:10:07' -> '10:07'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].target_rule.ts: '00:08:45' -> '08:45'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].presenter_claims[0].ts: '00:06:16' -> '06:16'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".strategies[0].uncertainties[0].ts: '00:10:07' -> '10:07'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:01:46' -> '01:46'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:07:23' -> '07:23'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:01:46' -> '01:46'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:01:46' -> '01:46'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[1].ts: '00:03:04' -> '03:04'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:01:46' -> '01:46'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:07:23' -> '07:23'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:12:00' -> '12:00'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:09:35' -> '09:35'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:07:50' -> '07:50'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:08:29' -> '08:29'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[2].ts: '00:09:35' -> '09:35'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[3].ts: '00:09:49' -> '09:49'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:07:23' -> '07:23'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:12:00' -> '12:00'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:13:35' -> '13:35'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:12:36' -> '12:36'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:12:00' -> '12:00'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[1].ts: '00:12:14' -> '12:14'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[2].ts: '00:12:36' -> '12:36'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '00:12:00' -> '12:00'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "example_enum",
+   "detail": "ex2_forex_filtering: frame timeframe 'Daily' -> \"1d\""
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "example_enum",
+   "detail": "ex3_indices_filtering: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "category_kept",
+   "detail": "relative_strength_filtering: worker proposed 'market_condition_filter'; original category 'trend_following' kept (valid entry category, entry rule present)"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "semantic",
+   "detail": "relative_strength_filtering.summary rewritten"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "timeframes",
+   "detail": "relative_strength_filtering: HTF/Daily/Weekly -> bias_tf '1d|1w'; setup_tf and entry_tf cleared because this file only filters chart selection and delegates execution to downstream entry models"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "requires_context",
+   "detail": "relative_strength_filtering: prose intermarket synchronization -> custom decoupled/relative-strength context plus market:needs_external_symbols; presenter bias is external, not engine structure bias"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "glossary",
+   "detail": "relative_strength_filtering: glossary normalized to canonical casing and linked to registry-backed decoupled/relative-strength terms"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "signals_required",
+   "detail": "relative_strength_filtering: removed invalid bias=='established' step; this file is a market-condition filter, not a sequential single-symbol trigger"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "custom_signals",
+   "detail": "relative_strength_filtering: decoupled_market and relatively_stronger_pair moved to registry-backed external-symbol concepts"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "asr",
+   "detail": "relative_strength_filtering.target_rule.quote: 'drone quality' -> 'draw on liquidity'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "rules",
+   "detail": "relative_strength_filtering: target_rule structured htf_liquidity_pool removed (no catalog/custom level); stop_rule placeholder -> null"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ref_resolved",
+   "detail": "relative_strength_filtering.reinforces: 'ref:smt_divergence' -> 'smt_divergence_confirmation'"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "ref_removed",
+   "detail": "relative_strength_filtering.reinforces: 'ref:fair_value_gap' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "intermarket_strength.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_forex_filtering[0]: maps_to_signal_step 1 -> None"
+  }
+ ],
+ "m3_secrets.json": [
+  {
+   "file": "m3_secrets.json",
+   "category": "envelope",
+   "detail": "shape [strategy_id,aliases,category,summary,direction,symmetric,timeframes,requires_con] -> {strategies, examples}"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "envelope",
+   "detail": "m3_secrets: nested 'pass_3_chart_examples' moved to top-level examples"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "asr",
+   "detail": "\\bfi gap\\b x1"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:02:18' -> '02:18'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:10:29' -> '10:29'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:06:26' -> '06:26'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:03:08' -> '03:08'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[1].ts: '00:03:14' -> '03:14'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[2].ts: '00:06:56' -> '06:56'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[3].ts: '00:07:17' -> '07:17'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:02:18' -> '02:18'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:10:29' -> '10:29'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:24:06' -> '24:06'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:17:45' -> '17:45'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:15:34' -> '15:34'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:18:16' -> '18:16'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[2].ts: '00:19:52' -> '19:52'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[3].ts: '00:20:29' -> '20:29'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:10:29' -> '10:29'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:24:06' -> '24:06'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:29:14' -> '29:14'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:27:36' -> '27:36'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:24:17' -> '24:17'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[1].ts: '00:26:06' -> '26:06'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[2].ts: '00:27:08' -> '27:08'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[3].ts: '00:27:36' -> '27:36'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '00:24:06' -> '24:06'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "example_enum",
+   "detail": "ex1_usdjpy_monthly_daily: frame timeframe '1M' -> \"1mo\""
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "example_enum",
+   "detail": "ex1_usdjpy_monthly_daily: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "engine_check",
+   "detail": "ex1_usdjpy_monthly_daily: 'htf_discount_array_tap' moved from should_detect to may_differ as 'custom_signals.htf_pd_array_tap' (not an engine detection)"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "example_enum",
+   "detail": "ex2_usdjpy_weekly_1h_5m: frame timeframe '1W' -> \"1w\""
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "engine_check",
+   "detail": "ex2_usdjpy_weekly_1h_5m: 'htf_discount_array_tap' moved from should_detect to may_differ as 'custom_signals.htf_pd_array_tap' (not an engine detection)"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "engine_check",
+   "detail": "ex2_usdjpy_weekly_1h_5m: 'order_block.subtype.breaker' moved from should_detect to may_differ as 'custom_signals.order_block.subtype.breaker' (not an engine detection)"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "example_enum",
+   "detail": "ex3_eurgbp_market_maker_buy_model: frame timeframe '1W' -> \"1w\""
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "custom_alias",
+   "detail": "ex3_eurgbp_market_maker_buy_model: custom_signals_observed 'st_entry' -> canonical 'first_fvg_after_array_tap'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "semantic",
+   "detail": "m3_secrets.summary rewritten"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "timeframes",
+   "detail": "m3_secrets: normalized timeframe labels and kept the presenter's fractal bias/setup/entry ladder"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "requires_context",
+   "detail": "m3_secrets: presenter HTF context -> custom_signals.htf_pd_array_tap; news-driver requirement tagged as market:needs_news_calendar; day_of_week prose moved out of the enum field"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "glossary",
+   "detail": "m3_secrets: CONTEXT/ST/SHORT_TERM_RANGE removed because the registry already defines them; kept 'Magnet and rocket' as presenter jargon"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "signals_required",
+   "detail": "m3_secrets: htf_discount_array_tap -> canonical htf_pd_array_tap alias; ST expressed as optional first_fvg_after_array_tap; execution grounded by entry_tf FVG + short_term_range + retracement touch"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "custom_signals",
+   "detail": "m3_secrets: canonicalized htf_discount_array_tap -> htf_pd_array_tap, st_entry -> first_fvg_after_array_tap, and fvg_magnet_rocket -> htf_opposing_pd_array"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "rules",
+   "detail": "m3_secrets: entry normalized to the short-term-range FVG near edge, target to the canonical HTF opposing PD array, and stop to the protected short-term low"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ref_resolved",
+   "detail": "m3_secrets.reinforces: 'ref:intermediate_term_structure' -> 'market_structure_secrets'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ref_resolved",
+   "detail": "m3_secrets.reinforces: 'ref:short_term_ranges' -> 'market_structure_secrets'"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "ref_removed",
+   "detail": "m3_secrets.reinforces: 'ref:fair_value_gaps' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex1_usdjpy_monthly_daily[3]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_usdjpy_weekly_1h_5m[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex2_usdjpy_weekly_1h_5m[2]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "engine_check",
+   "detail": "ex2_usdjpy_weekly_1h_5m: rewrote engine_check to valid catalog/custom signals after raw should_detect listed a non-detection breaker shorthand"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex3_eurgbp_market_maker_buy_model[0]: maps_to_signal_step 1 -> None"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "walkthrough_map",
+   "detail": "ex3_eurgbp_market_maker_buy_model[3]: maps_to_signal_step 3 -> 4"
+  },
+  {
+   "file": "m3_secrets.json",
+   "category": "custom_signals_observed",
+   "detail": "ex3_eurgbp_market_maker_buy_model: fvg_magnet_rocket -> htf_opposing_pd_array and st_entry -> first_fvg_after_array_tap"
+  }
+ ],
+ "shorterm_trading.json": [
+  {
+   "file": "shorterm_trading.json",
+   "category": "envelope",
+   "detail": "shape [strategy,examples] -> {strategies, examples}"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "asr",
+   "detail": "\\b[Vv]erif(?:y|ied) [Gg]ap\\b x3"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "asr",
+   "detail": "\\bfor Vega\\b x1"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "asr",
+   "detail": "\\bthat is our SD\\b x1"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "asr",
+   "detail": "\\bfor Value Gap\\b x3"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "asr",
+   "detail": "\\b[Rr]evive [Gg]ap\\b x1"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "example_enum",
+   "detail": "ex1_monthly_context_4h_entry: frame timeframe '1M' -> \"1mo\""
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex1_monthly_context_4h_entry: may_differ 'custom_signals.htf_array_tap' -> canonical 'custom_signals.htf_pd_array_tap'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex1_monthly_context_4h_entry: custom_signals_observed 'htf_array_tap' -> canonical 'htf_pd_array_tap'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex1_monthly_context_4h_entry: custom_signals_observed 'overlapping_entry_zone' -> canonical 'overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "example_enum",
+   "detail": "ex2_monthly_context_daily_reentry: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex2_monthly_context_daily_reentry: may_differ 'custom_signals.overlapping_entry_zone' -> canonical 'custom_signals.overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex2_monthly_context_daily_reentry: custom_signals_observed 'overlapping_entry_zone' -> canonical 'overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "example_enum",
+   "detail": "ex3_weekly_context_1h_to_4h: frame timeframe '1W' -> \"1w\""
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex3_weekly_context_1h_to_4h: may_differ 'custom_signals.overlapping_entry_zone' -> canonical 'custom_signals.overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex3_weekly_context_1h_to_4h: custom_signals_observed 'htf_array_tap' -> canonical 'htf_pd_array_tap'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex3_weekly_context_1h_to_4h: custom_signals_observed 'overlapping_entry_zone' -> canonical 'overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "example_enum",
+   "detail": "ex4_daily_context_1h_to_4h: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex4_daily_context_1h_to_4h: may_differ 'custom_signals.overlapping_entry_zone' -> canonical 'custom_signals.overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex4_daily_context_1h_to_4h: custom_signals_observed 'htf_array_tap' -> canonical 'htf_pd_array_tap'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex4_daily_context_1h_to_4h: custom_signals_observed 'overlapping_entry_zone' -> canonical 'overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex4_daily_context_1h_to_4h: custom_signals_observed 'overlapping_entry_zone' -> canonical 'overlapping_pd_array'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "semantic",
+   "detail": "swing_trading_lost_art.summary rewritten"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "timeframes",
+   "detail": "swing_trading_lost_art: timeframe labels normalized to Traidle enums; strict=false because the entry/re-entry pair depends on the chosen higher-timeframe context"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "requires_context",
+   "detail": "swing_trading_lost_art: prose higher-timeframe context -> custom_signals.htf_pd_array_tap; Monday-Wednesday preference kept as a filter instead of a hard context gate"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "signals_required",
+   "detail": "swing_trading_lost_art: custom_signals.htf_array_tap -> registry htf_pd_array_tap; raw new_short_term_range -> registry short_term_range; overlap kept in the entry rule because breaker/prior-high partners are only partly expressible"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_signals",
+   "detail": "swing_trading_lost_art: htf_array_tap -> htf_pd_array_tap, new_short_term_range -> short_term_range, overlapping_entry_zone -> overlapping_pd_array"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "ref_removed",
+   "detail": "swing_trading_lost_art.reinforces: 'ref:Market maker models' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "ref_removed",
+   "detail": "swing_trading_lost_art.reinforces: 'ref:ST model' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "ref_removed",
+   "detail": "swing_trading_lost_art.reinforces: 'ref:Short-term range' is a concept, not a strategy; removed"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "semantic",
+   "detail": "swing_trading_lost_art.notes rewritten"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "uncertainty_dropped",
+   "detail": "swing_trading_lost_art: 'ST' dropped (the presenter defines ST here as the first bullish fair value gap after the higher-timeframe tap)"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex1_monthly_context_4h_entry: custom_signals_observed 'new_short_term_range' -> canonical 'short_term_range'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex2_monthly_context_daily_reentry: custom_signals_observed 'new_short_term_range' -> canonical 'short_term_range'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex3_weekly_context_1h_to_4h: custom_signals_observed 'new_short_term_range' -> canonical 'short_term_range'"
+  },
+  {
+   "file": "shorterm_trading.json",
+   "category": "custom_alias",
+   "detail": "ex4_daily_context_1h_to_4h: custom_signals_observed 'new_short_term_range' -> canonical 'short_term_range'"
+  }
+ ],
+ "silver_bullet.json": [
+  {
+   "file": "silver_bullet.json",
+   "category": "envelope",
+   "detail": "shape [strategy_id,aliases,category,summary,direction,symmetric,timeframes,requires_con] -> {strategies, examples}"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "envelope",
+   "detail": "swing_rate_silver_bullet: nested 'chart_examples' moved to top-level examples"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.start: '00:00:00' -> '00:00'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.end: '00:03:57' -> '03:57'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].video_span.canonical_frame_ts: '00:01:00' -> '01:00'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[0].ts: '00:00:13' -> '00:13'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[1].ts: '00:00:42' -> '00:42'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].setup_walkthrough[2].ts: '00:01:23' -> '01:23'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[0].uncertainties[0].ts: '00:00:00' -> '00:00'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.start: '00:03:57' -> '03:57'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.end: '00:09:40' -> '09:40'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].video_span.canonical_frame_ts: '00:08:41' -> '08:41'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[0].ts: '00:04:54' -> '04:54'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[1].ts: '00:05:44' -> '05:44'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[2].ts: '00:06:58' -> '06:58'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[3].ts: '00:08:22' -> '08:22'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].setup_walkthrough[4].ts: '00:08:41' -> '08:41'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[1].uncertainties[0].ts: '00:03:57' -> '03:57'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.start: '00:09:40' -> '09:40'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.end: '00:11:09' -> '11:09'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].video_span.canonical_frame_ts: '00:10:41' -> '10:41'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[0].ts: '00:09:58' -> '09:58'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[1].ts: '00:10:12' -> '10:12'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[2].ts: '00:10:41' -> '10:41'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].setup_walkthrough[3].ts: '00:10:47' -> '10:47'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[2].uncertainties[0].ts: '00:09:40' -> '09:40'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.start: '00:11:09' -> '11:09'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.end: '00:13:51' -> '13:51'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].video_span.canonical_frame_ts: '00:12:37' -> '12:37'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[0].ts: '00:11:09' -> '11:09'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[1].ts: '00:11:31' -> '11:31'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[2].ts: '00:12:01' -> '12:01'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[3].ts: '00:12:37' -> '12:37'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].setup_walkthrough[4].ts: '00:12:49' -> '12:49'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "ts_format",
+   "detail": ".examples[3].uncertainties[0].ts: '00:11:09' -> '11:09'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "custom_alias",
+   "detail": "nasdaq_structure: may_differ 'custom_signals.fibonacci_swing_rates' -> canonical 'custom_signals.swing_rates_framework'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "custom_alias",
+   "detail": "nasdaq_structure: custom_signals_observed 'fibonacci_swing_rates' -> canonical 'swing_rates_framework'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "legacy_signal",
+   "detail": "nasdaq_structure: engine_check 'swing_points' -> ['swing_high', 'swing_low']"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "example_enum",
+   "detail": "nasdaq_1m_sweep: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "legacy_signal",
+   "detail": "nasdaq_1m_sweep: engine_check 'liquidity_sweep_high' -> ['structural_event.liquidity_sweep_high']"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "example_enum",
+   "detail": "usdjpy_htf_context: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "example_enum",
+   "detail": "usdjpy_htf_context: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "legacy_signal",
+   "detail": "usdjpy_htf_context: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "example_enum",
+   "detail": "usdjpy_4h_to_5m: trade.outcome 'explanation_only' -> 'not_taken'"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "semantic",
+   "detail": "swing_rate_silver_bullet.summary rewritten"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "timeframes",
+   "detail": "swing_rate_silver_bullet: placeholder HTF/LTF labels -> null roles resolved at evaluation time"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "requires_context",
+   "detail": "swing_rate_silver_bullet: free-prose anchor requirement -> custom_signals.intermediate_term_low, custom_signals.intermediate_term_high and custom_signals.swing_rates_framework"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "glossary",
+   "detail": "swing_rate_silver_bullet: kept only swing-rates, terminus, and sting jargon; intermediate-term anchors come from registry signals"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "mirror",
+   "detail": "swing_rate_silver_bullet: normalized on the canonical bullish side; bearish walkthroughs rely on the catalog mirror table"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "signals_required",
+   "detail": "swing_rate_silver_bullet: raw 0.75 boolean level -> candle.high gte_signal custom_signals.swing_rate_075; raw fvg.state=open -> first bullish FVG formed after the 0.75 hit"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "custom_signals",
+   "detail": "swing_rate_silver_bullet: added registry-backed swing-rate framework, midpoint, 0.75 level, and midpoint behavior signals"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "rules",
+   "detail": "swing_rate_silver_bullet: target swing_extreme -> custom_signals.intermediate_term_high; stop fvg.gap_extreme -> bullish FVG far edge fvg.gap_low"
+  },
+  {
+   "file": "silver_bullet.json",
+   "category": "example_signal",
+   "detail": "nasdaq_structure: fibonacci_swing_rates observed/may_differ -> custom_signals.swing_rates_framework"
+  }
+ ],
+ "smt_divergence.json": [
+  {
+   "file": "smt_divergence.json",
+   "category": "envelope",
+   "detail": "shape [strategy_definition,chart_examples] -> {strategies, examples}"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "custom_alias",
+   "detail": "smt_indices_es_nq: may_differ 'custom_signals.bullish_smt_divergence' -> canonical 'custom_signals.smt_divergence'"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "custom_alias",
+   "detail": "smt_indices_es_nq: custom_signals_observed 'bullish_smt_divergence' -> canonical 'smt_divergence'"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "legacy_signal",
+   "detail": "smt_indices_es_nq: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "legacy_signal",
+   "detail": "smt_indices_es_nq: engine_check 'swing_point' -> ['swing_high', 'swing_low']"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "example_enum",
+   "detail": "smt_forex_gu_eu: frame timeframe '1D' -> \"1d\""
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "custom_alias",
+   "detail": "smt_forex_gu_eu: may_differ 'custom_signals.bullish_smt_divergence' -> canonical 'custom_signals.smt_divergence'"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "custom_alias",
+   "detail": "smt_forex_gu_eu: custom_signals_observed 'bullish_smt_divergence' -> canonical 'smt_divergence'"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "legacy_signal",
+   "detail": "smt_forex_gu_eu: engine_check 'liquidity_sweep_low' -> ['structural_event.liquidity_sweep_low']"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "semantic",
+   "detail": "smt_divergence_confirmation.summary rewritten"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "requires_context",
+   "detail": "smt_divergence_confirmation: requires_context.other 'htf_pd_array' -> custom_signals.htf_pd_array_tap and market:needs_external_symbols; presenter bias kept in notes"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "signals_required",
+   "detail": "smt_divergence_confirmation: HTF PD-array context restored as step1, single-symbol sweep kept as step2, and bullish_smt_divergence normalized to registry custom_signals.smt_divergence for the cross-symbol confirmation step"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "custom_signals",
+   "detail": "smt_divergence_confirmation: dropped non-registry buying_on_strength_trigger because structural_event.candle_high already expresses the trigger level exactly"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "mirror",
+   "detail": "smt_divergence_confirmation: rewritten on the canonical bullish side; bearish use is implied by the mirror table"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "example_cleanup",
+   "detail": "smt_indices_es_nq: removed buying_on_strength_trigger from custom_signals_observed and narrowed engine_check.should_detect swing_point -> swing_low"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "walkthrough_map",
+   "detail": "smt_indices_es_nq[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "walkthrough_map",
+   "detail": "smt_indices_es_nq[2]: maps_to_signal_step 1 -> 3"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "walkthrough_map",
+   "detail": "smt_indices_es_nq[3]: maps_to_signal_step 1 -> 3"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "walkthrough_map",
+   "detail": "smt_forex_gu_eu[0]: maps_to_signal_step None -> 1"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "walkthrough_map",
+   "detail": "smt_forex_gu_eu[2]: maps_to_signal_step 1 -> 3"
+  },
+  {
+   "file": "smt_divergence.json",
+   "category": "walkthrough_map",
+   "detail": "smt_forex_gu_eu[3]: maps_to_signal_step 1 -> 3"
+  }
+ ]
+}

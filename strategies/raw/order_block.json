@@ -1,0 +1,690 @@
+[
+  {
+    "strategy_id": "order_block_mitigation",
+    "aliases": [
+      "OB Setup"
+    ],
+    "category": "trend_following",
+    "summary": "Identify a directional bias, locate a down-candle (bullish) or up-candle (bearish) that bounces off support/resistance and has its high/low broken, and enter on the return to this block.",
+    "direction": "both",
+    "symmetric": true,
+    "timeframes": {
+      "bias_tf": null,
+      "setup_tf": null,
+      "entry_tf": null,
+      "strict": false,
+      "notes": "No specific timeframes are given in this introductory video."
+    },
+    "requires_context": {
+      "bias": [
+        "bullish",
+        "bearish"
+      ],
+      "session": [],
+      "time_window_ny": null,
+      "day_of_week": null,
+      "other": [
+        "Must align with the current directional bias (e.g., following a liquidity sweep)."
+      ]
+    },
+    "glossary": {
+      "Mean threshold": "50% of the bodies of the order block candles, completely ignoring the wicks.",
+      "Order block (bullish)": "A down candle (or consecutive down candles) coming off support whose high gets broken."
+    },
+    "signals_required": [
+      {
+        "step": 1,
+        "signal": "order_block.bullish",
+        "equals": true,
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": false,
+        "provenance": "presenter_stated",
+        "ts": "03:41"
+      },
+      {
+        "step": 2,
+        "signal": "candle.low",
+        "lte_signal": "order_block.zone_high",
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "03:59"
+      }
+    ],
+    "custom_signals": [
+      {
+        "name": "mean_threshold_bodies",
+        "kind": "level",
+        "plain_definition": "50% of the bodies of the order block candles, not the wicks.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "04:16"
+      },
+      {
+        "name": "ob_fvg_overlap_sensitivity",
+        "kind": "level",
+        "plain_definition": "If the OB wick overlaps an FVG, use the wick top; if no FVG overlap, use the body open.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "06:48"
+      }
+    ],
+    "sequence": [
+      "Establish a directional bias (e.g., a bearish bias after a buy-side liquidity sweep).",
+      "Identify a down candle (for long) or up candle (for short) coming off a previous support or resistance level.",
+      "Wait for the high of the down candle (or low of the up candle) to be broken, confirming the order block.",
+      "Wait for price to return and mitigate the order block.",
+      "Observe the mean threshold (50% of the bodies); price must not close beyond it for the setup to remain valid."
+    ],
+    "invalidation": [
+      {
+        "text": "A candle closes beyond the mean threshold (50% of the order block bodies).",
+        "provenance": "presenter_stated",
+        "ts": "06:25"
+      }
+    ],
+    "filters": [
+      {
+        "text": "The order block must align with the overall bias; not every down/up candle is an order block.",
+        "provenance": "presenter_stated",
+        "ts": "08:04"
+      },
+      {
+        "text": "If the wick overlaps an FVG, the wick is sensitive; if not, the unmitigated orders are in the body.",
+        "provenance": "presenter_stated",
+        "ts": "06:48"
+      }
+    ],
+    "entry_rule": {
+      "text": "Enter when price returns to the order block (at the wick if overlapping an FVG, otherwise the body).",
+      "structured": {
+        "type": "limit",
+        "reference": "order_block.zone_high"
+      },
+      "provenance": "presenter_stated",
+      "ts": "03:59",
+      "quote": "if it then returns to that order block we can possibly buy"
+    },
+    "target_rule": {
+      "text": "Not explicitly defined in this video.",
+      "structured": null,
+      "provenance": "inferred",
+      "ts": null,
+      "quote": null
+    },
+    "stop_rule": {
+      "text": "Not explicitly defined, though implicitly relies on the mean threshold invalidation.",
+      "structured": null,
+      "provenance": "inferred",
+      "ts": "06:25",
+      "quote": null
+    },
+    "management": {
+      "breakeven": null,
+      "partials": null,
+      "trailing": null,
+      "notes": null
+    },
+    "risk": {
+      "typical_rr": null,
+      "min_rr": null,
+      "risk_per_trade_pct": null
+    },
+    "reinforces": [],
+    "conflicts_with": [],
+    "weight": 1.0,
+    "historical_stats": {
+      "occurrences": null,
+      "win_rate": null,
+      "avg_r": null,
+      "last_backtested": null
+    },
+    "presenter_claims": [
+      {
+        "claim": "order blocks alone could make you profitable",
+        "ts": "15:43",
+        "verified": false
+      }
+    ],
+    "notes": "The presenter's definition of an order block is looser than standard ICT/Traidle. He requires it to bounce off support/resistance but does not strictly require it to leave an FVG, though the presence of an FVG changes the specific entry level (wick vs body). Additionally, his 'mean threshold' is strictly 50% of the bodies, differing from standard definitions that use the entire candle range.",
+    "examples": [
+      "ex1_bullish_ob_theory",
+      "ex2_bearish_ob_sweep",
+      "ex3_bullish_ob_sequence"
+    ],
+    "uncertainties": [
+      {
+        "issue": "Trade parameters (Stop Loss and Take Profit)",
+        "why": "The video focuses entirely on the identification and theory of order blocks, without providing concrete trade management parameters.",
+        "ts": "00:00"
+      }
+    ],
+    "confidence": {
+      "level": "high",
+      "reason": "The presenter very clearly outlines the step-by-step criteria for identifying and validating his version of an order block."
+    }
+  },
+  {
+    "example_id": "ex1_bullish_ob_theory",
+    "strategy_id": "order_block_mitigation",
+    "video_span": {
+      "start": "04:30",
+      "end": "08:26",
+      "canonical_frame_ts": "08:20"
+    },
+    "example_role": "explanation_only",
+    "chart_kind": "real_market",
+    "frames": [
+      {
+        "frame_id": "f1",
+        "frame_role": "full",
+        "symbol": null,
+        "feed_as_shown": null,
+        "timeframe": null,
+        "chart_timezone": null,
+        "date_range_shown": {
+          "from": null,
+          "to": null
+        },
+        "data_locator_confidence": "none",
+        "precision": "approx",
+        "price_axis_labels_seen": [],
+        "estimated_price_error": null,
+        "candle_columns": [
+          "i",
+          "time",
+          "o",
+          "h",
+          "l",
+          "c",
+          "v"
+        ],
+        "candles": [],
+        "low_confidence_candles": [],
+        "signals_observed": {
+          "swing_points": [],
+          "structural_events": [],
+          "fvgs": [
+            {
+              "c1_i": null,
+              "c3_i": null,
+              "bullish": true,
+              "gap_low": null,
+              "gap_high": null,
+              "state": "open",
+              "presenter_calls_it": "fair value gap / support"
+            }
+          ],
+          "order_blocks": [
+            {
+              "anchor_i": null,
+              "bullish": true,
+              "subtype": "standard",
+              "zone_low": null,
+              "zone_high": null,
+              "presenter_calls_it": "one big order block (two consecutive down candles)"
+            }
+          ],
+          "liquidity_levels": [],
+          "premium_discount": null,
+          "bias": "bullish",
+          "bias_source": "inferred from setup direction",
+          "kill_zone": "unknown"
+        },
+        "custom_signals_observed": [
+          {
+            "name": "mean_threshold_bodies",
+            "candle_i_range": null,
+            "measured": {
+              "body": null,
+              "range": null,
+              "lower_wick": null,
+              "upper_wick": null
+            },
+            "presenter_calls_it": "mean threshold / MT / 50% of bodies"
+          }
+        ],
+        "annotations_drawn_by_presenter": [
+          {
+            "type": "other",
+            "text": null,
+            "price_from": null,
+            "price_to": null,
+            "candle_from_i": null,
+            "candle_to_i": null,
+            "meaning": "Highlights the top of the wick overlapping with an FVG as the sensitive entry level"
+          }
+        ],
+        "indicators_on_screen": []
+      }
+    ],
+    "setup_walkthrough": [
+      {
+        "step": 1,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "Two consecutive down candles form, bouncing off a previous fair value gap acting as support.",
+        "maps_to_signal_step": 1,
+        "ts": "04:35"
+      },
+      {
+        "step": 2,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "The high of the consolidated order block is broken.",
+        "maps_to_signal_step": 1,
+        "ts": "05:14"
+      },
+      {
+        "step": 3,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "Price returns to mitigate the order block. Because the OB wick overlaps with an FVG, the top of the wick is the sensitive entry area.",
+        "maps_to_signal_step": 2,
+        "ts": "06:48"
+      },
+      {
+        "step": 4,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "The mean threshold (50% of the bodies) is strictly respected with no bodies closing below it, validating the block.",
+        "maps_to_signal_step": 2,
+        "ts": "06:25"
+      }
+    ],
+    "trade": {
+      "taken": false,
+      "direction": "long",
+      "entry": {
+        "price": null,
+        "candle_i": null,
+        "frame_id": "f1"
+      },
+      "stop": {
+        "price": null
+      },
+      "targets": [],
+      "outcome": "not_taken",
+      "exit": {
+        "price": null,
+        "candle_i": null
+      },
+      "r_multiple": null,
+      "precision": ""
+    },
+    "presenter_commentary": "The presenter emphasizes that an order block doesn't have to be a single candle; consecutive down candles act as one. He also introduces a key nuance: if the OB wick overlaps a fair value gap, the wick is the entry zone; if it doesn't, the unmitigated orders lie in the candle body.",
+    "engine_check": {
+      "should_detect": [
+        "order_block.bullish"
+      ],
+      "may_differ": [
+        {
+          "signal": "order_block.mean_threshold",
+          "reason": "Traidle defines mean threshold as the midpoint of the high-low range, but the presenter explicitly restricts it to 50% of the candle bodies, ignoring wicks."
+        },
+        {
+          "signal": "order_block.zone_high",
+          "reason": "If an FVG does not overlap the wick, the presenter uses the open of the body as the top of the sensitive zone, whereas Traidle uses the high of the candle."
+        }
+      ]
+    },
+    "uncertainties": [
+      {
+        "issue": "Cannot read exact price data or OHLC values.",
+        "why": "I am operating from the video transcript and lack visual access to the video frames to read the chart's price axis, symbol, timeframe, or candlestick structures.",
+        "ts": "04:30"
+      }
+    ]
+  },
+  {
+    "example_id": "ex2_bearish_ob_sweep",
+    "strategy_id": "order_block_mitigation",
+    "video_span": {
+      "start": "08:26",
+      "end": "12:08",
+      "canonical_frame_ts": "12:00"
+    },
+    "example_role": "textbook_illustration",
+    "chart_kind": "real_market",
+    "frames": [
+      {
+        "frame_id": "f1",
+        "frame_role": "full",
+        "symbol": null,
+        "feed_as_shown": null,
+        "timeframe": null,
+        "chart_timezone": null,
+        "date_range_shown": {
+          "from": null,
+          "to": null
+        },
+        "data_locator_confidence": "none",
+        "precision": "approx",
+        "price_axis_labels_seen": [],
+        "estimated_price_error": null,
+        "candle_columns": [
+          "i",
+          "time",
+          "o",
+          "h",
+          "l",
+          "c",
+          "v"
+        ],
+        "candles": [],
+        "low_confidence_candles": [],
+        "signals_observed": {
+          "swing_points": [
+            {
+              "candle_i": null,
+              "is_high": true,
+              "price": null,
+              "swept": true,
+              "presenter_calls_it": "this High"
+            }
+          ],
+          "structural_events": [
+            {
+              "candle_i": null,
+              "kind": "liquidity_sweep_high",
+              "reference_price": null,
+              "candle_close": null,
+              "is_mss": false,
+              "presenter_calls_it": "sweep of the high / breakout traders trapped"
+            }
+          ],
+          "fvgs": [
+            {
+              "c1_i": null,
+              "c3_i": null,
+              "bullish": false,
+              "gap_low": null,
+              "gap_high": null,
+              "state": "open",
+              "presenter_calls_it": "small fair value gap"
+            }
+          ],
+          "order_blocks": [
+            {
+              "anchor_i": null,
+              "bullish": false,
+              "subtype": "standard",
+              "zone_low": null,
+              "zone_high": null,
+              "presenter_calls_it": "bearish order block / up candles"
+            }
+          ],
+          "liquidity_levels": [],
+          "premium_discount": null,
+          "bias": "bearish",
+          "bias_source": "established after the buy-side liquidity sweep",
+          "kill_zone": "unknown"
+        },
+        "custom_signals_observed": [
+          {
+            "name": "mean_threshold_bodies",
+            "candle_i_range": null,
+            "measured": {
+              "body": null,
+              "range": null,
+              "lower_wick": null,
+              "upper_wick": null
+            },
+            "presenter_calls_it": "mean threshold"
+          }
+        ],
+        "annotations_drawn_by_presenter": [],
+        "indicators_on_screen": []
+      }
+    ],
+    "setup_walkthrough": [
+      {
+        "step": 1,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "Price sweeps above a previous high, hitting the buy stops of breakout traders, shifting the market bias to bearish.",
+        "maps_to_signal_step": null,
+        "ts": "08:44"
+      },
+      {
+        "step": 2,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "An up candle forms coming off a small FVG (resistance), and its low is subsequently broken, confirming it as a bearish order block.",
+        "maps_to_signal_step": 1,
+        "ts": "09:24"
+      },
+      {
+        "step": 3,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "Price returns to the up candle. The bodies are used as the sensitive zone because there is no overlapping FVG with the wick. Mean threshold is respected.",
+        "maps_to_signal_step": 2,
+        "ts": "10:26"
+      },
+      {
+        "step": 4,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "The sequence repeats as a new up candle forms, its low is broken, price returns to mitigate it, respects the MT, and rejects away again.",
+        "maps_to_signal_step": 2,
+        "ts": "10:40"
+      }
+    ],
+    "trade": {
+      "taken": false,
+      "direction": "short",
+      "entry": {
+        "price": null,
+        "candle_i": null,
+        "frame_id": "f1"
+      },
+      "stop": {
+        "price": null
+      },
+      "targets": [],
+      "outcome": "not_taken",
+      "exit": {
+        "price": null,
+        "candle_i": null
+      },
+      "r_multiple": null,
+      "precision": ""
+    },
+    "presenter_commentary": "He explains the logic of liquidity sweeps trapping breakout traders to establish a bias. Once bearish, he demonstrates a sequence where multiple up candles act as valid bearish order blocks because they meet the criteria of bouncing off resistance, breaking their lows, and respecting the body mean threshold.",
+    "engine_check": {
+      "should_detect": [
+        "structural_event.liquidity_sweep_high",
+        "order_block.bearish"
+      ],
+      "may_differ": [
+        {
+          "signal": "order_block.mean_threshold",
+          "reason": "Same as previous example: relies on 50% of bodies, not the full candle range."
+        }
+      ]
+    },
+    "uncertainties": [
+      {
+        "issue": "Cannot read exact price data or OHLC values.",
+        "why": "I am operating from the video transcript and lack visual access to the video frames to read the chart's price axis, symbol, timeframe, or candlestick structures.",
+        "ts": "08:26"
+      }
+    ]
+  },
+  {
+    "example_id": "ex3_bullish_ob_sequence",
+    "strategy_id": "order_block_mitigation",
+    "video_span": {
+      "start": "12:08",
+      "end": "14:38",
+      "canonical_frame_ts": "13:45"
+    },
+    "example_role": "textbook_illustration",
+    "chart_kind": "real_market",
+    "frames": [
+      {
+        "frame_id": "f1",
+        "frame_role": "full",
+        "symbol": null,
+        "feed_as_shown": null,
+        "timeframe": null,
+        "chart_timezone": null,
+        "date_range_shown": {
+          "from": null,
+          "to": null
+        },
+        "data_locator_confidence": "none",
+        "precision": "approx",
+        "price_axis_labels_seen": [],
+        "estimated_price_error": null,
+        "candle_columns": [
+          "i",
+          "time",
+          "o",
+          "h",
+          "l",
+          "c",
+          "v"
+        ],
+        "candles": [],
+        "low_confidence_candles": [],
+        "signals_observed": {
+          "swing_points": [],
+          "structural_events": [],
+          "fvgs": [],
+          "order_blocks": [
+            {
+              "anchor_i": null,
+              "bullish": true,
+              "subtype": "standard",
+              "zone_low": null,
+              "zone_high": null,
+              "presenter_calls_it": "one big order block"
+            },
+            {
+              "anchor_i": null,
+              "bullish": true,
+              "subtype": "standard",
+              "zone_low": null,
+              "zone_high": null,
+              "presenter_calls_it": "new bullish order block"
+            },
+            {
+              "anchor_i": null,
+              "bullish": true,
+              "subtype": "standard",
+              "zone_low": null,
+              "zone_high": null,
+              "presenter_calls_it": "order block fail"
+            }
+          ],
+          "liquidity_levels": [],
+          "premium_discount": null,
+          "bias": "bullish",
+          "bias_source": "inferred from setup direction and repeated holding of support",
+          "kill_zone": "unknown"
+        },
+        "custom_signals_observed": [
+          {
+            "name": "mean_threshold_bodies",
+            "candle_i_range": null,
+            "measured": {
+              "body": null,
+              "range": null,
+              "lower_wick": null,
+              "upper_wick": null
+            },
+            "presenter_calls_it": "mean threshold"
+          },
+          {
+            "name": "rejection_block",
+            "candle_i_range": null,
+            "measured": {
+              "body": null,
+              "range": null,
+              "lower_wick": null,
+              "upper_wick": null
+            },
+            "presenter_calls_it": "rejection block / some kind of support"
+          }
+        ],
+        "annotations_drawn_by_presenter": [],
+        "indicators_on_screen": []
+      }
+    ],
+    "setup_walkthrough": [
+      {
+        "step": 1,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "A series of consecutive down candles bounces off a rejection block. The high is broken, price returns, and respects the mean threshold.",
+        "maps_to_signal_step": 1,
+        "ts": "12:45"
+      },
+      {
+        "step": 2,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "A second bullish order block forms, using the first order block as support, and is also respected.",
+        "maps_to_signal_step": 1,
+        "ts": "13:10"
+      },
+      {
+        "step": 3,
+        "frame_id": "f1",
+        "candle_i": null,
+        "what_happens": "A subsequent order block forms, but experiences a deep downside rejection where price disrespects the mean threshold, causing the block to fail.",
+        "maps_to_signal_step": 2,
+        "ts": "13:35"
+      }
+    ],
+    "trade": {
+      "taken": false,
+      "direction": "long",
+      "entry": {
+        "price": null,
+        "candle_i": null,
+        "frame_id": "f1"
+      },
+      "stop": {
+        "price": null
+      },
+      "targets": [],
+      "outcome": "not_taken",
+      "exit": {
+        "price": null,
+        "candle_i": null
+      },
+      "r_multiple": null,
+      "precision": ""
+    },
+    "presenter_commentary": "The presenter highlights a sequence of successful bullish order blocks followed by one that fails (mean threshold is disrespected). He emphasizes this to show that no setup is perfect, trading is probabilistic, and the search for a 100% win-rate 'Holy Grail' is flawed.",
+    "engine_check": {
+      "should_detect": [
+        "order_block.bullish"
+      ],
+      "may_differ": [
+        {
+          "signal": "order_block.mean_threshold",
+          "reason": "Calculated strictly as 50% of the bodies, differing from standard range midpoint."
+        },
+        {
+          "signal": "order_block.invalidation",
+          "reason": "Traidle invalidates on a body close beyond the MT; the presenter notes the setup fails here but price still continues higher, meaning the structural trend didn't break even if the local OB failed."
+        }
+      ]
+    },
+    "uncertainties": [
+      {
+        "issue": "Cannot read exact price data or OHLC values.",
+        "why": "I am operating from the video transcript and lack visual access to the video frames to read the chart's price axis, symbol, timeframe, or candlestick structures.",
+        "ts": "12:08"
+      }
+    ]
+  }
+]

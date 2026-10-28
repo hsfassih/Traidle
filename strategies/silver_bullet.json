@@ -1,0 +1,1077 @@
+{
+ "strategies": [
+  {
+   "strategy_id": "swing_rate_silver_bullet",
+   "aliases": [
+    "0.75 Silver Bullet",
+    "Swing Rate 0.75 Entry"
+   ],
+   "category": "htf_continuation",
+   "summary": "Draw swing-rate quartiles (0.25, 0.5, 0.75) between an intermediate-term low and the opposing intermediate-term high. After the 0.5 midpoint behavior is established, buy the first bullish FVG that forms once price reaches 0.75 and target the terminus.",
+   "direction": "both",
+   "symmetric": true,
+   "timeframes": {
+    "bias_tf": null,
+    "setup_tf": null,
+    "entry_tf": null,
+    "strict": false,
+    "notes": "Fractal framework. The intermediate-term anchor range is taken from the chosen context chart, while setup_tf and entry_tf are the execution chart used to read the 0.5 behavior and the first post-0.75 FVG; if no separate entry chart is used, entry_tf = setup_tf. The examples show 1m inside 1h and 4h inside 1d."
+   },
+   "requires_context": {
+    "bias": [
+     "bullish",
+     "bearish"
+    ],
+    "session": [],
+    "time_window_ny": null,
+    "day_of_week": null,
+    "other": [
+     "custom_signals.intermediate_term_low",
+     "custom_signals.intermediate_term_high",
+     "custom_signals.swing_rates_framework"
+    ]
+   },
+   "glossary": {
+    "Swing rates": "Fibonacci quartiles (0.25, 0.5, 0.75) drawn between the origin and terminus; see custom_signals.swing_rate_050 and custom_signals.swing_rate_075.",
+    "Terminus": "The 1.0 target of the swing-rate range, i.e. the opposing intermediate-term high on the canonical bullish side.",
+    "Sting": "A shallow touch into the first fair value gap near 0.75 rather than a deeper overlapping-array retracement."
+   },
+   "signals_required": [
+    {
+     "step": 1,
+     "signal": "custom_signals.swing_rate_050_behavior",
+     "equals": true,
+     "timeframe": "setup_tf",
+     "optional": false,
+     "max_candles_after_previous_step": null,
+     "traidle_supported": false,
+     "provenance": "presenter_stated",
+     "ts": "01:23"
+    },
+    {
+     "step": 2,
+     "signal": "candle.high",
+     "gte_signal": "custom_signals.swing_rate_075",
+     "timeframe": "setup_tf",
+     "optional": false,
+     "max_candles_after_previous_step": null,
+     "traidle_supported": true,
+     "provenance": "presenter_stated",
+     "ts": "03:02"
+    },
+    {
+     "step": 3,
+     "signal": "fvg.bullish",
+     "equals": true,
+     "timeframe": "entry_tf",
+     "optional": false,
+     "max_candles_after_previous_step": null,
+     "traidle_supported": true,
+     "provenance": "presenter_stated",
+     "ts": "03:02"
+    }
+   ],
+   "custom_signals": [
+    {
+     "name": "swing_rates_framework",
+     "kind": "other",
+     "plain_definition": "An intermediate-term low and the opposing intermediate-term high are established so the 0, 0.25, 0.5, 0.75 and 1.0 swing rates can be drawn between them.",
+     "numeric_definition": "swing_high[1].open_time > swing_low[1].open_time",
+     "definition_source": "inferred",
+     "ts": "00:42"
+    },
+    {
+     "name": "intermediate_term_low",
+     "kind": "level",
+     "plain_definition": "A swing low flanked by a higher swing low on its left and a higher swing low on its right.",
+     "numeric_definition": "swing_low[1].price < swing_low[0].price AND swing_low[1].price < swing_low[2].price",
+     "definition_source": "presenter_stated",
+     "ts": "00:13"
+    },
+    {
+     "name": "intermediate_term_high",
+     "kind": "level",
+     "plain_definition": "A swing high flanked by a lower swing high on its left and a lower swing high on its right.",
+     "numeric_definition": "swing_high[1].price > swing_high[0].price AND swing_high[1].price > swing_high[2].price",
+     "definition_source": "presenter_stated",
+     "ts": "00:13"
+    },
+    {
+     "name": "swing_rate_050",
+     "kind": "level",
+     "plain_definition": "The 50% equilibrium swing-rate level between the origin intermediate-term low and the terminus intermediate-term high.",
+     "numeric_definition": "custom_signals.swing_rates_framework",
+     "definition_source": "presenter_stated",
+     "ts": "00:42"
+    },
+    {
+     "name": "swing_rate_050_behavior",
+     "kind": "price_action",
+     "plain_definition": "Price trades at the 50% swing-rate level and shows the deeper-retracement behavior the presenter expects there: consolidation and/or a liquidity sweep before 0.75 is reached.",
+     "numeric_definition": "(low <= custom_signals.swing_rate_050 AND high >= custom_signals.swing_rate_050) AND (custom_signals.consolidation OR any(structural_event.kind == liquidity_sweep_low, K_REACTION_WINDOW_CANDLES))",
+     "definition_source": "inferred",
+     "ts": "01:23"
+    },
+    {
+     "name": "swing_rate_075",
+     "kind": "level",
+     "plain_definition": "The 75% swing-rate level between the origin intermediate-term low and the terminus intermediate-term high.",
+     "numeric_definition": "custom_signals.swing_rates_framework",
+     "definition_source": "presenter_stated",
+     "ts": "01:53"
+    },
+    {
+     "name": "consolidation",
+     "kind": "price_action",
+     "plain_definition": "Sideways price action with no expansion over a recent window.",
+     "numeric_definition": "highest(high, K_CONSOLIDATION_CANDLES) - lowest(low, K_CONSOLIDATION_CANDLES) <= K_CONSOLIDATION_RANGE_ATR * atr",
+     "definition_source": "inferred",
+     "ts": "01:23"
+    }
+   ],
+   "sequence": [
+    "Identify the intermediate-term low and the opposing intermediate-term high that define the range.",
+    "Draw the 0.25, 0.5 and 0.75 swing rates across that range.",
+    "Require the deeper 0.5 midpoint behavior: consolidation and/or a liquidity sweep.",
+    "Once price reaches 0.75, buy the first bullish fair value gap that forms there.",
+    "Target the terminus at the opposing intermediate-term high."
+   ],
+   "invalidation": [
+    {
+     "text": "If price reaches the 0.75 level but the 0.5 level did not previously feature a consolidation or liquidity sweep, ignore the 0.75 entry.",
+     "provenance": "presenter_stated",
+     "ts": "08:22",
+     "numeric_definition": null
+    }
+   ],
+   "filters": [
+    {
+     "text": "Because price is close to the draw on liquidity at the 0.75 level, do not expect a deep retracement into overlapping PD arrays.",
+     "provenance": "presenter_stated",
+     "ts": "02:20",
+     "numeric_definition": null
+    }
+   ],
+   "entry_rule": {
+    "text": "Enter on the first bullish fair value gap that forms once 0.75 is reached.",
+    "structured": {
+     "type": "limit",
+     "reference": "fvg.gap_high"
+    },
+    "provenance": "presenter_stated",
+    "ts": "03:02",
+    "quote": "you wait for the 0.75 level to be hit and you enter on the first fair value Gap that you can see"
+   },
+   "target_rule": {
+    "text": "Target the terminus at the opposing intermediate-term high.",
+    "structured": {
+     "type": "target_level",
+     "reference": "custom_signals.intermediate_term_high"
+    },
+    "provenance": "presenter_stated",
+    "ts": "03:02",
+    "quote": "Target intermediate term low that is your silver bullet entry"
+   },
+   "stop_rule": {
+    "text": "Use a tighter, more aggressive stop beyond the first fair value gap because deep retracements are not expected this close to the terminus.",
+    "structured": {
+     "type": "beyond",
+     "reference": "fvg.gap_low",
+     "buffer_atr": null
+    },
+    "provenance": "presenter_stated",
+    "ts": "09:01",
+    "quote": "to make the RR worth it you can indeed have a more aggressive stop loss why because the 0.75 level you are not expecting a huge retracement"
+   },
+   "management": {
+    "breakeven": null,
+    "partials": null,
+    "trailing": null,
+    "notes": "Treat the setup as the final push into the draw on liquidity; once 0.75 is active, expect only shallow pullbacks."
+   },
+   "risk": {
+    "typical_rr": null,
+    "min_rr": null,
+    "risk_per_trade_pct": null
+   },
+   "reinforces": [],
+   "conflicts_with": [],
+   "weight": 1.0,
+   "historical_stats": {
+    "occurrences": null,
+    "win_rate": null,
+    "avg_r": null,
+    "last_backtested": null
+   },
+   "presenter_claims": [
+    {
+     "claim": "The 0.75 level is where the Silver Bullet entry happens, providing very accurate, mechanical entries.",
+     "ts": "02:47",
+     "verified": false
+    }
+   ],
+   "notes": "The file captures only the 0.75 Silver Bullet branch. The presenter also discusses earlier 0.25 entries and deeper 0.5 reactions, but those are context for the quartile map rather than separate normalized triggers here. Required bias is the presenter’s directional range toward the terminus, not the engine BOS/CHoCH bias.",
+   "examples": [
+    "nasdaq_structure",
+    "nasdaq_1m_sweep",
+    "usdjpy_htf_context",
+    "usdjpy_4h_to_5m"
+   ],
+   "uncertainties": [
+    {
+     "issue": "Aggressive stop loss exact placement",
+     "why": "He states you can use a 'more aggressive stop loss' at 0.75 to preserve RR since deep retracements aren't expected, but doesn't mathematically define the exact placement (e.g., above the FVG high vs. the short-term high).",
+     "ts": "09:01"
+    }
+   ],
+   "confidence": {
+    "level": "high",
+    "reason": "The presenter defines the 0.75 mechanical steps, sequence, and invalidation rules explicitly."
+   }
+  }
+ ],
+ "examples": [
+  {
+   "example_id": "nasdaq_structure",
+   "strategy_id": "swing_rate_silver_bullet",
+   "video_span": {
+    "start": "00:00",
+    "end": "03:57",
+    "canonical_frame_ts": "01:00"
+   },
+   "example_role": "explanation_only",
+   "chart_kind": "real_market",
+   "frames": [
+    {
+     "frame_id": "f1_nasdaq_htf",
+     "frame_role": "htf_context",
+     "symbol": "NASDAQ",
+     "feed_as_shown": null,
+     "timeframe": null,
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [
+       {
+        "candle_i": null,
+        "is_high": true,
+        "price": null,
+        "swept": false,
+        "presenter_calls_it": "intermediate term High"
+       },
+       {
+        "candle_i": null,
+        "is_high": false,
+        "price": null,
+        "swept": false,
+        "presenter_calls_it": "intermediate term low / Terminus / Target"
+       }
+      ],
+      "structural_events": [],
+      "fvgs": [],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": {
+       "swing_high": null,
+       "swing_low": null,
+       "equilibrium": null,
+       "ote_618": null,
+       "ote_705": null,
+       "ote_786": null
+      },
+      "bias": "bearish",
+      "bias_source": "Moving from intermediate term high to intermediate term low target",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [
+      {
+       "name": "swing_rates_framework",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "swing rates (0, 0.25, 0.5, 0.75, 1)"
+      }
+     ],
+     "annotations_drawn_by_presenter": [
+      {
+       "type": "fib",
+       "text": "Swing Rates",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "Fibonacci tool modified to display 0.25, 0.5, and 0.75 quartiles between the HTF structure points."
+      }
+     ],
+     "indicators_on_screen": []
+    }
+   ],
+   "setup_walkthrough": [
+    {
+     "step": 1,
+     "frame_id": "f1_nasdaq_htf",
+     "candle_i": null,
+     "what_happens": "Presenter identifies an intermediate term high as the origin and an intermediate term low as the target (Terminus).",
+     "maps_to_signal_step": null,
+     "ts": "00:13"
+    },
+    {
+     "step": 2,
+     "frame_id": "f1_nasdaq_htf",
+     "candle_i": null,
+     "what_happens": "Presenter draws a Fibonacci tool across this range to map the 0.25, 0.5 (equilibrium), and 0.75 swing rates.",
+     "maps_to_signal_step": null,
+     "ts": "00:42"
+    },
+    {
+     "step": 3,
+     "frame_id": "f1_nasdaq_htf",
+     "candle_i": null,
+     "what_happens": "Presenter outlines the expected price action at each level: consolidation/sweep at 0.5, and a shallow sting into a FVG at 0.75 (the Silver Bullet).",
+     "maps_to_signal_step": 1,
+     "ts": "01:23"
+    }
+   ],
+   "trade": {
+    "taken": false,
+    "direction": "short",
+    "entry": {
+     "price": null,
+     "candle_i": null,
+     "frame_id": "f1_nasdaq_htf"
+    },
+    "stop": {
+     "price": null
+    },
+    "targets": [],
+    "outcome": "not_taken",
+    "exit": {
+     "price": null,
+     "candle_i": null
+    },
+    "r_multiple": null,
+    "precision": "approx"
+   },
+   "presenter_commentary": "He introduces the core concept of dividing an intermediate term range into quartiles, noting that close to the target (0.75), you no longer expect deep retracements, which allows for mechanical, shallow entries.",
+   "engine_check": {
+    "should_detect": [
+     "swing_high",
+     "swing_low"
+    ],
+    "may_differ": [
+     {
+      "signal": "custom_signals.swing_rates_framework",
+      "reason": "Traidle calculates standard premium/discount equilibrium and OTE, but does not natively log 0.25 or 0.75 quartiles."
+     }
+    ]
+   },
+   "uncertainties": [
+    {
+     "issue": "Cannot extract OHLC values or timeframes",
+     "why": "Visual frames are not provided, preventing exact chart transcription.",
+     "ts": "00:00"
+    }
+   ]
+  },
+  {
+   "example_id": "nasdaq_1m_sweep",
+   "strategy_id": "swing_rate_silver_bullet",
+   "video_span": {
+    "start": "03:57",
+    "end": "09:40",
+    "canonical_frame_ts": "08:41"
+   },
+   "example_role": "textbook_illustration",
+   "chart_kind": "real_market",
+   "frames": [
+    {
+     "frame_id": "f1_nasdaq_1m",
+     "frame_role": "setup",
+     "symbol": "NASDAQ",
+     "feed_as_shown": null,
+     "timeframe": "1m",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [
+       {
+        "candle_i": null,
+        "is_high": true,
+        "price": null,
+        "swept": true,
+        "presenter_calls_it": "short term High"
+       }
+      ],
+      "structural_events": [
+       {
+        "candle_i": null,
+        "kind": "liquidity_sweep_high",
+        "reference_price": null,
+        "candle_close": null,
+        "is_mss": false,
+        "presenter_calls_it": "liquidity sweep"
+       }
+      ],
+      "fvgs": [
+       {
+        "c1_i": null,
+        "c3_i": null,
+        "bullish": false,
+        "gap_low": null,
+        "gap_high": null,
+        "state": "open",
+        "presenter_calls_it": "overlapping fair value Gap"
+       },
+       {
+        "c1_i": null,
+        "c3_i": null,
+        "bullish": false,
+        "gap_low": null,
+        "gap_high": null,
+        "state": "open",
+        "presenter_calls_it": "first fair value Gap at 0.75"
+       }
+      ],
+      "order_blocks": [],
+      "liquidity_levels": [
+       {
+        "kind": "other",
+        "price": null,
+        "from_i": null,
+        "swept_at_i": null
+       }
+      ],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "HTF intermediate term low target",
+      "kill_zone": "new_york_am"
+     },
+     "custom_signals_observed": [
+      {
+       "name": "swing_rate_050",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "0.5 level"
+      },
+      {
+       "name": "swing_rate_075",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "0.75 level / Silver Bullet"
+      }
+     ],
+     "annotations_drawn_by_presenter": [
+      {
+       "type": "line",
+       "text": "0.5",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "Equilibrium swing rate level"
+      },
+      {
+       "type": "line",
+       "text": "0.75",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "0.75 swing rate level"
+      }
+     ],
+     "indicators_on_screen": []
+    }
+   ],
+   "setup_walkthrough": [
+    {
+     "step": 1,
+     "frame_id": "f1_nasdaq_1m",
+     "candle_i": null,
+     "what_happens": "Price crosses the 0.25 level but the presenter notes it might be too early to enter safely.",
+     "maps_to_signal_step": null,
+     "ts": "04:54"
+    },
+    {
+     "step": 2,
+     "frame_id": "f1_nasdaq_1m",
+     "candle_i": null,
+     "what_happens": "Price reaches the 0.5 level. It consolidates and the 9:30 AM open creates a liquidity sweep of a short-term high.",
+     "maps_to_signal_step": 1,
+     "ts": "05:44"
+    },
+    {
+     "step": 3,
+     "frame_id": "f1_nasdaq_1m",
+     "candle_i": null,
+     "what_happens": "A short entry is presented at the 0.5 level using an overlapping fair value gap, with the stop loss above the short-term high.",
+     "maps_to_signal_step": null,
+     "ts": "06:58"
+    },
+    {
+     "step": 4,
+     "frame_id": "f1_nasdaq_1m",
+     "candle_i": null,
+     "what_happens": "Price drops further and hits the 0.75 level. Presenter noted he waited for this level to be activated after the 0.5 sweep.",
+     "maps_to_signal_step": 2,
+     "ts": "08:22"
+    },
+    {
+     "step": 5,
+     "frame_id": "f1_nasdaq_1m",
+     "candle_i": null,
+     "what_happens": "At the 0.75 level, entry is taken on the very first fair value gap that appears, using a tight, aggressive stop loss, targeting the Terminus.",
+     "maps_to_signal_step": 3,
+     "ts": "08:41"
+    }
+   ],
+   "trade": {
+    "taken": false,
+    "direction": "short",
+    "entry": {
+     "price": null,
+     "candle_i": null,
+     "frame_id": "f1_nasdaq_1m"
+    },
+    "stop": {
+     "price": null
+    },
+    "targets": [
+     {
+      "price": null
+     }
+    ],
+    "outcome": "not_taken",
+    "exit": {
+     "price": null,
+     "candle_i": null
+    },
+    "r_multiple": null,
+    "precision": "approx"
+   },
+   "presenter_commentary": "He breaks down multiple entry points along the move, explaining how the 0.5 level requires patience for a consolidation/sweep, while the 0.75 level allows for immediate entry on the first FVG because deep retracements are unlikely so close to the target.",
+   "engine_check": {
+    "should_detect": [
+     "structural_event.liquidity_sweep_high",
+     "fvg.bearish"
+    ],
+    "may_differ": [
+     {
+      "signal": "custom_signals.swing_rate_075",
+      "reason": "Tracking specific quartile retracements between HTF structure points requires a custom script rather than standard SMC rules."
+     }
+    ]
+   },
+   "uncertainties": [
+    {
+     "issue": "Cannot extract OHLC values or specific candle indices",
+     "why": "Visual frames are not provided, preventing exact chart transcription.",
+     "ts": "03:57"
+    }
+   ]
+  },
+  {
+   "example_id": "usdjpy_htf_context",
+   "strategy_id": "swing_rate_silver_bullet",
+   "video_span": {
+    "start": "09:40",
+    "end": "11:09",
+    "canonical_frame_ts": "10:41"
+   },
+   "example_role": "explanation_only",
+   "chart_kind": "real_market",
+   "frames": [
+    {
+     "frame_id": "f1_usdjpy_daily",
+     "frame_role": "htf_context",
+     "symbol": "USDJPY",
+     "feed_as_shown": null,
+     "timeframe": "1d",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [
+       {
+        "candle_i": null,
+        "is_high": false,
+        "price": null,
+        "swept": false,
+        "presenter_calls_it": "intermediate term low"
+       },
+       {
+        "candle_i": null,
+        "is_high": true,
+        "price": null,
+        "swept": false,
+        "presenter_calls_it": "intermediate term high"
+       }
+      ],
+      "structural_events": [
+       {
+        "candle_i": null,
+        "kind": "liquidity_sweep_low",
+        "reference_price": null,
+        "candle_close": null,
+        "is_mss": false,
+        "presenter_calls_it": "huge liquidity sweep"
+       }
+      ],
+      "fvgs": [
+       {
+        "c1_i": null,
+        "c3_i": null,
+        "bullish": true,
+        "gap_low": null,
+        "gap_high": null,
+        "state": "open",
+        "presenter_calls_it": "first fair value Gap getting respected"
+       }
+      ],
+      "order_blocks": [
+       {
+        "anchor_i": null,
+        "bullish": true,
+        "subtype": "standard",
+        "zone_low": null,
+        "zone_high": null,
+        "presenter_calls_it": "monthly order block"
+       }
+      ],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bullish",
+      "bias_source": "Moving from monthly discount array to monthly premium array",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [
+      {
+       "name": "swing_rate_050",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "0.5 level"
+      },
+      {
+       "name": "swing_rate_075",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "0.75 level"
+      }
+     ],
+     "annotations_drawn_by_presenter": [
+      {
+       "type": "fib",
+       "text": "Swing Rates",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "0.25, 0.5, 0.75 mapped between the intermediate term low and high."
+      }
+     ],
+     "indicators_on_screen": []
+    }
+   ],
+   "setup_walkthrough": [
+    {
+     "step": 1,
+     "frame_id": "f1_usdjpy_daily",
+     "candle_i": null,
+     "what_happens": "Presenter identifies the HTF context: tapping a monthly order block and targeting a monthly premium array, forming a Daily intermediate term low and high.",
+     "maps_to_signal_step": null,
+     "ts": "09:58"
+    },
+    {
+     "step": 2,
+     "frame_id": "f1_usdjpy_daily",
+     "candle_i": null,
+     "what_happens": "Swing rates are drawn across this Daily structural range.",
+     "maps_to_signal_step": null,
+     "ts": "10:12"
+    },
+    {
+     "step": 3,
+     "frame_id": "f1_usdjpy_daily",
+     "candle_i": null,
+     "what_happens": "At the 0.5 level, there is a huge retracement and liquidity sweep visible on the 4-hour basis.",
+     "maps_to_signal_step": 1,
+     "ts": "10:41"
+    },
+    {
+     "step": 4,
+     "frame_id": "f1_usdjpy_daily",
+     "candle_i": null,
+     "what_happens": "At the 0.75 level, price respects a fair value gap and continues higher, functioning as a daily timeframe Silver Bullet.",
+     "maps_to_signal_step": 3,
+     "ts": "10:47"
+    }
+   ],
+   "trade": {
+    "taken": false,
+    "direction": "long",
+    "entry": {
+     "price": null,
+     "candle_i": null,
+     "frame_id": "f1_usdjpy_daily"
+    },
+    "stop": {
+     "price": null
+    },
+    "targets": [],
+    "outcome": "not_taken",
+    "exit": {
+     "price": null,
+     "candle_i": null
+    },
+    "r_multiple": null,
+    "precision": "approx"
+   },
+   "presenter_commentary": "He uses the USDJPY daily chart to prove that the mechanical swing rates concept is completely fractal and works identically on a Daily/4H basis as it does on a 1-minute chart.",
+   "engine_check": {
+    "should_detect": [
+     "order_block.bullish",
+     "structural_event.liquidity_sweep_low",
+     "fvg.bullish"
+    ],
+    "may_differ": [
+     {
+      "signal": "custom_signals.swing_rate_050",
+      "reason": "Swing rate mapping uses custom quartiles which are not part of the standard Traidle premium/discount dictionary."
+     }
+    ]
+   },
+   "uncertainties": [
+    {
+     "issue": "Cannot extract exact chart data",
+     "why": "Visual frames are not provided.",
+     "ts": "09:40"
+    }
+   ]
+  },
+  {
+   "example_id": "usdjpy_4h_to_5m",
+   "strategy_id": "swing_rate_silver_bullet",
+   "video_span": {
+    "start": "11:09",
+    "end": "13:51",
+    "canonical_frame_ts": "12:37"
+   },
+   "example_role": "textbook_illustration",
+   "chart_kind": "real_market",
+   "frames": [
+    {
+     "frame_id": "f1_usdjpy_4h",
+     "frame_role": "htf_context",
+     "symbol": "USDJPY",
+     "feed_as_shown": null,
+     "timeframe": "4h",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [],
+      "structural_events": [],
+      "fvgs": [
+       {
+        "c1_i": null,
+        "c3_i": null,
+        "bullish": false,
+        "gap_low": null,
+        "gap_high": null,
+        "state": "open",
+        "presenter_calls_it": "daily fair value Gap / new four hour fair value Gap"
+       }
+      ],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "Mitigation of a 4H FVG inside a Daily FVG",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [],
+     "annotations_drawn_by_presenter": [],
+     "indicators_on_screen": []
+    },
+    {
+     "frame_id": "f2_usdjpy_5m",
+     "frame_role": "setup",
+     "symbol": "USDJPY",
+     "feed_as_shown": null,
+     "timeframe": "5m",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [
+       {
+        "candle_i": null,
+        "is_high": false,
+        "price": null,
+        "swept": false,
+        "presenter_calls_it": "intermediate term low"
+       },
+       {
+        "candle_i": null,
+        "is_high": true,
+        "price": null,
+        "swept": false,
+        "presenter_calls_it": "intermediate term High"
+       }
+      ],
+      "structural_events": [],
+      "fvgs": [
+       {
+        "c1_i": null,
+        "c3_i": null,
+        "bullish": false,
+        "gap_low": null,
+        "gap_high": null,
+        "state": "open",
+        "presenter_calls_it": "first fair value Gap"
+       }
+      ],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "4H context FVG",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [
+      {
+       "name": "swing_rate_050",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "0.5"
+      },
+      {
+       "name": "swing_rate_075",
+       "candle_i_range": null,
+       "measured": {
+        "body": null,
+        "range": null,
+        "lower_wick": null,
+        "upper_wick": null
+       },
+       "presenter_calls_it": "0.75"
+      }
+     ],
+     "annotations_drawn_by_presenter": [
+      {
+       "type": "fib",
+       "text": "Swing Rates",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "0.25, 0.5, 0.75 mapped across the 5m structural range."
+      }
+     ],
+     "indicators_on_screen": []
+    }
+   ],
+   "setup_walkthrough": [
+    {
+     "step": 1,
+     "frame_id": "f1_usdjpy_4h",
+     "candle_i": null,
+     "what_happens": "Identifies price tapping into a Daily FVG and a new 4H FVG.",
+     "maps_to_signal_step": null,
+     "ts": "11:09"
+    },
+    {
+     "step": 2,
+     "frame_id": "f2_usdjpy_5m",
+     "candle_i": null,
+     "what_happens": "Drops to the 5-minute timeframe. Maps swing rates from an intermediate term high to an intermediate term low.",
+     "maps_to_signal_step": null,
+     "ts": "11:31"
+    },
+    {
+     "step": 3,
+     "frame_id": "f2_usdjpy_5m",
+     "candle_i": null,
+     "what_happens": "Notes that at 0.5, price action consolidates and hits equilibrium as expected.",
+     "maps_to_signal_step": 1,
+     "ts": "12:01"
+    },
+    {
+     "step": 4,
+     "frame_id": "f2_usdjpy_5m",
+     "candle_i": null,
+     "what_happens": "Price hits the 0.75 level. Presenter identifies the very first fair value gap that forms right at that level.",
+     "maps_to_signal_step": 2,
+     "ts": "12:37"
+    },
+    {
+     "step": 5,
+     "frame_id": "f2_usdjpy_5m",
+     "candle_i": null,
+     "what_happens": "Entry is placed on this first FVG at 0.75 without waiting for a deeper retracement into an overlapping PD array.",
+     "maps_to_signal_step": 3,
+     "ts": "12:49"
+    }
+   ],
+   "trade": {
+    "taken": false,
+    "direction": "short",
+    "entry": {
+     "price": null,
+     "candle_i": null,
+     "frame_id": "f2_usdjpy_5m"
+    },
+    "stop": {
+     "price": null
+    },
+    "targets": [
+     {
+      "price": null
+     }
+    ],
+    "outcome": "not_taken",
+    "exit": {
+     "price": null,
+     "candle_i": null
+    },
+    "r_multiple": null,
+    "precision": "approx"
+   },
+   "presenter_commentary": "He walks through the mechanical steps on a lower timeframe, pointing out that you don't need a deep overlapping PD array once 0.75 is hit, making the first FVG a highly viable 'Silver Bullet' entry.",
+   "engine_check": {
+    "should_detect": [
+     "fvg.bearish"
+    ],
+    "may_differ": [
+     {
+      "signal": "custom_signals.swing_rate_075",
+      "reason": "Swing rate mapping uses custom quartiles which are not part of the standard Traidle premium/discount dictionary."
+     }
+    ]
+   },
+   "uncertainties": [
+    {
+     "issue": "Cannot extract exact chart data",
+     "why": "Visual frames are not provided.",
+     "ts": "11:09"
+    }
+   ]
+  }
+ ]
+}

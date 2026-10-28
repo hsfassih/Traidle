@@ -1,0 +1,685 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "daily_bias_via_fvg_reading",
+      "aliases": [],
+      "category": "htf_continuation",
+      "summary": "Determine the daily bias by reading the sequence of fair value gaps (FVGs) on the daily timeframe in context with weekly PD arrays. Strong bias is confirmed when price respects (wicks into) fair value gaps in the direction of the trend and disrespects (closes through) counter-trend fair value gaps.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "weekly",
+        "setup_tf": "daily",
+        "entry_tf": null,
+        "strict": false,
+        "notes": "The daily timeframe must be read in the context of the weekly timeframe (fractal alignment)."
+      },
+      "requires_context": {
+        "bias": [
+          "weekly_fvg"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": []
+      },
+      "glossary": {
+        "respect": "Price wicking into a fair value gap without closing fully through it, indicating the gap is holding.",
+        "disrespect": "Price closing fully above or below a fair value gap (closing inside or through it), indicating the gap has failed as support/resistance."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "fvg.bullish",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "00:01:45"
+        },
+        {
+          "step": 2,
+          "signal": "candle.close",
+          "gt": "fvg.gap_high",
+          "timeframe": "setup_tf",
+          "optional": true,
+          "max_candles_after_previous_step": 5,
+          "traidle_supported": true,
+          "provenance": "inferred",
+          "ts": "00:04:05"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "leg_strength",
+          "kind": "other",
+          "plain_definition": "A price leg is strong if it contains an FVG; it is weak if it does not contain an FVG.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "00:03:27"
+        },
+        {
+          "name": "context_conflict",
+          "kind": "other",
+          "plain_definition": "A daily FVG is low probability if there is an opposing weekly FVG sitting right behind it.",
+          "numeric_definition": null,
+          "definition_source": "presenter_stated",
+          "ts": "00:04:42"
+        }
+      ],
+      "sequence": [
+        "Identify a directional price leg on the daily timeframe that leaves a Fair Value Gap (FVG).",
+        "Check the context on the Weekly timeframe. Ensure there is no opposing Weekly FVG immediately in the path of the Daily leg.",
+        "Wait for price to retrace into the Daily FVG.",
+        "Observe the reaction. A 'strong' FVG will be respected (wicked into but not closed through) in one or very few attempts.",
+        "If the Daily FVG is respected, form a directional bias aiming for the next liquidity pool (a leg lacking an FVG or an opposing premium/discount array).",
+        "If opposing Daily FVGs are disrespected (price closes through them), this further confirms the initial bias.",
+        "Sacrifice the first day of the reaction (the wick) to confirm the bias for the subsequent days."
+      ],
+      "invalidation": [
+        {
+          "text": "The Daily FVG is 'disrespected' if a daily candle body closes entirely through it (e.g., closing below a bullish FVG).",
+          "provenance": "presenter_stated",
+          "ts": "00:10:57"
+        },
+        {
+          "text": "The bias becomes low probability if price requires multiple deep retracements (stings) into the FVG over many days before expanding.",
+          "provenance": "presenter_stated",
+          "ts": "00:07:05"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not trade towards a lower timeframe FVG (like 5m or 1m) for daily bias context; use 4H, Daily, Weekly, Monthly.",
+          "provenance": "presenter_stated",
+          "ts": "00:10:32"
+        },
+        {
+          "text": "Avoid trading neutral days. If the bias is unclear or price action is low probability, do not trade.",
+          "provenance": "presenter_stated",
+          "ts": "00:08:48"
+        }
+      ],
+      "entry_rule": {
+        "text": "The entry model is independent of the bias determination. Any entry model can be used once the bias is established.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "00:00:32",
+        "quote": "the entry model is completely irrelevant you can get very creative with your Edge model"
+      },
+      "target_rule": {
+        "text": "Target the opposing premium or discount array, specifically legs of price action that do not contain Fair Value Gaps (draw on liquidity).",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "00:03:27",
+        "quote": "you target what the price action where we have no fair value cups left"
+      },
+      "stop_rule": {
+        "text": "Not specified for the daily bias concept itself.",
+        "structured": null,
+        "provenance": "inferred",
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": "Manage risk by moving to break even and taking profits."
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "Using this method has allowed him to outperform every hedge fund in the world.",
+          "ts": "00:08:36",
+          "verified": false
+        }
+      ],
+      "notes": "The core thesis is that 'respect' vs 'disrespect' of FVGs dictates the true draw on liquidity. A strong bias is formed by sacrificing the first day of a reaction to confirm the FVG is holding, making the subsequent days 'obvious'.",
+      "examples": [
+        "ex1_daily_bias_fvg_reading"
+      ],
+      "uncertainties": [],
+      "confidence": {
+        "level": "high",
+        "reason": "The presenter repeatedly and clearly explains the mechanics of reading FVGs for bias."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_daily_bias_fvg_reading",
+      "strategy_id": "daily_bias_via_fvg_reading",
+      "video_span": {
+        "start": "00:01:45",
+        "end": "00:13:16",
+        "canonical_frame_ts": "00:12:11"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "Daily",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "weak fair value gap / fully rebalanced"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "inverted",
+                "presenter_calls_it": "disrespected fair value gap / fully closing below"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "weekly fair value gap"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "strong fair value gap / only wicking"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "weekly fair value gap context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Presenter points out a daily fair value gap that is tapped four times and fully rebalanced, indicating it is weak.",
+          "maps_to_signal_step": null,
+          "ts": "00:02:16"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price disrespects another daily fair value gap by fully closing below it, which suggests a larger weekly fair value gap below is drawing price.",
+          "maps_to_signal_step": 2,
+          "ts": "00:03:52"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price wicks into the weekly fair value gap, showing respect. Strong fair value gaps only need one sting before expanding.",
+          "maps_to_signal_step": null,
+          "ts": "00:05:05"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A new strong daily fair value gap is formed and respected with a single wick, providing the daily bias for the subsequent days.",
+          "maps_to_signal_step": 1,
+          "ts": "00:11:36"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "null",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter emphasizes reading the 'story' of FVGs. Disrespected (closed through) FVGs and weak FVGs (multiple taps) tell you where price is NOT going, while respected (wicked) FVGs confirm the true directional bias.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "candle.close",
+            "reason": "Traidle calculates pure candle closes relative to the gap edges, while the presenter emphasizes the visual 'respect' via wicks on the specific timeframe."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing chart data",
+          "why": "I am working from a transcript without visual access to the chart. Cannot verify OHLC values or precise price levels."
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_1h_entry_model",
+      "strategy_id": "htf_bias_with_ltf_entry",
+      "video_span": {
+        "start": "00:13:16",
+        "end": "00:13:52",
+        "canonical_frame_ts": "00:13:30"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "1H",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "intermediate term high"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "first fair value gap"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "second fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "assumed context for entry model",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Wait for a first fair value gap to form on the 1-hour timeframe.",
+          "maps_to_signal_step": null,
+          "ts": "00:13:25"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Wait for a second fair value gap to confirm the directional shift.",
+          "maps_to_signal_step": null,
+          "ts": "00:13:28"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Enter off the second fair value gap, placing the stop loss covering the intermediate term high.",
+          "maps_to_signal_step": null,
+          "ts": "00:13:30"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "This is a brief summary of a 1-hour execution model using two consecutive FVGs. He emphasizes targeting a 1-to-2 risk-to-reward ratio and actively managing risk by moving to break-even.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bearish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing chart data",
+          "why": "I am working from a transcript without visual access to the chart. Cannot verify OHLC values or precise price levels."
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_gn_multi_timeframe",
+      "strategy_id": "htf_bias_with_ltf_entry",
+      "video_span": {
+        "start": "00:13:52",
+        "end": "00:16:16",
+        "canonical_frame_ts": "00:15:43"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "htf_context",
+          "symbol": "GBPNZD",
+          "feed_as_shown": null,
+          "timeframe": "Daily",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "weekly fair value gap / discount array"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "daily fair value Gap (prevented from forming)"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Weekly FVG context acting as a discount array to push price higher",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_1h",
+          "frame_role": "entry",
+          "symbol": "GBPNZD",
+          "feed_as_shown": null,
+          "timeframe": "1H",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "this high right there / Target"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gaps to get to my entry"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "other",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null,
+                "presenter_calls_it": "that low right there / Tuesday low"
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Price preventing a daily FVG from forming, confirming the weekly FVG magnet",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "leg_strength",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "lag lower... does it have a fair value in it no so that lag is what low probability"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Establish context that price is sitting in a Weekly FVG (discount array) and must choose whether to respect it and go higher, or create a new Daily FVG to go lower.",
+          "maps_to_signal_step": null,
+          "ts": "00:14:19"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "On the 1-hour chart, price trades into the Tuesday low on Wednesday, expanding upward and thereby preventing the bearish Daily FVG from forming.",
+          "maps_to_signal_step": null,
+          "ts": "00:15:13"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "The failure of the daily FVG confirms the weekly FVG bias. Enter long using a 1-hour FVG, with the stop covering the low and targeting the recent high.",
+          "maps_to_signal_step": null,
+          "ts": "00:15:43"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_1h"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights how GBP/NZD utilized a weekly discount array. By dropping to the 1-hour timeframe and observing that price prevented a bearish daily FVG from forming, the weekly bullish bias was confirmed, making the opposing high a high-probability target.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Missing chart data",
+          "why": "I am working from a transcript without visual access to the chart. Cannot verify OHLC values or exact price levels."
+        }
+      ]
+    }
+  ]
+}

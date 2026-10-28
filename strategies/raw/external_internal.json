@@ -1,0 +1,559 @@
+{
+  "strategy_definition": {
+    "strategy_id": "external_internal",
+    "aliases": [
+      "external_to_internal",
+      "turtle_soup_to_internal_respect"
+    ],
+    "category": "liquidity_reversal",
+    "summary": "Price reaches a higher-timeframe PD array and executes an external move (liquidity sweep or turtle soup), followed by a market structure shift. Once a fair value gap forms in the leg to confirm rebalancing over liquidity taking, an entry is taken when price respects internal PD arrays.",
+    "direction": "both",
+    "symmetric": true,
+    "timeframes": {
+      "bias_tf": "Daily",
+      "setup_tf": "15m",
+      "entry_tf": "5m",
+      "strict": false,
+      "notes": "The concept is taught as fractal. The presenter demonstrates a Daily context down to 15-minute setup/entry in Example 1, and a 1-hour/15-minute context down to 5-minute setup/entry in Example 2."
+    },
+    "requires_context": {
+      "bias": [
+        "bullish",
+        "bearish"
+      ],
+      "session": [],
+      "time_window_ny": null,
+      "day_of_week": null,
+      "other": [
+        "Higher timeframe PD array (e.g., daily fair value gap, order block, or line of defense)"
+      ]
+    },
+    "glossary": {
+      "EXTERNAL_MOVE": "Price sweeping beyond an existing swing high/low or intermediate-term level (a liquidity sweep / turtle soup), trading at a premium or discount array.",
+      "INTERNAL_MOVE": "Price respecting newly formed internal PD arrays (fair value gaps, order blocks, or breakers) rather than continuing to sweep liquidity.",
+      "LINE_OF_DEFENSE": "A protective higher-timeframe PD array (first line of defense, fourth line of defense, or last line of defense) expected to maintain institutional order flow."
+    },
+    "signals_required": [
+      {
+        "step": 1,
+        "signal": "structural_event.kind",
+        "equals": "liquidity_sweep_low",
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "01:48"
+      },
+      {
+        "step": 2,
+        "signal": "structural_event.kind",
+        "equals": "bullish_choch",
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": false,
+        "provenance": "presenter_stated",
+        "ts": "02:03"
+      },
+      {
+        "step": 3,
+        "signal": "fvg.bullish",
+        "equals": true,
+        "timeframe": "setup_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "02:27"
+      },
+      {
+        "step": 4,
+        "signal": "fvg.state",
+        "equals": "mitigated",
+        "timeframe": "entry_tf",
+        "optional": false,
+        "max_candles_after_previous_step": null,
+        "traidle_supported": true,
+        "provenance": "presenter_stated",
+        "ts": "05:09"
+      }
+    ],
+    "custom_signals": [
+      {
+        "name": "external_move",
+        "kind": "other",
+        "plain_definition": "A price move that takes liquidity by sweeping beyond a previous swing point or intermediate-term high/low.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "01:18"
+      },
+      {
+        "name": "internal_move",
+        "kind": "other",
+        "plain_definition": "A price move where price respects newly created fair value gaps, order blocks, or breakers instead of taking external liquidity.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "01:41"
+      },
+      {
+        "name": "presenter_market_structure_shift",
+        "kind": "other",
+        "plain_definition": "A market structure shift defined as price breaking above a swing high (or below a swing low) with even just a wick; body close is explicitly not required.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "02:03"
+      },
+      {
+        "name": "fvg_in_displacement_leg",
+        "kind": "indicator_relation",
+        "plain_definition": "Presence of an unmitigated fair value gap within the displacement leg that shifts structure, confirming rebalancing order flow.",
+        "numeric_definition": null,
+        "definition_source": "presenter_stated",
+        "ts": "02:27"
+      }
+    ],
+    "sequence": [
+      "Identify a higher-timeframe PD array (e.g. Daily FVG or order block) acting as the line of defense in the direction of the bias.",
+      "Observe an external move into the HTF PD array that sweeps an intermediate-term low or swing low (turtle soup).",
+      "Watch for a market structure shift breaking the opposing swing high (wick break accepted by presenter).",
+      "Verify that a clear fair value gap is left behind within the impulse leg; if no FVG exists, the swing low remains vulnerable to being swept again.",
+      "Wait for price to retrace into the internal PD array (fair value gap, breaker, or order block).",
+      "Enter long upon mitigation and respect of the internal PD array (or wait for a second internal confirmation if earlier price action is ambiguous).",
+      "Target opposing premium arrays or key swing highs representing the draw on liquidity."
+    ],
+    "invalidation": [
+      {
+        "text": "If the impulsive leg fails to create a fair value gap, the swing extreme is likely to be swept again, invalidating the shift.",
+        "provenance": "presenter_stated",
+        "ts": "02:34"
+      },
+      {
+        "text": "If price trades completely through the HTF line of defense or closes through the opposing edge of the internal order block/breaker.",
+        "provenance": "inferred",
+        "ts": "00:25"
+      }
+    ],
+    "filters": [
+      {
+        "text": "Do not enter if there is no fair value gap in the shift leg, because price is taking liquidity rather than rebalancing.",
+        "provenance": "presenter_stated",
+        "ts": "02:27"
+      },
+      {
+        "text": "If an initial external move fails or occurs outside prime kill zones (e.g., early London), wait for a secondary external sweep followed by a clean internal move before entering.",
+        "provenance": "presenter_stated",
+        "ts": "04:08"
+      }
+    ],
+    "entry_rule": {
+      "text": "Enter long upon retracement into the newly established internal PD array (fair value gap, order block, or breaker) following the external sweep and structure shift.",
+      "structured": {
+        "type": "limit",
+        "reference": "fvg.gap_high"
+      },
+      "provenance": "presenter_stated",
+      "ts": "05:09",
+      "quote": "then we have a new internal and right there could be your entry right there"
+    },
+    "target_rule": {
+      "text": "Target opposing premium arrays (such as opposing fair value gaps or swing highs) as the primary draw on liquidity.",
+      "structured": {
+        "type": "target_level",
+        "reference": "opposing_premium_array"
+      },
+      "provenance": "presenter_stated",
+      "ts": "00:40",
+      "quote": "this is actually your first premium race so this would be your first Target"
+    },
+    "stop_rule": {
+      "text": "Stop loss placed below the external move sweep low (or above the external sweep high for short setups).",
+      "structured": {
+        "type": "beyond",
+        "reference": "external_sweep_extreme",
+        "buffer_atr": null
+      },
+      "provenance": "inferred",
+      "ts": "06:54",
+      "quote": ""
+    },
+    "management": {
+      "breakeven": null,
+      "partials": "Take partial profits at the first premium array, letting remaining position run to secondary HTF target.",
+      "trailing": null,
+      "notes": "Presenter notes that in high momentum, the first target is the immediate premium array, and the second target is the next draw on liquidity."
+    },
+    "risk": {
+      "typical_rr": null,
+      "min_rr": null,
+      "risk_per_trade_pct": null
+    },
+    "reinforces": [
+      "ref:turtle_soup",
+      "ref:market_structure_shift",
+      "ref:fair_value_gap",
+      "ref:order_block",
+      "ref:breaker"
+    ],
+    "conflicts_with": [],
+    "weight": 1.0,
+    "historical_stats": {
+      "occurrences": null,
+      "win_rate": null,
+      "avg_r": null,
+      "last_backtested": null
+    },
+    "presenter_claims": [
+      {
+        "claim": "When we have fair value gaps up in the leg, they are more likely to hold and more likely to have an internal move than an external move.",
+        "ts": "02:48",
+        "verified": false
+      },
+      {
+        "claim": "When we break that swing high with that little wick right there, we don't have to close above it necessarily, that is your market structure shift.",
+        "ts": "02:03",
+        "verified": false
+      },
+      {
+        "claim": "Price is either rebalancing or taking liquidity; if it is not rebalancing something, then it is taking liquidity.",
+        "ts": "06:11",
+        "verified": false
+      }
+    ],
+    "notes": "The strategy hinges on distinguishing between liquidity runs (external moves) and institutional rebalancing (internal moves). The presence of an FVG inside the displacement leg is the explicit diagnostic used to determine whether the structural shift will hold or result in another external sweep.",
+    "examples": [
+      "ex1_bullish_daily_15m",
+      "ex2_bearish_es_5m"
+    ],
+    "uncertainties": [
+      {
+        "issue": "Explicit stop loss distance not stated numerically in this episode",
+        "why": "Presenter indicates stop loss rules were taught in earlier episodes of the A-Z guide and does not define a tick or buffer rule here.",
+        "ts": "06:54"
+      },
+      {
+        "issue": "Kill zone time rules deferred",
+        "why": "Presenter explicitly states he will not get into time/kill zones yet and defers full discussion to a future video.",
+        "ts": "04:08"
+      }
+    ],
+    "confidence": {
+      "level": "high",
+      "reason": "The presenter provides clear conceptual definitions, exact rules for distinguishing false from valid shifts using FVGs, and walks through both bullish and bearish examples step-by-step."
+    }
+  },
+  "chart_examples": [
+    {
+      "example_id": "ex1_bullish_daily_15m",
+      "strategy_id": "external_internal",
+      "video_span": {
+        "start": "00:00:19",
+        "end": "00:03:32",
+        "canonical_frame_ts": "00:03:13"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "htf_context",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "Daily",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "exact",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Daily timeframe in high momentum returning to a FVG",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_15m",
+          "frame_role": "setup",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "exact",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Reaction to Daily FVG",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": 0,
+          "what_happens": "Price trades into a Daily fair value gap acting as the first line of defense.",
+          "maps_to_signal_step": 1,
+          "ts": "00:00:31"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_15m",
+          "candle_i": 0,
+          "what_happens": "Price sweeps an intermediate swing low, executing an external move (turtle soup).",
+          "maps_to_signal_step": 1,
+          "ts": "00:01:25"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_15m",
+          "candle_i": 0,
+          "what_happens": "Price breaks above the previous swing high with a wick, creating a market structure shift.",
+          "maps_to_signal_step": 2,
+          "ts": "00:02:03"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_15m",
+          "candle_i": 0,
+          "what_happens": "A fair value gap is left behind in the upward leg, confirming an internal move.",
+          "maps_to_signal_step": 3,
+          "ts": "00:02:40"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_15m",
+          "candle_i": 0,
+          "what_happens": "Price retraces into the internal breaker and FVG, respecting it to continue higher.",
+          "maps_to_signal_step": 4,
+          "ts": "00:03:13"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_15m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "exact"
+      },
+      "presenter_commentary": "He emphasizes that an external move is a sweep of liquidity (turtle soup), while an internal move is the respect of a fair value gap or order block. The presence of the FVG in the leg up confirms the shift from external to internal.",
+      "engine_check": {
+        "should_detect": [
+          "liquidity_sweep_low",
+          "bullish_choch",
+          "fvg.bullish",
+          "fvg.mitigated"
+        ],
+        "may_differ": [
+          {
+            "signal": "bullish_choch",
+            "reason": "The presenter explicitly accepts a wick break as a valid market structure shift here, whereas Traidle requires a body close."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read chart data",
+          "why": "No visual access to the video frames to extract exact OHLC data, symbols, dates, or price axis values.",
+          "ts": "00:00:19"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_bearish_es_5m",
+      "strategy_id": "external_internal",
+      "video_span": {
+        "start": "00:03:32",
+        "end": "00:06:43",
+        "canonical_frame_ts": "00:05:09"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_5m",
+          "frame_role": "full",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "5m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "exact",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Reaction to HTF OB and FVG after sweeping a high",
+            "kill_zone": "london"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_5m",
+          "candle_i": 0,
+          "what_happens": "Price sweeps a high (external move) and leaves an FVG and OB lower.",
+          "maps_to_signal_step": 1,
+          "ts": "00:03:36"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_5m",
+          "candle_i": 0,
+          "what_happens": "Price returns to the OB and executes a 'trick' external move that drops but lacks an internal FVG confirmation in the leg.",
+          "maps_to_signal_step": null,
+          "ts": "00:04:03"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_5m",
+          "candle_i": 0,
+          "what_happens": "A real external move sweeps highs again, followed by a real internal move that leaves a clean FVG.",
+          "maps_to_signal_step": 3,
+          "ts": "00:04:36"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_5m",
+          "candle_i": 0,
+          "what_happens": "Price retraces into the newly confirmed internal FVG, offering a valid short entry.",
+          "maps_to_signal_step": 4,
+          "ts": "00:05:09"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_5m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "exact"
+      },
+      "presenter_commentary": "He uses this bearish example to illustrate a 'trick' external move that fails. He emphasizes waiting for the internal move (a verified FVG in the displacement leg) to form after the external sweep before taking the entry, avoiding being caught in a false shift.",
+      "engine_check": {
+        "should_detect": [
+          "liquidity_sweep_high",
+          "bearish_choch",
+          "fvg.bearish",
+          "fvg.mitigated"
+        ],
+        "may_differ": []
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read chart data",
+          "why": "No visual access to the video frames to extract exact OHLC data, dates, or prices.",
+          "ts": "00:03:32"
+        }
+      ]
+    }
+  ]
+}
