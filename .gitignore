@@ -33,7 +33,7 @@ CMakeUserPresets.json
 # Others
 .env
 scrap-data/
-# scripts/
+scripts/
 # strategies/
 /strategies/raw/
 .github/instructions/
