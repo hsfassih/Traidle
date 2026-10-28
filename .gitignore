@@ -35,7 +35,7 @@ CMakeUserPresets.json
 scrap-data/
 # scripts/
 # strategies/
-*raw/
+/strategies/raw/
 .github/instructions/
 .github/*.md
 storage/
