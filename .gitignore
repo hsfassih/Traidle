@@ -34,11 +34,10 @@ CMakeUserPresets.json
 .env
 scrap-data/
 scripts/
-# strategies/
-/strategies/raw/
+strategies/
 .github/instructions/
 .github/*.md
 storage/
-# docs/
+docs/
 tasks/
 tools/
