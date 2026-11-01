@@ -1,0 +1,468 @@
+{
+ "strategies": [
+  {
+   "strategy_id": "advanced_market_structure",
+   "aliases": [
+    "ith_itl_structure",
+    "fractal_market_structure"
+   ],
+   "category": "trend_following",
+   "summary": "Use the ITH/ITL hierarchy to decide which short-term highs stay protected while price travels toward the opposing ITL. Once that ITL is swept, expect a deeper retracement into the premium array on the timeframe immediately above the execution chart.",
+   "direction": "both",
+   "symmetric": true,
+   "timeframes": {
+    "bias_tf": null,
+    "setup_tf": null,
+    "entry_tf": null,
+    "strict": false,
+    "notes": "Fractal hierarchy. setup_tf is the active structure leg, bias_tf is the timeframe immediately above it via the contract ladder, and entry_tf is the current execution chart; the walkthrough shows daily -> 1h -> 15m -> 1m."
+   },
+   "requires_context": {
+    "bias": [],
+    "session": [],
+    "time_window_ny": null,
+    "day_of_week": null,
+    "other": [
+     "custom_signals.htf_opposing_pd_array"
+    ]
+   },
+   "glossary": {
+    "Draw on liquidity": "The immediate target level price is moving toward; in this lesson it is the opposing intermediate-term low during the bearish push, then the higher-timeframe premium array once that low is swept."
+   },
+   "signals_required": [
+    {
+     "step": 1,
+     "signal": "structural_event.kind",
+     "equals": "liquidity_sweep_low",
+     "timeframe": "setup_tf",
+     "optional": false,
+     "max_candles_after_previous_step": null,
+     "traidle_supported": true,
+     "provenance": "presenter_stated",
+     "ts": "07:24"
+    },
+    {
+     "step": 2,
+     "signal": "candle.high",
+     "gte_signal": "custom_signals.htf_opposing_pd_array",
+     "timeframe": "entry_tf",
+     "optional": false,
+     "max_candles_after_previous_step": null,
+     "traidle_supported": true,
+     "provenance": "presenter_stated",
+     "ts": "15:38"
+    }
+   ],
+   "custom_signals": [
+    {
+     "name": "intermediate_term_high",
+     "kind": "level",
+     "plain_definition": "A swing high flanked by a lower swing high on its left and a lower swing high on its right.",
+     "numeric_definition": "swing_high[1].price > swing_high[0].price AND swing_high[1].price > swing_high[2].price",
+     "definition_source": "presenter_stated",
+     "ts": "03:45"
+    },
+    {
+     "name": "intermediate_term_low",
+     "kind": "level",
+     "plain_definition": "A swing low flanked by a higher swing low on its left and a higher swing low on its right.",
+     "numeric_definition": "swing_low[1].price < swing_low[0].price AND swing_low[1].price < swing_low[2].price",
+     "definition_source": "presenter_stated",
+     "ts": "03:26"
+    },
+    {
+     "name": "htf_opposing_pd_array",
+     "kind": "level",
+     "plain_definition": "The opposing higher-timeframe premium array (for longs) that acts as the draw on liquidity.",
+     "numeric_definition": "NOT bearish_fvg[0].filled@bias_tf",
+     "definition_source": "inferred",
+     "ts": "15:38"
+    },
+    {
+     "name": "overlapping_pd_array",
+     "kind": "indicator_relation",
+     "plain_definition": "A fair value gap that shares price with another PD array (order block) on the same timeframe; the shared range is the entry zone.",
+     "numeric_definition": "max(bullish_fvg[0].gap_low, bullish_ob[0].zone_low) <= min(bullish_fvg[0].gap_high, bullish_ob[0].zone_high) AND NOT bullish_fvg[0].filled AND NOT bullish_ob[0].invalidated",
+     "definition_source": "inferred",
+     "ts": "18:48"
+    }
+   ],
+   "sequence": [
+    "Mark the active bearish leg with its protected intermediate-term high and its opposing intermediate-term low draw on liquidity.",
+    "As price pushes toward that ITL, treat the short-term highs inside the leg as protected unless the larger structure fails first.",
+    "When the ITL is swept, expect a deeper retracement rather than immediate continuation.",
+    "Project that retracement into the premium array on the timeframe immediately above the execution chart.",
+    "Prefer the retracement when multiple PD arrays overlap inside that higher-timeframe premium zone."
+   ],
+   "invalidation": [
+    {
+     "text": "If a protected Intermediate Term High is violated before the target Draw on Liquidity (ITL) is reached, the structure is broken.",
+     "provenance": "inferred",
+     "ts": "20:35",
+     "numeric_definition": "close > custom_signals.intermediate_term_high AND NOT swing_low[1].swept"
+    }
+   ],
+   "filters": [
+    {
+     "text": "For the retracement after an ITL is swept, look for multiple PD arrays overlapping (e.g., an FVG overlapping with a mitigation block).",
+     "provenance": "presenter_stated",
+     "ts": "18:48",
+     "numeric_definition": "custom_signals.overlapping_pd_array"
+    }
+   ],
+   "entry_rule": {
+    "text": "After the intermediate-term low is swept, look for the larger retracement into the premium array on the timeframe immediately above the execution chart.",
+    "structured": {
+     "type": "limit",
+     "reference": "custom_signals.htf_opposing_pd_array"
+    },
+    "provenance": "presenter_stated",
+    "ts": "15:38",
+    "quote": "After we take that intermediate term low... retracement into a premium array that is above the one minute time frame."
+   },
+   "target_rule": {
+    "text": "Target the opposing intermediate-term low.",
+    "structured": {
+     "type": "target_level",
+     "reference": "custom_signals.intermediate_term_low"
+    },
+    "provenance": "presenter_stated",
+    "ts": "08:06",
+    "quote": "our draw on liquidity is this intermediate term low"
+   },
+   "stop_rule": {
+    "text": "Place the stop loss beyond the protected intermediate-term high.",
+    "structured": {
+     "type": "beyond",
+     "reference": "custom_signals.intermediate_term_high",
+     "buffer_atr": null
+    },
+    "provenance": "presenter_stated",
+    "ts": "20:35",
+    "quote": "this intermediate term high should ideally not get violated at all"
+   },
+   "management": {
+    "breakeven": null,
+    "partials": null,
+    "trailing": null,
+    "notes": null
+   },
+   "risk": {
+    "typical_rr": null,
+    "min_rr": null,
+    "risk_per_trade_pct": null
+   },
+   "reinforces": [],
+   "conflicts_with": [],
+   "weight": 1.0,
+   "historical_stats": {
+    "occurrences": null,
+    "win_rate": null,
+    "avg_r": null,
+    "last_backtested": null
+   },
+   "presenter_claims": [
+    {
+     "claim": "Following this exact step-by-step logic will get you as close to the 'Holy Grail' as possible.",
+     "ts": "19:40",
+     "verified": false
+    },
+    {
+     "claim": "This strategy can yield a 90% win rate (with the caveat that 1 in 10 days will still be bad).",
+     "ts": "19:19",
+     "verified": false
+    }
+   ],
+   "notes": "Framework, not a standalone execution model: it explains when a completed draw on liquidity should lead to a deeper pullback into the next-higher-timeframe PD array. The presenter’s structure is a swing hierarchy (ITH/ITL and protected short-term highs), not Traidle’s BOS/CHoCH bias state machine. The walkthrough is taught on the bearish side even though the idea is symmetric.",
+   "examples": [
+    "fractal_ms_daily_to_1m"
+   ],
+   "uncertainties": [],
+   "confidence": {
+    "level": "high",
+    "reason": "The presenter is extremely explicit about the definitions of ITH/ITL, the sequence of events, and which highs are protected versus targeted."
+   }
+  }
+ ],
+ "examples": [
+  {
+   "example_id": "fractal_ms_daily_to_1m",
+   "strategy_id": "advanced_market_structure",
+   "video_span": {
+    "start": "01:33",
+    "end": "21:13",
+    "canonical_frame_ts": "20:35"
+   },
+   "example_role": "explanation_only",
+   "chart_kind": "real_market",
+   "frames": [
+    {
+     "frame_id": "f1_daily",
+     "frame_role": "htf_context",
+     "symbol": null,
+     "feed_as_shown": null,
+     "timeframe": "1d",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [],
+      "structural_events": [],
+      "fvgs": [],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "Daily sweep of previous day high into a Daily FVG",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [],
+     "annotations_drawn_by_presenter": [
+      {
+       "type": "label",
+       "text": "STH / STL",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "Short Term High / Short Term Low"
+      },
+      {
+       "type": "label",
+       "text": "ITH / ITL",
+       "price_from": null,
+       "price_to": null,
+       "candle_from_i": null,
+       "candle_to_i": null,
+       "meaning": "Intermediate Term High / Intermediate Term Low"
+      }
+     ],
+     "indicators_on_screen": []
+    },
+    {
+     "frame_id": "f2_1h",
+     "frame_role": "htf_context",
+     "symbol": null,
+     "feed_as_shown": null,
+     "timeframe": "1h",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [],
+      "structural_events": [],
+      "fvgs": [],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "1H targeting an opposing discount array (swing low)",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [],
+     "annotations_drawn_by_presenter": [],
+     "indicators_on_screen": []
+    },
+    {
+     "frame_id": "f3_15m",
+     "frame_role": "setup",
+     "symbol": null,
+     "feed_as_shown": null,
+     "timeframe": "15m",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [],
+      "structural_events": [],
+      "fvgs": [],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "Following HTF draw on liquidity downwards",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [],
+     "annotations_drawn_by_presenter": [],
+     "indicators_on_screen": []
+    },
+    {
+     "frame_id": "f4_1m",
+     "frame_role": "entry",
+     "symbol": null,
+     "feed_as_shown": null,
+     "timeframe": "1m",
+     "chart_timezone": null,
+     "date_range_shown": {
+      "from": null,
+      "to": null
+     },
+     "data_locator_confidence": "none",
+     "precision": "approx",
+     "price_axis_labels_seen": [],
+     "estimated_price_error": null,
+     "candle_columns": [
+      "i",
+      "time",
+      "o",
+      "h",
+      "l",
+      "c",
+      "v"
+     ],
+     "candles": [],
+     "low_confidence_candles": [],
+     "signals_observed": {
+      "swing_points": [],
+      "structural_events": [],
+      "fvgs": [],
+      "order_blocks": [],
+      "liquidity_levels": [],
+      "premium_discount": null,
+      "bias": "bearish",
+      "bias_source": "Retracing into a 5-minute premium array to continue the bearish 15m/1H trend",
+      "kill_zone": "unknown"
+     },
+     "custom_signals_observed": [],
+     "annotations_drawn_by_presenter": [],
+     "indicators_on_screen": []
+    }
+   ],
+   "setup_walkthrough": [
+    {
+     "step": 1,
+     "frame_id": "f1_daily",
+     "candle_i": null,
+     "what_happens": "Price sweeps an intermediate term high (which was a previous day high) and rejects heavily, creating a Daily bearish FVG.",
+     "maps_to_signal_step": null,
+     "ts": "04:59"
+    },
+    {
+     "step": 2,
+     "frame_id": "f2_1h",
+     "candle_i": null,
+     "what_happens": "Price moves out of the Daily premium array and targets a 1H discount array (an intermediate term low). It creates a series of protected short-term highs along the way.",
+     "maps_to_signal_step": null,
+     "ts": "06:43"
+    },
+    {
+     "step": 3,
+     "frame_id": "f3_15m",
+     "candle_i": null,
+     "what_happens": "Zooming in, the price action clearly shows intermediate term highs protecting the downward structure while sweeping intermediate term lows.",
+     "maps_to_signal_step": null,
+     "ts": "12:23"
+    },
+    {
+     "step": 4,
+     "frame_id": "f4_1m",
+     "candle_i": null,
+     "what_happens": "After sweeping a local 1m intermediate term low, price pulls back deeply into an overlapping 5m FVG and Mitigation Block. This retracement forms a new protected 1m intermediate term high.",
+     "maps_to_signal_step": 2,
+     "ts": "18:29"
+    }
+   ],
+   "trade": {
+    "taken": false,
+    "direction": "short",
+    "entry": {
+     "price": null,
+     "candle_i": null,
+     "frame_id": "f4_1m"
+    },
+    "stop": {
+     "price": null
+    },
+    "targets": [
+     {
+      "price": null
+     }
+    ],
+    "outcome": "not_taken",
+    "exit": {
+     "price": null,
+     "candle_i": null
+    },
+    "r_multiple": null,
+    "precision": "approx"
+   },
+   "presenter_commentary": "The presenter uses this continuous top-down sequence to illustrate the fractal nature of market structure. He emphasizes that predicting deeper retracements becomes highly probable once a Draw on Liquidity (an Intermediate Term Low) is swept, at which point traders should look one timeframe higher for the target premium array.",
+   "engine_check": {
+    "should_detect": [
+     "pdh",
+     "fvg.bearish",
+     "structural_event.liquidity_sweep_low"
+    ],
+    "may_differ": [
+     {
+      "signal": "custom_signals.intermediate_term_high",
+      "reason": "Traidle relies on a standard 3-candle swing point rule. The presenter's ITH/ITL concepts require sequences of multiple swings (a 3-swing fractal), which standard indicator engines do not inherently flag without compound logic."
+     },
+     {
+      "signal": "custom_signals.swing_failure_pattern",
+      "reason": "Custom concept, not an engine detection; moved from should_detect."
+     }
+    ]
+   },
+   "uncertainties": [
+    {
+     "issue": "No visual chart access",
+     "why": "Without seeing the video frames, exact asset symbols, times, prices, and candlestick OHLCV data cannot be identified. All frames have been submitted with empty candle arrays.",
+     "ts": "01:33"
+    }
+   ]
+  }
+ ]
+}

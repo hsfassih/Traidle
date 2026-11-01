@@ -1,0 +1,47 @@
+{
+  "costs_version": "1.0.0",
+  "provenance": "assumption",
+  "binance_usd_m": {
+    "asset_class": "crypto",
+    "default_fee_type": "taker",
+    "fee_bps_per_side": {
+      "maker": {
+        "value": 2.0,
+        "assumption": true
+      },
+      "taker": {
+        "value": 5.0,
+        "assumption": true
+      }
+    },
+    "slippage_bps_per_side": {
+      "value": 1.0,
+      "assumption": true
+    }
+  },
+  "capital_com": {
+    "price_basis": "bid-only candles",
+    "round_trip_spread_bps": {
+      "forex_majors": {
+        "value": 2.0,
+        "assumption": true
+      },
+      "forex_crosses": {
+        "value": 4.0,
+        "assumption": true
+      },
+      "metals": {
+        "value": 8.0,
+        "assumption": true
+      },
+      "indices": {
+        "value": 5.0,
+        "assumption": true
+      },
+      "crypto_cfds": {
+        "value": 20.0,
+        "assumption": true
+      }
+    }
+  }
+}

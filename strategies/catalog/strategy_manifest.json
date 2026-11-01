@@ -1,0 +1,5502 @@
+{
+  "manifest_version": "1.0.0",
+  "strategies": [
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "htf_opposing_pd_array",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "overlapping_pd_array"
+      ],
+      "custom_signals_used": [
+        "htf_opposing_pd_array",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "overlapping_pd_array"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "advanced_ms.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "advanced_market_structure",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "session_open_manipulation",
+      "custom_signals_roots": [
+        "london_open_price",
+        "midnight_open",
+        "monthly_open",
+        "weekly_open"
+      ],
+      "custom_signals_used": [
+        "london_open_price",
+        "midnight_open",
+        "monthly_open",
+        "weekly_open"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "amd_po3.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "1h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "2h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "4h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "6h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "8h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "12h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1w)",
+          "setup_tf": "1d",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1w)",
+          "setup_tf": "3d",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1mo)",
+          "setup_tf": "1w",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": "custom signal london_open_price is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1mo)",
+          "setup_tf": "1mo",
+          "status": "not_applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "amd_power_of_3",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "A",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "arjoio_ny_am_session",
+        "arjoio_ny_pm_session",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "short_term_low"
+      ],
+      "custom_signals_used": [
+        "arjoio_ny_am_session",
+        "arjoio_ny_pm_session",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "short_term_low"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "market:needs_equity_session"
+      ],
+      "file": "bias_independance.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "bias_independent",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 2.0,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "breaker_pattern",
+        "unicorn_overlap"
+      ],
+      "custom_signals_used": [
+        "breaker_pattern",
+        "unicorn_overlap"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "breaker_block.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "breaker_block_setup",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "fvg_respected",
+        "fvg_touched",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap"
+      ],
+      "custom_signals_used": [
+        "fvg_respected",
+        "fvg_touched",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "daily_bias.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "daily_bias_via_fvg_reading",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "context_framework",
+      "custom_signals_roots": [
+        "displacement_candle",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap",
+        "pre_major_news",
+        "prior_session_expansion"
+      ],
+      "custom_signals_used": [
+        "displacement_candle",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap",
+        "pre_major_news",
+        "prior_session_expansion"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "external.news_event",
+        "external.news_minute",
+        "market:needs_news_calendar"
+      ],
+      "file": "daily_profile.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_DISPLACEMENT_BODY_MULT",
+        "K_DISPLACEMENT_LOOKBACK"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        }
+      ],
+      "role": "framework",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [
+          "asian",
+          "london",
+          "new_york_am"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "daily_profiles",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "dealing_range",
+        "dealing_range_low",
+        "fvg_without_displacement",
+        "htf_pd_array_tap",
+        "quadrant_extreme"
+      ],
+      "custom_signals_used": [
+        "dealing_range",
+        "dealing_range_high",
+        "dealing_range_low",
+        "fvg_without_displacement",
+        "htf_pd_array_tap",
+        "quadrant_extreme"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "dealing_ranges.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": 1.0,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "dealing_range_reversal",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "fvg_touched",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap",
+        "short_term_high"
+      ],
+      "custom_signals_used": [
+        "fvg_touched",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap",
+        "short_term_high"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "external_internal.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "external_internal",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "context_framework",
+      "custom_signals_roots": [
+        "flod",
+        "llod",
+        "overlapping_pd_array"
+      ],
+      "custom_signals_used": [
+        "flod",
+        "llod",
+        "overlapping_pd_array"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "flod_llod.json",
+      "has_entry_rule": false,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "framework",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "flod_llod",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "context_framework",
+      "custom_signals_roots": [
+        "fvg_without_displacement",
+        "overlapping_pd_array"
+      ],
+      "custom_signals_used": [
+        "fvg_without_displacement",
+        "overlapping_pd_array"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "gap_imbalance.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "framework",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "gap_and_imbalance_overlap_confluence",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "market_condition_filter",
+      "custom_signals_roots": [
+        "consolidation_expansion_consolidation",
+        "displacement_candle",
+        "failed_rejection",
+        "major_expansion_dol_swept",
+        "obvious_draw_on_liquidity",
+        "pre_major_news"
+      ],
+      "custom_signals_used": [
+        "consolidation_expansion_consolidation",
+        "displacement_candle",
+        "failed_rejection",
+        "major_expansion_dol_swept",
+        "obvious_draw_on_liquidity",
+        "pre_major_news"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "external.news_event",
+        "external.news_minute",
+        "market:needs_news_calendar"
+      ],
+      "file": "trading_probabilities.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_DISPLACEMENT_BODY_MULT",
+        "K_DISPLACEMENT_LOOKBACK",
+        "K_REACTION_WINDOW_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [],
+      "role": "modifier",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "hp_lp_conditions_filter",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "C",
+      "timeframe_resolution": {
+        "reason": "No execution timeframe can be derived from the declared roles and notes",
+        "status": "unresolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": "external market dependency; non-computable dependency: obvious_draw_on_liquidity",
+        "status": "excluded"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "intermediate_term_low",
+        "setup_tf_pd_array_tap",
+        "short_term_swing_point"
+      ],
+      "custom_signals_used": [
+        "intermediate_term_low",
+        "setup_tf_pd_array_tap",
+        "short_term_swing_point"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "market:needs_news_calendar"
+      ],
+      "file": "advanced_scalping.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [
+          "london",
+          "new_york_am"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "htf_boundary_scalping",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 2.0,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "session_open_manipulation",
+      "custom_signals_roots": [
+        "arjoio_ny_am_session",
+        "arjoio_ny_pm_session",
+        "equities_open_judas",
+        "htf_pd_array_tap",
+        "objective_reached",
+        "pure_sweep"
+      ],
+      "custom_signals_used": [
+        "arjoio_ny_am_session",
+        "arjoio_ny_pm_session",
+        "equities_open_judas",
+        "htf_pd_array_tap",
+        "objective_reached",
+        "pure_sweep"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "market:needs_equity_session"
+      ],
+      "file": "trading_indices.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_OPEN_WINDOW_MINUTES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "custom signal objective_reached is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "5m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "custom signal objective_reached is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "custom signal objective_reached is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "5m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "custom signal objective_reached is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [
+          "london"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "indices_session_sequence",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "session_open_manipulation",
+      "custom_signals_roots": [
+        "htf_opposing_pd_array",
+        "judas_reversal_zone_tap",
+        "llod"
+      ],
+      "custom_signals_used": [
+        "flod",
+        "htf_opposing_pd_array",
+        "judas_reversal_zone_tap",
+        "judas_swing",
+        "llod",
+        "london_open_price",
+        "midnight_open",
+        "opening_judas_swing",
+        "weekly_open"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "market:needs_news_calendar"
+      ],
+      "file": "avoid_fakouts.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [
+          "london",
+          "new_york_am"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "judas_swing_reversal",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "displacement_reaction",
+        "failed_rejection",
+        "pure_sweep"
+      ],
+      "custom_signals_used": [
+        "displacement_candle",
+        "displacement_reaction",
+        "failed_rejection",
+        "pure_sweep"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "liquidity_pools.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_DISPLACEMENT_BODY_MULT",
+        "K_DISPLACEMENT_LOOKBACK",
+        "K_REACTION_WINDOW_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "liquidity_sweep_and_target",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_low_stop",
+        "london_kz_entry_trigger"
+      ],
+      "custom_signals_used": [
+        "asia_consolidation",
+        "asia_expansion",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_low_stop",
+        "london_kz_entry_trigger",
+        "st_model"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "london_killzone.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_ST_MAX_CANDLES"
+      ],
+      "min_rr": 3.0,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [
+          "london"
+        ],
+        "time_window_ny": "02:00-05:00"
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "london_killzone",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 3.5,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "consolidation",
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap",
+        "short_term_range"
+      ],
+      "custom_signals_used": [
+        "consolidation",
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_opposing_pd_array",
+        "htf_pd_array_tap",
+        "short_term_range"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "market:needs_news_calendar"
+      ],
+      "file": "m3_secrets.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_CONSOLIDATION_CANDLES",
+        "K_CONSOLIDATION_RANGE_ATR",
+        "K_TAP_LOOKBACK_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "m3_secrets",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 2.0,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "short_term_range"
+      ],
+      "custom_signals_used": [
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "short_term_range"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "ms_secrets.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_TAP_LOOKBACK_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "market_structure_secrets",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "target_projection",
+      "custom_signals_roots": [
+        "judas_swing",
+        "london_open_price",
+        "measured_swing_projection",
+        "midnight_open",
+        "monthly_open",
+        "overlapping_pd_array",
+        "weekly_open"
+      ],
+      "custom_signals_used": [
+        "judas_swing",
+        "london_open_price",
+        "measured_swing_projection",
+        "midnight_open",
+        "monthly_open",
+        "overlapping_pd_array",
+        "weekly_open"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "dol_fibonacci.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: measured_swing_projection",
+          "setup_tf": "1h",
+          "status": "excluded"
+        }
+      ],
+      "role": "target_tool",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "measured_swing_projections",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "C",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": "non-computable dependency: measured_swing_projection",
+        "status": "excluded"
+      }
+    },
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "mb_fvg_overlap_sensitivity",
+        "mitigation_block_pd_array_overlap",
+        "swing_failure_pattern"
+      ],
+      "custom_signals_used": [
+        "mb_fvg_overlap_sensitivity",
+        "mitigation_block_pd_array_overlap",
+        "swing_failure_pattern"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "mitigation_block.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "mitigation_block_setup",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "intermediate_term_low",
+        "london_missed_htf_poi",
+        "london_taps_htf_poi_and_displaces",
+        "overlapping_pd_array"
+      ],
+      "custom_signals_used": [
+        "first_fvg_after_array_tap",
+        "htf_pd_array_tap",
+        "intermediate_term_low",
+        "london_missed_htf_poi",
+        "london_taps_htf_poi_and_displaces",
+        "overlapping_pd_array"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "newyork_killzone.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_TAP_LOOKBACK_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "custom signal london_taps_htf_poi_and_displaces is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "custom signal london_taps_htf_poi_and_displaces is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "kill_zone is meaningless on 1d under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "kill_zone is meaningless on 1d under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1m",
+          "reason": "kill_zone is meaningless on 1mo under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": "kill_zone is meaningless on 1mo under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [
+          "new_york_am"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "new_york_retracement",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 2.0,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "session_open_manipulation",
+      "custom_signals_roots": [
+        "intermediate_term_low",
+        "london_missed_htf_poi",
+        "london_taps_htf_poi_and_displaces",
+        "ny_taps_htf_poi",
+        "overlapping_pd_array"
+      ],
+      "custom_signals_used": [
+        "first_fvg_after_array_tap",
+        "htf_pd_array_tap",
+        "intermediate_term_low",
+        "london_missed_htf_poi",
+        "london_taps_htf_poi_and_displaces",
+        "ny_taps_htf_poi",
+        "overlapping_pd_array"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "newyork_killzone.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_TAP_LOOKBACK_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "custom signal london_missed_htf_poi is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "custom signal london_missed_htf_poi is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 4h)",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "kill_zone is meaningless on 1d under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "kill_zone is meaningless on 1d under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1m",
+          "reason": "kill_zone is meaningless on 1mo under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "5m",
+          "reason": "kill_zone is meaningless on 1mo under the data contract",
+          "setup_tf": "15m",
+          "status": "not_applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [
+          "new_york_am"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "new_york_reversal",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 2.0,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "mean_threshold_bodies",
+        "ob_fvg_overlap_sensitivity",
+        "presenter_order_block"
+      ],
+      "custom_signals_used": [
+        "mean_threshold_bodies",
+        "ob_fvg_overlap_sensitivity",
+        "presenter_order_block"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "order_block.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "order_block_mitigation",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "overlapping_pd_array"
+      ],
+      "custom_signals_used": [
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "overlapping_pd_array"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "entry_patterns.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "overlapping_pd_array_entry",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "market_maker_curve_shift",
+        "reclaimed_pd_array_overlap",
+        "reclaimed_trade_through"
+      ],
+      "custom_signals_used": [
+        "breaker_pattern",
+        "htf_pd_array_tap",
+        "market_maker_curve_shift",
+        "reclaimed_pd_array_overlap",
+        "reclaimed_trade_through",
+        "swing_failure_pattern"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "reclaimed_ob.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "reclaimed_order_block_overlap",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "rejection_block",
+        "rejection_block_body_sweep"
+      ],
+      "custom_signals_used": [
+        "rejection_block",
+        "rejection_block_body_sweep"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "rejection_block.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_REJECTION_WICK_FRACTION"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "rejection_block_reversal",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "decoupled_market",
+        "relatively_stronger_pair"
+      ],
+      "custom_signals_used": [
+        "decoupled_market",
+        "relatively_stronger_pair"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "external.bonds",
+        "external.correlated",
+        "external.dxy",
+        "market:needs_external_symbols"
+      ],
+      "file": "intermarket_strength.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "3m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "3m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "30m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "2h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "2h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "4h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "6h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "8h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "12h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1d",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "3m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "30m",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "2h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "2h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "4h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "4h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "6h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "6h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "8h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "8h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "12h",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "12h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "3d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1w",
+          "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+          "setup_tf": "1w",
+          "status": "excluded"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "relative_strength_filtering",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "C",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": "external market dependency; non-computable dependency: decoupled_market, relatively_stronger_pair",
+        "status": "excluded"
+      }
+    },
+    {
+      "category": "mean_reversion",
+      "custom_signals_roots": [
+        "dealing_range",
+        "intermediate_term_low",
+        "pure_sweep",
+        "quadrant_extreme",
+        "st_model"
+      ],
+      "custom_signals_used": [
+        "dealing_range",
+        "dealing_range_high",
+        "dealing_range_low",
+        "intermediate_term_low",
+        "pure_sweep",
+        "quadrant_extreme",
+        "st_model"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "snd_turtlesoup.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_ST_MAX_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "seek_and_destroy_turtle_soup",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 1.75,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "market_condition_filter",
+      "custom_signals_roots": [
+        "consolidation",
+        "equilibrium_reversion",
+        "htf_range_displacement",
+        "pd_array_failure"
+      ],
+      "custom_signals_used": [
+        "consolidation",
+        "dealing_range",
+        "displacement_candle",
+        "equilibrium_reversion",
+        "htf_range_displacement",
+        "pd_array_failure"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "seek_destroy.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_CONSOLIDATION_CANDLES",
+        "K_CONSOLIDATION_RANGE_ATR",
+        "K_DISPLACEMENT_BODY_MULT",
+        "K_DISPLACEMENT_LOOKBACK",
+        "K_REACTION_WINDOW_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        }
+      ],
+      "role": "modifier",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "seek_n_destroy",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "indicator_confluence",
+      "custom_signals_roots": [
+        "htf_pd_array_tap",
+        "smt_divergence"
+      ],
+      "custom_signals_used": [
+        "htf_pd_array_tap",
+        "smt_divergence"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "external.correlated.swing_low",
+        "market:needs_external_symbols"
+      ],
+      "file": "smt_divergence.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_STOP_BUFFER_ATR"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": "external market dependency",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": "external market dependency",
+          "setup_tf": "3m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": "external market dependency",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": "external market dependency",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": "external market dependency",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": "external market dependency",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": "external market dependency",
+          "setup_tf": "2h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": "external market dependency",
+          "setup_tf": "4h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": "external market dependency",
+          "setup_tf": "6h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": "external market dependency",
+          "setup_tf": "8h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": "external market dependency",
+          "setup_tf": "12h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": "external market dependency",
+          "setup_tf": "1d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": "external market dependency",
+          "setup_tf": "3d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": "external market dependency",
+          "setup_tf": "1w",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": "external market dependency",
+          "setup_tf": "1mo",
+          "status": "excluded"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "smt_divergence_confirmation",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "C",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": "external market dependency",
+        "status": "excluded"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_low"
+      ],
+      "custom_signals_used": [
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_low"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "st_model.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_TAP_LOOKBACK_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "st_model_advanced",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "st_model"
+      ],
+      "custom_signals_used": [
+        "first_fvg_after_array_tap",
+        "fvg_touched",
+        "htf_pd_array_tap",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "st_model"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "st_model.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_ST_MAX_CANDLES",
+        "K_TAP_LOOKBACK_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "st_model_standard",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "target_projection",
+      "custom_signals_roots": [
+        "judas_swing",
+        "london_open_price",
+        "midnight_open",
+        "overlapping_pd_array",
+        "standard_deviations",
+        "weekly_open"
+      ],
+      "custom_signals_used": [
+        "judas_swing",
+        "london_open_price",
+        "midnight_open",
+        "overlapping_pd_array",
+        "standard_deviations",
+        "weekly_open"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "dol_fibonacci.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "15m",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: standard_deviations",
+          "setup_tf": "1h",
+          "status": "excluded"
+        }
+      ],
+      "role": "target_tool",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "standard_deviations_indices",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "C",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": "non-computable dependency: standard_deviations",
+        "status": "excluded"
+      }
+    },
+    {
+      "category": "context_framework",
+      "custom_signals_roots": [
+        "displacement_candle",
+        "fvg_respected",
+        "liquidity_run_continuation",
+        "obvious_draw_on_liquidity",
+        "pure_sweep",
+        "st_model"
+      ],
+      "custom_signals_used": [
+        "displacement_candle",
+        "fvg_respected",
+        "liquidity_run_continuation",
+        "obvious_draw_on_liquidity",
+        "pure_sweep",
+        "st_model"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "sweep__run.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_DISPLACEMENT_BODY_MULT",
+        "K_DISPLACEMENT_LOOKBACK",
+        "K_REACTION_WINDOW_CANDLES",
+        "K_ST_MAX_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "1m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "3m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "5m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "15m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "30m",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "1h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "2h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "4h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "6h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "8h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "12h",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "1d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "3d",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "1w",
+          "status": "excluded"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": "non-computable dependency: obvious_draw_on_liquidity",
+          "setup_tf": "1mo",
+          "status": "excluded"
+        }
+      ],
+      "role": "framework",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "sweep_or_run",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "C",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": "non-computable dependency: obvious_draw_on_liquidity",
+        "status": "excluded"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "swing_rate_050_behavior",
+        "swing_rate_075",
+        "swing_rates_framework"
+      ],
+      "custom_signals_used": [
+        "consolidation",
+        "intermediate_term_high",
+        "intermediate_term_low",
+        "swing_rate_050",
+        "swing_rate_050_behavior",
+        "swing_rate_075",
+        "swing_rates_framework"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "silver_bullet.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_CONSOLIDATION_CANDLES",
+        "K_CONSOLIDATION_RANGE_ATR",
+        "K_REACTION_WINDOW_CANDLES"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "5m",
+          "entry_tf": "1m",
+          "reason": null,
+          "setup_tf": "1m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "5m",
+          "entry_tf": "3m",
+          "reason": null,
+          "setup_tf": "3m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "30m",
+          "reason": null,
+          "setup_tf": "30m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "2h",
+          "reason": null,
+          "setup_tf": "2h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "6h",
+          "reason": null,
+          "setup_tf": "6h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "8h",
+          "reason": null,
+          "setup_tf": "8h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "12h",
+          "reason": null,
+          "setup_tf": "12h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1d",
+          "reason": null,
+          "setup_tf": "1d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "3d",
+          "reason": null,
+          "setup_tf": "3d",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1w",
+          "reason": null,
+          "setup_tf": "1w",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1mo",
+          "reason": null,
+          "setup_tf": "1mo",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "swing_rate_silver_bullet",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "htf_continuation",
+      "custom_signals_roots": [
+        "htf_pd_array_tap",
+        "intermediate_term_low",
+        "overlapping_pd_array",
+        "short_term_range"
+      ],
+      "custom_signals_used": [
+        "htf_pd_array_tap",
+        "intermediate_term_low",
+        "overlapping_pd_array",
+        "short_term_range"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "shorterm_trading.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": 2.0,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1w",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1mo",
+          "entry_tf": "4h",
+          "reason": null,
+          "setup_tf": "4h",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "swing_trading_lost_art",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": 2.0,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "liquidity_reversal",
+      "custom_signals_roots": [
+        "htf_pd_array_tap",
+        "short_term_high"
+      ],
+      "custom_signals_used": [
+        "htf_pd_array_tap",
+        "short_term_high"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "swing_hl.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": false,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "15m",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "4h",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "5m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "15m",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": false,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "swings_hl",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "trend_following",
+      "custom_signals_roots": [
+        "htf_pd_array_tap",
+        "pure_sweep"
+      ],
+      "custom_signals_used": [
+        "htf_pd_array_tap",
+        "pure_sweep"
+      ],
+      "direction": "both",
+      "external_dependencies": [],
+      "file": "snd_turtlesoup.json",
+      "has_entry_rule": true,
+      "k_constants_used": [
+        "K_STOP_BUFFER_ATR"
+      ],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "4h",
+          "entry_tf": "5m",
+          "reason": null,
+          "setup_tf": "1h",
+          "status": "applicable"
+        }
+      ],
+      "role": "entry_model",
+      "session_and_time_window_gating": {
+        "day_of_week": null,
+        "presenter_bias_ignored": true,
+        "session": [
+          "london",
+          "new_york_am"
+        ],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": true,
+      "strategy_id": "trending_turtle_soup_strength",
+      "symmetric": true,
+      "target_rule_structured": true,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    },
+    {
+      "category": "context_framework",
+      "custom_signals_roots": [
+        "friday_tgif_reversal",
+        "htf_pd_array_tap",
+        "weekly_open"
+      ],
+      "custom_signals_used": [
+        "friday_tgif_reversal",
+        "htf_pd_array_tap",
+        "weekly_open"
+      ],
+      "direction": "both",
+      "external_dependencies": [
+        "market:needs_news_calendar"
+      ],
+      "file": "weekly_profile.json",
+      "has_entry_rule": true,
+      "k_constants_used": [],
+      "min_rr": null,
+      "missing_custom_signals": [],
+      "needs_ny_time": true,
+      "resolved_timeframe_runs": [
+        {
+          "bias_tf": "1d",
+          "entry_tf": "15m",
+          "reason": "custom signal weekly_open is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "4h",
+          "status": "not_applicable"
+        },
+        {
+          "bias_tf": "1d",
+          "entry_tf": "1h",
+          "reason": "custom signal weekly_open is valid only on 1m, 3m, 5m, 15m, 30m, 1h (resolved 1d)",
+          "setup_tf": "4h",
+          "status": "not_applicable"
+        }
+      ],
+      "role": "framework",
+      "session_and_time_window_gating": {
+        "day_of_week": [
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ],
+        "presenter_bias_ignored": true,
+        "session": [],
+        "time_window_ny": null
+      },
+      "stop_rule_structured": false,
+      "strategy_id": "weekly_profiles_tgif",
+      "symmetric": true,
+      "target_rule_structured": false,
+      "tier": "B",
+      "timeframe_resolution": {
+        "reason": null,
+        "status": "resolved"
+      },
+      "typical_rr": null,
+      "unknown_k_constants": [],
+      "v1_status": {
+        "reason": null,
+        "status": "included"
+      }
+    }
+  ],
+  "strategy_file_count": 35,
+  "strategy_id_count": 39
+}

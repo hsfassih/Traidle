@@ -1,0 +1,959 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "reclaimed_order_block_overlap",
+      "aliases": [
+        "Reclaimed OB"
+      ],
+      "category": "trend_following",
+      "summary": "Mark the bullish order blocks formed during the sell curve into a higher-timeframe discount array. After price shifts into the buy curve and reclaims one from below, only trade the retest when a new right-curve PD array overlaps that block.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "4h",
+        "setup_tf": "15m",
+        "entry_tf": "15m",
+        "strict": false,
+        "notes": "The transcript explicitly uses 4h context and 15m execution. The higher-timeframe array lives on bias_tf; the order block, reclaim, overlap, and entry all run on 15m."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": []
+      },
+      "glossary": {
+        "Market maker model": "A sell curve into a higher-timeframe discount array followed by a buy curve; here proxied by custom_signals.market_maker_curve_shift.",
+        "Reclaimed order block": "A bullish order block from the sell curve that price later closes back above on the buy curve; see custom_signals.reclaimed_trade_through."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "order_block.bullish",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "02:49"
+        },
+        {
+          "step": 2,
+          "signal": "custom_signals.market_maker_curve_shift",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "03:20"
+        },
+        {
+          "step": 3,
+          "signal": "custom_signals.reclaimed_trade_through",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "04:01"
+        },
+        {
+          "step": 4,
+          "signal": "custom_signals.reclaimed_pd_array_overlap",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "08:14"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "htf_pd_array_tap",
+          "kind": "price_action",
+          "plain_definition": "Price trades into a higher-timeframe discount array (bullish) or premium array (bearish), such as a fair value gap or order block.",
+          "numeric_definition": "(low <= bullish_fvg[0].gap_high@bias_tf AND high >= bullish_fvg[0].gap_low@bias_tf AND NOT bullish_fvg[0].filled@bias_tf) OR (low <= bullish_ob[0].zone_high@bias_tf AND high >= bullish_ob[0].zone_low@bias_tf AND NOT bullish_ob[0].invalidated@bias_tf)",
+          "definition_source": "inferred",
+          "ts": "03:20"
+        },
+        {
+          "name": "market_maker_curve_shift",
+          "kind": "price_action",
+          "plain_definition": "Price taps a higher-timeframe discount array and then prints a bullish structure shift on the setup timeframe, starting the buy curve of the market maker model.",
+          "numeric_definition": "custom_signals.htf_pd_array_tap AND (structural_event.kind == bullish_choch OR structural_event.kind == bullish_bos)",
+          "definition_source": "inferred",
+          "ts": "03:20"
+        },
+        {
+          "name": "reclaimed_trade_through",
+          "kind": "price_action",
+          "plain_definition": "Price closes back above the high of the left-curve bullish order block, reclaiming it as support on the buy curve.",
+          "numeric_definition": "close > order_block.zone_high AND close[-1] <= order_block.zone_high",
+          "definition_source": "inferred",
+          "ts": "04:01"
+        },
+        {
+          "name": "breaker_pattern",
+          "kind": "price_action",
+          "plain_definition": "A high forms, price then sweeps the prior swing low, and then closes back above that high; the up candle(s) at the broken high form the breaker block.",
+          "numeric_definition": "swing_low[0].price < swing_low[1].price AND swing_high[0].open_time > swing_low[1].open_time AND swing_high[0].open_time < swing_low[0].open_time AND close > swing_high[0].price AND close[-1] <= swing_high[0].price",
+          "definition_source": "presenter_stated",
+          "ts": "10:30"
+        },
+        {
+          "name": "swing_failure_pattern",
+          "kind": "price_action",
+          "plain_definition": "A low, a high, a higher low (the low is not swept), then a close above that high; the broken high is the mitigation block.",
+          "numeric_definition": "swing_low[0].price > swing_low[1].price AND swing_high[0].open_time > swing_low[1].open_time AND swing_high[0].open_time < swing_low[0].open_time AND close > swing_high[0].price AND close[-1] <= swing_high[0].price",
+          "definition_source": "presenter_stated",
+          "ts": "10:30"
+        },
+        {
+          "name": "reclaimed_pd_array_overlap",
+          "kind": "indicator_relation",
+          "plain_definition": "The reclaimed bullish order block overlaps a newly formed right-curve PD array: a bullish fair value gap, a later bullish order block, a breaker pattern level, or a swing-failure-pattern mitigation level.",
+          "numeric_definition": "(bullish_fvg[0].confirmed_at > order_block.anchor_at AND max(order_block.zone_low, bullish_fvg[0].gap_low) <= min(order_block.zone_high, bullish_fvg[0].gap_high) AND NOT bullish_fvg[0].filled) OR (bullish_ob[0].anchor_at > order_block.anchor_at AND max(order_block.zone_low, bullish_ob[0].zone_low) <= min(order_block.zone_high, bullish_ob[0].zone_high) AND NOT bullish_ob[0].invalidated) OR (custom_signals.breaker_pattern >= order_block.zone_low AND custom_signals.breaker_pattern <= order_block.zone_high) OR (custom_signals.swing_failure_pattern >= order_block.zone_low AND custom_signals.swing_failure_pattern <= order_block.zone_high)",
+          "definition_source": "inferred",
+          "ts": "08:14"
+        }
+      ],
+      "sequence": [
+        "Mark the bullish order block formed during the sell curve into the higher-timeframe discount array.",
+        "Wait for the higher-timeframe array tap and bullish structure shift that starts the buy curve.",
+        "Wait for price to close back above that left-curve bullish order block so it becomes reclaimed support.",
+        "Only keep the setup if a new right-curve PD array overlaps the reclaimed block, then buy the retest of that reclaimed block."
+      ],
+      "invalidation": [],
+      "filters": [
+        {
+          "text": "Never trade a reclaimed order block in isolation. It MUST overlap with another PD array to avoid chart clutter and low-probability random bounces.",
+          "provenance": "presenter_stated",
+          "ts": "08:25",
+          "numeric_definition": "custom_signals.reclaimed_pd_array_overlap"
+        }
+      ],
+      "entry_rule": {
+        "text": "Buy the retracement into the reclaimed bullish order block once a new right-curve PD array overlaps it.",
+        "structured": {
+          "type": "limit",
+          "reference": "order_block.zone_high"
+        },
+        "provenance": "inferred",
+        "ts": "14:35",
+        "quote": "where does it go higher off of is fair value gap overlapping with the other two discount arrays"
+      },
+      "target_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "order_block_mitigation",
+        "mitigation_block_setup"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "if you have a thousand PD arrays on your chart then you are not accurate No you're just guessing",
+          "ts": "12:10",
+          "verified": false
+        },
+        {
+          "claim": "that's exactly what makes PD arrays so strong when they are overlapping with another PD array",
+          "ts": "14:51",
+          "verified": false
+        }
+      ],
+      "notes": "Written on the canonical bullish side; the bearish examples are the mirror. The market maker model is proxied as a 4h array tap plus a bullish CHoCH/BOS on 15m, because the presenter names the curve logic but does not define a separate detector for the full two-curve profile. The overlap filter keeps right-curve confluence with a new FVG, a later order block, a breaker level, or a swing-failure-pattern mitigation level.",
+      "examples": [
+        "ex1_market_maker_curves_schematic",
+        "ex2_bearish_reclaimed_ob_clutter",
+        "ex3_bearish_reclaimed_ob_overlap",
+        "ex4_bullish_reclaimed_ob_overlap"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Trade parameters (Stop Loss and Take Profit)",
+          "why": "The video focuses entirely on market maker model theory and identifying overlapping arrays for entry, without providing trade management specifics.",
+          "ts": "00:00"
+        },
+        {
+          "issue": "Exact entry edge inside the overlap cluster",
+          "why": "The presenter requires the reclaimed block to overlap another PD array but does not name a finer edge inside that cluster; the structured rule uses the reclaimed order block's near edge on the bullish side.",
+          "ts": "14:35"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The presenter is extremely explicit about the mechanics of the market maker model curves and repetitively stresses the non-negotiable rule of requiring overlapping PD arrays to validate the setup."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_market_maker_curves_schematic",
+      "strategy_id": "reclaimed_order_block_overlap",
+      "video_span": {
+        "start": "01:08",
+        "end": "06:09",
+        "canonical_frame_ts": "04:01"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "schematic_drawing",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "schematic",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "bullish order blocks on the sell side"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "undetermined",
+            "bias_source": "schematic overview",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "market_maker_curve_shift",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "sell curve / buy curve / market maker buy model"
+            },
+            {
+              "name": "reclaimed_trade_through",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "reclaimed order blocks"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Draws two distinct curves representing the two sides of a market maker model, mapping where institutional accumulation forms blocks."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price moves down forming a sell curve towards a HTF discount array. During this leg, institutions buy and form regular bullish order blocks.",
+          "maps_to_signal_step": 1,
+          "ts": "02:49"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price hits the discount array, shifts market structure, and begins the upward buy curve.",
+          "maps_to_signal_step": 2,
+          "ts": "03:20"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price trades above the old bullish order blocks from the sell curve, officially turning them into reclaimed order blocks that now act as support.",
+          "maps_to_signal_step": 3,
+          "ts": "04:01"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "schematic"
+      },
+      "presenter_commentary": "The presenter explains the fundamental logic of a market maker model: institutions accumulate long positions during the sell curve, forming order blocks. Once the trend shifts to the buy curve, these same blocks become reclaimed and provide support.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.reclaimed_trade_through",
+            "reason": "Traidle tracks standard order block mitigation, but does not explicitly categorize blocks as 'reclaimed' based on market maker model curves."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "No real market data.",
+          "why": "This is a hand-drawn schematic showing conceptual curves on a blank screen."
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_bearish_reclaimed_ob_clutter",
+      "strategy_id": "reclaimed_order_block_overlap",
+      "video_span": {
+        "start": "06:09",
+        "end": "08:06",
+        "canonical_frame_ts": "07:03"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "bearish order blocks formed on the buy side"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "4-hour order block contextual drop into a 15-minute sell curve",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "market_maker_curve_shift",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "market maker sell model"
+            },
+            {
+              "name": "reclaimed_trade_through",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "reclaimed order blocks"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "line",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Draws multiple horizontal lines extending from every bearish order block formed on the left curve, demonstrating visual clutter."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price hits a 4-hour HTF order block and begins a 15-minute market maker sell model.",
+          "maps_to_signal_step": 2,
+          "ts": "06:09"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Numerous bearish order blocks are identified on the left side of the profile (the buy curve).",
+          "maps_to_signal_step": 1,
+          "ts": "06:37"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "As price drops into the sell curve, it trades below these blocks, officially making them reclaimed bearish order blocks.",
+          "maps_to_signal_step": 3,
+          "ts": "07:11"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The presenter highlights that marking all of these reclaimed blocks leads to extreme chart clutter and random guessing.",
+          "maps_to_signal_step": null,
+          "ts": "07:54"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "This example is used to illustrate a problem: because reclaimed order blocks form constantly throughout the first curve of a market maker model, drawing all of them results in a clustered chart where you are just guessing which line will hold. This sets up the need for the overlapping filter.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.reclaimed_trade_through",
+            "reason": "Traidle does not natively track the shift from left-curve to right-curve reclaimed blocks."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact prices or candles.",
+          "why": "Working from the video transcript without visual access to candlestick OHLC data, dates, and exact price axis levels."
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_bearish_reclaimed_ob_overlap",
+      "strategy_id": "reclaimed_order_block_overlap",
+      "video_span": {
+        "start": "08:06",
+        "end": "13:04",
+        "canonical_frame_ts": "10:48"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "old bearish order block"
+              },
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "mitigation block"
+              },
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "4-hour order block contextual drop into a 15-minute sell curve",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "market_maker_curve_shift",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "finishing the buy side of the curve cell side of the curve"
+            },
+            {
+              "name": "reclaimed_trade_through",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "trading back below this old bearish order block / now becomes a reclaimed order block"
+            },
+            {
+              "name": "reclaimed_pd_array_overlap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "four things overlapping"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights a single high-probability level where a reclaimed block perfectly overlaps with an FVG, mitigation block, and new order block."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price completes the buy side of the curve and shifts to the sell side of the curve, trading decisively below an old bearish order block from the left curve.",
+          "maps_to_signal_step": 3,
+          "ts": "10:10"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The old block is officially designated as a reclaimed order block.",
+          "maps_to_signal_step": 3,
+          "ts": "10:23"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A cluster of new PD arrays is identified exactly at this level: a mitigation block, a standard order block, and a fair value gap.",
+          "maps_to_signal_step": 4,
+          "ts": "10:30"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price retraces back into this heavily defended, overlapping zone and rejects lower.",
+          "maps_to_signal_step": null,
+          "ts": "10:48"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter uses this to demonstrate the solution to chart clutter. He emphasizes that out of all the reclaimed order blocks drawn earlier, this specific one was high-probability because it perfectly overlapped with three other PD arrays (mitigation block, order block, FVG).",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bearish",
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.reclaimed_trade_through",
+            "reason": "Traidle tracks standard OBs but doesn't explicitly flag the transition to reclaimed status based on market maker curve positioning."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact prices or candles.",
+          "why": "Working from the video transcript without visual access to candlestick OHLC data, dates, and exact price axis levels."
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_bullish_reclaimed_ob_overlap",
+      "strategy_id": "reclaimed_order_block_overlap",
+      "video_span": {
+        "start": "13:04",
+        "end": "15:19",
+        "canonical_frame_ts": "14:45"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "overlapping fair value Gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "bullish order blocks"
+              },
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "breaker",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "breaker"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "anticipating higher prices (market maker buy model)",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "market_maker_curve_shift",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "sell side of the curve / buy side of the curve"
+            },
+            {
+              "name": "reclaimed_trade_through",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "drop down below / initiate the bicep curve"
+            },
+            {
+              "name": "reclaimed_pd_array_overlap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "three discount arrays reclaimed order Block Breaker fair value Gap"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the confluence zone where a bullish reclaimed order block from the sell curve aligns with an FVG and breaker on the buy curve."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A market maker buy model forms, with multiple bullish order blocks generated during the initial downward sell curve.",
+          "maps_to_signal_step": 1,
+          "ts": "13:16"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price trades down through one of these blocks, then shifts into the buy curve, officially reclaiming it.",
+          "maps_to_signal_step": 3,
+          "ts": "14:14"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A new fair value gap and a breaker block form in exact confluence with this reclaimed order block on the right curve.",
+          "maps_to_signal_step": 4,
+          "ts": "14:27"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price retraces into this triple-confluence discount array zone and bounces higher.",
+          "maps_to_signal_step": null,
+          "ts": "14:45"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He reiterates the core rule using a bullish example: you find the order blocks on the left curve and wait to see which one aligns with newly formed PD arrays on the right curve. He notes this specific spot had three overlapping discount arrays.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bullish",
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.reclaimed_trade_through",
+            "reason": "Traidle tracks standard OBs but doesn't explicitly flag the transition to reclaimed status based on market maker curve positioning."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact prices or candles.",
+          "why": "Working from the video transcript without visual access to candlestick OHLC data, dates, and exact price axis levels."
+        }
+      ]
+    }
+  ]
+}

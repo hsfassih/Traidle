@@ -1,0 +1,927 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "indices_session_sequence",
+      "aliases": [
+        "AM/PM consolidation/expansion sequence"
+      ],
+      "category": "session_open_manipulation",
+      "summary": "On indices, the daily sequence flips between AM and PM expansion depending on whether the higher-timeframe objective is reached before 08:30 New York. Trade the designated expanding session with a sweep-and-fair-value-gap entry while treating the presenter's AM and PM windows as custom equity-session time blocks.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "4h|1d",
+        "setup_tf": "5m|15m",
+        "entry_tf": "1m",
+        "strict": false,
+        "notes": "bias_tf names the higher-timeframe objective (commonly 4h or 1d). setup_tf provides the session-sequence context, while entry_tf is the preferred 1m execution chart for indices; some examples align a 5m FVG with the 1m entry."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [
+          "london"
+        ],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.htf_pd_array_tap",
+          "custom_signals.objective_reached",
+          "custom_signals.arjoio_ny_am_session",
+          "custom_signals.arjoio_ny_pm_session",
+          "market:needs_equity_session"
+        ]
+      },
+      "glossary": {
+        "Opening Range": "The 09:30-10:30 New York period that often sets the high or low of the day; see custom_signals.equities_open_judas for the opening sweep proxy.",
+        "Closing Hour": "The 15:00-16:00 New York period ('power hour') when volatility often accelerates into the day's target or profit-taking."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "structural_event.kind",
+          "equals": "liquidity_sweep_low",
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "05:12"
+        },
+        {
+          "step": 2,
+          "signal": "custom_signals.pure_sweep",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": 0,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "05:12"
+        },
+        {
+          "step": 3,
+          "signal": "fvg.bullish",
+          "equals": true,
+          "timeframe": "entry_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "08:15"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "arjoio_ny_am_session",
+          "kind": "time_rule",
+          "plain_definition": "The presenter's New York AM session: 08:30 to 11:00 New York time.",
+          "numeric_definition": "ny_minute >= 08:30 AND ny_minute < 11:00",
+          "definition_source": "presenter_stated",
+          "ts": "01:00"
+        },
+        {
+          "name": "arjoio_ny_pm_session",
+          "kind": "time_rule",
+          "plain_definition": "The presenter's New York PM session: 13:30 to 16:00 New York time.",
+          "numeric_definition": "ny_minute >= 13:30 AND ny_minute < 16:00",
+          "definition_source": "presenter_stated",
+          "ts": "01:17"
+        },
+        {
+          "name": "htf_pd_array_tap",
+          "kind": "price_action",
+          "plain_definition": "Price trades into a higher-timeframe discount array (bullish) or premium array (bearish), such as a fair value gap or order block.",
+          "numeric_definition": "(low <= bullish_fvg[0].gap_high@bias_tf AND high >= bullish_fvg[0].gap_low@bias_tf AND NOT bullish_fvg[0].filled@bias_tf) OR (low <= bullish_ob[0].zone_high@bias_tf AND high >= bullish_ob[0].zone_low@bias_tf AND NOT bullish_ob[0].invalidated@bias_tf)",
+          "definition_source": "inferred",
+          "ts": "02:00"
+        },
+        {
+          "name": "objective_reached",
+          "kind": "price_action",
+          "plain_definition": "Price has already tapped the higher-timeframe PD array before 08:30 New York time.",
+          "numeric_definition": "any(custom_signals.htf_pd_array_tap AND ny_minute < 08:30, ny_minute / tf_minutes + 1)",
+          "definition_source": "presenter_stated",
+          "ts": "09:10"
+        },
+        {
+          "name": "equities_open_judas",
+          "kind": "time_rule",
+          "plain_definition": "A volatile fake move that sweeps liquidity at the 08:30 or 09:30 New York open on indices.",
+          "numeric_definition": "structural_event.kind == liquidity_sweep_low AND ((ny_minute >= 08:30 AND ny_minute < 08:30 + K_OPEN_WINDOW_MINUTES) OR (ny_minute >= 09:30 AND ny_minute < 09:30 + K_OPEN_WINDOW_MINUTES))",
+          "definition_source": "inferred",
+          "ts": "05:37"
+        },
+        {
+          "name": "pure_sweep",
+          "kind": "price_action",
+          "plain_definition": "Price trades through a swing low (sell-side liquidity) and the sweeping candle closes back above it (turtle soup).",
+          "numeric_definition": "structural_event.kind == liquidity_sweep_low AND structural_event.candle_close >= structural_event.reference_price",
+          "definition_source": "presenter_stated",
+          "ts": "05:12"
+        }
+      ],
+      "sequence": [
+        "Choose the expanding session from the sequence: use AM when the higher-timeframe objective is still unreached before 08:30 New York, otherwise wait for PM after the AM consolidation.",
+        "In that expanding session, wait for sell-side liquidity to be swept.",
+        "Require the sweeping candle to close back above the swept level, then buy the bullish FVG that forms after it."
+      ],
+      "invalidation": [
+        {
+          "text": "Do not expect a massive AM expansion if London or the pre-8:30 timeframe already achieved the draw on liquidity.",
+          "provenance": "presenter_stated",
+          "ts": "09:29",
+          "numeric_definition": "custom_signals.objective_reached"
+        }
+      ],
+      "filters": [
+        {
+          "text": "Indices are liquidity hunters; prefer entering after the 9:30 AM equities open volatility has swept early session liquidity.",
+          "provenance": "presenter_stated",
+          "ts": "05:37",
+          "numeric_definition": "custom_signals.equities_open_judas"
+        },
+        {
+          "text": "For London session trading, focus on DAX. For AM/PM sessions, focus on ES/NQ.",
+          "provenance": "presenter_stated",
+          "ts": "02:52",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the bullish fair value gap that forms after the session liquidity sweep in the designated expanding session.",
+        "structured": null,
+        "provenance": "inferred",
+        "ts": "08:15",
+        "quote": "both based off of the St model that I'm teaching inside the mentorship"
+      },
+      "target_rule": {
+        "text": "Target the higher-timeframe objective identified before the session sequence begins.",
+        "structured": null,
+        "provenance": "presenter_stated",
+        "ts": "07:09",
+        "quote": "a perfectly fine trade still in PM session as long as you keep the Target right there in mind"
+      },
+      "stop_rule": {
+        "text": "Place the stop beyond the sweep extreme.",
+        "structured": {
+          "type": "beyond",
+          "reference": "structural_event.candle_low",
+          "buffer_atr": null
+        },
+        "provenance": "inferred",
+        "ts": "13:26",
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": "Be cautious in the closing hour; it can accelerate into the target or turn into profit-taking after the objective is already reached."
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "Indices are way more doable to navigate on the 1-minute timeframe than Forex due to cleaner liquidity hunting characteristics.",
+          "ts": "13:26",
+          "verified": false
+        }
+      ],
+      "notes": "This is a session-sequence framework first and an entry trigger second: London determines whether AM expands or only engineers liquidity for PM. The presenter’s 08:30-11:00 and 13:30-16:00 windows are custom equity-session rules, not engine kill zones, and objective_reached is proxied by a pre-08:30 higher-timeframe FVG/order-block tap rather than every possible discretionary target.",
+      "examples": [
+        "ex1_nq_consolidation_expansion",
+        "ex2_es_expansion_consolidation",
+        "ex3_es_am_fake_move"
+      ],
+      "uncertainties": [
+        {
+          "issue": "objective_reached only proxies engine FVG/order-block targets",
+          "why": "The presenter also names swing objectives such as intermediate-term highs/lows, but the reused registry entry only detects a pre-08:30 tap of the latest higher-timeframe engine FVG or order block.",
+          "ts": "09:10"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The macro logic (if-then statements based on session sequence) is heavily detailed and repeated multiple times. The only ambiguity lies in the exact lower-timeframe entry trigger which is gatekept behind his mentorship, though visually it aligns with a standard 1M MSS/FVG."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_nq_consolidation_expansion",
+      "strategy_id": "indices_session_sequence",
+      "video_span": {
+        "start": "01:52",
+        "end": "08:21",
+        "canonical_frame_ts": "07:45"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_4h",
+          "frame_role": "htf_context",
+          "symbol": "NASDAQ",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "four hour order block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "4-hour order block acting as a premium array target",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_15m_5m",
+          "frame_role": "setup",
+          "symbol": "NASDAQ",
+          "feed_as_shown": null,
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweep of London"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "session_low",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Expanding toward HTF objective",
+            "kill_zone": "london"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "arjoio_ny_am_session",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "am expansion"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f3_1m",
+          "frame_role": "entry",
+          "symbol": "NASDAQ",
+          "feed_as_shown": null,
+          "timeframe": "1m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "London sweep"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value Gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Continuing PM expansion",
+            "kill_zone": "new_york_am"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_4h",
+          "candle_i": null,
+          "what_happens": "Presenter identifies a 4-hour order block to act as the primary target/objective for the day.",
+          "maps_to_signal_step": null,
+          "ts": "02:00"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_15m_5m",
+          "candle_i": null,
+          "what_happens": "London session consolidates, providing liquidity. The 8:30 AM/9:30 AM equities open sequence sweeps the London consolidation.",
+          "maps_to_signal_step": 1,
+          "ts": "05:12"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_15m_5m",
+          "candle_i": null,
+          "what_happens": "Because the 4H objective was not yet reached during London or AM open, the AM session initiates a large expansion toward it.",
+          "maps_to_signal_step": null,
+          "ts": "06:15"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_15m_5m",
+          "candle_i": null,
+          "what_happens": "The PM session continues the expansion because the 4H target has still not been fully tapped.",
+          "maps_to_signal_step": null,
+          "ts": "06:40"
+        },
+        {
+          "step": 5,
+          "frame_id": "f3_1m",
+          "candle_i": null,
+          "what_happens": "Zooming into the 1-minute chart during the PM session, a 5-minute FVG is aligned with a 1-minute entry based on the 'ST model'.",
+          "maps_to_signal_step": 3,
+          "ts": "08:15"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f3_1m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter uses this to showcase a classic 'consolidation -> expansion -> consolidation/expansion' sequence. He emphasizes that if the target is unreached, subsequent sessions (even PM) will keep expanding toward it.",
+      "engine_check": {
+        "should_detect": [
+          "order_block.bullish",
+          "structural_event.liquidity_sweep_low",
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.arjoio_ny_am_session",
+            "reason": "Traidle uses 07:00-10:00 for new_york_am, whereas the presenter strictly defines indices AM session as 08:30-11:00."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "No visual chart access",
+          "why": "Without seeing the video frames, exact prices, specific candlesticks, and exact timestamps cannot be extracted."
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_es_expansion_consolidation",
+      "strategy_id": "indices_session_sequence",
+      "video_span": {
+        "start": "08:21",
+        "end": "14:05",
+        "canonical_frame_ts": "13:26"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_htf",
+          "frame_role": "htf_context",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "other",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "Objective reached early in London",
+            "kill_zone": "london"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_1m",
+          "frame_role": "entry",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "1m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_high",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "PM session swept liquidity"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "PM expansion post-consolidation",
+            "kill_zone": "none"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_htf",
+          "candle_i": null,
+          "what_happens": "Prior to 8:30 AM (during London), price actively expands and takes out an intermediate term low, completing the primary objective early.",
+          "maps_to_signal_step": null,
+          "ts": "09:10"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_htf",
+          "candle_i": null,
+          "what_happens": "Because the objective is complete, the AM session and equities open at 9:30 AM fall into consolidation to build new liquidity pools.",
+          "maps_to_signal_step": null,
+          "ts": "09:46"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_1m",
+          "candle_i": null,
+          "what_happens": "With the AM session consolidating, the algorithm dictates the PM session must be the expansion phase. The PM session sweeps liquidity at the equilibrium/premium of the range.",
+          "maps_to_signal_step": 1,
+          "ts": "13:03"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_1m",
+          "candle_i": null,
+          "what_happens": "Dropping to the 1-minute chart, a precise entry is formed right after the PM sweep, utilizing the 'flood and llod concepts'.",
+          "maps_to_signal_step": 3,
+          "ts": "13:53"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_1m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights this ES example to prove the reverse sequence. If London hits the target early, AM will consolidate. Once AM consolidates, PM is guaranteed to expand. He notes this algorithmic 'if-then' rhythm allows traders to avoid AM chop.",
+      "engine_check": {
+        "should_detect": [
+          "structural_event.liquidity_sweep_high",
+          "premium_discount"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.objective_reached",
+            "reason": "An engine cannot automatically ascertain if a specific prior sweep 'satisfied the daily objective' without predefined human context."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "No visual chart access",
+          "why": "Cannot verify precise 1M structural events, FVG entries, or OHLC coordinates without visuals."
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_es_am_fake_move",
+      "strategy_id": "indices_session_sequence",
+      "video_span": {
+        "start": "14:05",
+        "end": "17:32",
+        "canonical_frame_ts": "16:23"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_htf_context",
+          "frame_role": "htf_context",
+          "symbol": "ES",
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "daily fair value gap"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "fair value gap on the four hour"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order block right there on the four hour"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Mitigating Daily discount FVG, seeking 4H premium array",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_15m",
+          "frame_role": "setup",
+          "symbol": "ES",
+          "feed_as_shown": "continuous contract",
+          "timeframe": "15m",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": "2023-06-01T00:00Z",
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "liquidity_sweep_low",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "sweeping again liquidity"
+              }
+            ],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [
+              {
+                "kind": "session_low",
+                "price": null,
+                "from_i": null,
+                "swept_at_i": null
+              }
+            ],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Continuing up from AM fake move",
+            "kill_zone": "new_york_am"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "objective_reached",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "already reach that premium array"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_htf_context",
+          "candle_i": null,
+          "what_happens": "Price comes off a Daily discount FVG, giving a bullish draw on liquidity toward a 4H order block and 4H FVG premium array.",
+          "maps_to_signal_step": null,
+          "ts": "14:43"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Following a London consolidation, the AM session executes a 'fake move' downwards in the opening range to create the low of the day.",
+          "maps_to_signal_step": 1,
+          "ts": "15:05"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "The AM session then heavily expands upwards, sweeping liquidity and tapping the 4H premium array target.",
+          "maps_to_signal_step": null,
+          "ts": "15:38"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "Because the objective (4H premium array) is reached entirely during the AM session, the subsequent PM session behaves as a consolidation.",
+          "maps_to_signal_step": null,
+          "ts": "15:57"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_15m",
+          "candle_i": null,
+          "what_happens": "During the closing hour, massive volatility enters the market causing a huge move down, confirming preference for shorts after the target is hit.",
+          "maps_to_signal_step": null,
+          "ts": "16:23"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_15m"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights the AM session 'fake move' which establishes the low of the day out of a daily discount array. He emphasizes the 'if-then' logic: because the AM session hit the target, the PM session had to consolidate.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "order_block.bearish",
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.arjoio_ny_am_session",
+            "reason": "Presenter defines the fake move specifically occurring in the opening range starting at 9:30 AM NY local time, distinct from Traidle's standard 07:00-10:00 definition."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "No visual chart access",
+          "why": "Without frames, precise entry signals (the specific 'ST model' entry) and structural levels on the 1-minute chart during the AM expansion cannot be mapped.",
+          "ts": "14:05"
+        }
+      ]
+    }
+  ]
+}

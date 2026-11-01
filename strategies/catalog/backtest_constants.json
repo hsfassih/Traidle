@@ -1,0 +1,49 @@
+{
+  "constants_version": "1.0.0",
+  "constants": [
+    {
+      "name": "BT_ORDER_EXPIRY_CANDLES",
+      "default": 3,
+      "unit": "closed candles on entry_tf after the signal candle",
+      "rationale": "An unfilled limit order remains active for three later entry-timeframe candles; it expires at the close of the third candle.",
+      "suggested_sweep_range": [
+        1,
+        10
+      ],
+      "provenance": "inferred"
+    },
+    {
+      "name": "BT_DEFAULT_STOP_ATR",
+      "default": 1.0,
+      "unit": "ATR(14) multiple of entry_tf",
+      "rationale": "Fallback stop distance from entry when a strategy has no structured stop rule.",
+      "suggested_sweep_range": [
+        0.5,
+        2.0
+      ],
+      "provenance": "inferred"
+    },
+    {
+      "name": "BT_DEFAULT_TARGET_R",
+      "default": 2.0,
+      "unit": "R multiple",
+      "rationale": "Fallback target distance when a strategy has no structured target rule; also the fixed target used by r_std2.",
+      "suggested_sweep_range": [
+        1.0,
+        4.0
+      ],
+      "provenance": "inferred"
+    },
+    {
+      "name": "BT_MAX_BARS_IN_TRADE",
+      "default": 20,
+      "unit": "closed candles on entry_tf, including the fill candle",
+      "rationale": "Bounds the maximum holding period and makes time-stop and split-embargo behavior finite.",
+      "suggested_sweep_range": [
+        5,
+        60
+      ],
+      "provenance": "inferred"
+    }
+  ]
+}

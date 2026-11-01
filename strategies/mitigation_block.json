@@ -1,0 +1,991 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "mitigation_block_setup",
+      "aliases": [
+        "MB",
+        "Swing Failure Mitigation"
+      ],
+      "category": "trend_following",
+      "summary": "A bullish mitigation block is the broken swing high of a swing-failure pattern: a higher low holds, then price closes above the prior swing high. Buy the retrace only when that broken high overlaps a bullish fair value gap or bullish order block.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": null,
+        "setup_tf": null,
+        "entry_tf": null,
+        "strict": false,
+        "notes": "No fixed timeframes are given; the setup is fractal, and the presenter only says higher-timeframe mitigation blocks are stronger."
+      },
+      "requires_context": {
+        "bias": [],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": []
+      },
+      "glossary": {},
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.swing_failure_pattern",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "01:43"
+        },
+        {
+          "step": 2,
+          "signal": "custom_signals.mitigation_block_pd_array_overlap",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "02:44"
+        },
+        {
+          "step": 3,
+          "signal": "candle.low",
+          "lte_signal": "custom_signals.mb_fvg_overlap_sensitivity",
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "02:25"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "swing_failure_pattern",
+          "kind": "price_action",
+          "plain_definition": "A low, a high, a higher low (the low is not swept), then a close above that high; the broken high is the mitigation block.",
+          "numeric_definition": "swing_low[0].price > swing_low[1].price AND swing_high[0].open_time > swing_low[1].open_time AND swing_high[0].open_time < swing_low[0].open_time AND close > swing_high[0].price AND close[-1] <= swing_high[0].price",
+          "definition_source": "presenter_stated",
+          "ts": "01:43"
+        },
+        {
+          "name": "mitigation_block_pd_array_overlap",
+          "kind": "indicator_relation",
+          "plain_definition": "The swing-failure-pattern mitigation level lies inside a bullish fair value gap or bullish order block on the same timeframe.",
+          "numeric_definition": "(custom_signals.swing_failure_pattern >= bullish_fvg[0].gap_low AND custom_signals.swing_failure_pattern <= bullish_fvg[0].gap_high AND NOT bullish_fvg[0].filled) OR (custom_signals.swing_failure_pattern >= bullish_ob[0].zone_low AND custom_signals.swing_failure_pattern <= bullish_ob[0].zone_high AND NOT bullish_ob[0].invalidated)",
+          "definition_source": "inferred",
+          "ts": "02:44"
+        },
+        {
+          "name": "mb_fvg_overlap_sensitivity",
+          "kind": "level",
+          "plain_definition": "If the mitigation-block wick overlaps a bullish fair value gap, the broken swing high is the entry level; otherwise the swing-high candle body open is.",
+          "numeric_definition": "(bullish_fvg[0].gap_high >= open[-((open_time - swing_high[0].open_time) / (tf_minutes * 60000))] AND bullish_fvg[0].gap_low <= custom_signals.swing_failure_pattern AND NOT bullish_fvg[0].filled) * custom_signals.swing_failure_pattern + (1 - (bullish_fvg[0].gap_high >= open[-((open_time - swing_high[0].open_time) / (tf_minutes * 60000))] AND bullish_fvg[0].gap_low <= custom_signals.swing_failure_pattern AND NOT bullish_fvg[0].filled)) * open[-((open_time - swing_high[0].open_time) / (tf_minutes * 60000))]",
+          "definition_source": "presenter_stated",
+          "ts": "08:27"
+        }
+      ],
+      "sequence": [
+        "Wait for a bullish swing-failure pattern so the broken swing high becomes the mitigation block.",
+        "Keep the setup only when that broken high overlaps a bullish fair value gap or bullish order block.",
+        "Buy the retrace into the mitigation block, using the wick if the fair value gap overlaps it and otherwise the swing-high candle body open."
+      ],
+      "invalidation": [
+        {
+          "text": "A candle closes beyond the mitigation block high/low without immediate rejection.",
+          "provenance": "presenter_stated",
+          "ts": "14:33",
+          "numeric_definition": null
+        }
+      ],
+      "filters": [
+        {
+          "text": "Only trade the mitigation block when there is something overlapping, preferably a fair value gap.",
+          "provenance": "presenter_stated",
+          "ts": "09:30",
+          "numeric_definition": "custom_signals.mitigation_block_pd_array_overlap"
+        },
+        {
+          "text": "It must be a swing failure pattern, not a breaker pattern (where the extreme is swept first).",
+          "provenance": "presenter_stated",
+          "ts": "10:18",
+          "numeric_definition": "custom_signals.swing_failure_pattern"
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the retrace into the mitigation block: use the broken swing high if a bullish fair value gap overlaps the wick, otherwise use the swing-high candle body open.",
+        "structured": {
+          "type": "limit",
+          "reference": "custom_signals.mb_fvg_overlap_sensitivity"
+        },
+        "provenance": "presenter_stated",
+        "ts": "02:25",
+        "quote": "if we trade back into this low there is our mitigation block"
+      },
+      "target_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "stop_rule": {
+        "text": null,
+        "structured": null,
+        "provenance": null,
+        "ts": null,
+        "quote": null
+      },
+      "management": {
+        "breakeven": null,
+        "partials": null,
+        "trailing": null,
+        "notes": null
+      },
+      "risk": {
+        "typical_rr": null,
+        "min_rr": null,
+        "risk_per_trade_pct": null
+      },
+      "reinforces": [
+        "order_block_mitigation"
+      ],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "two premium arrays overlapping is double as strong as one mitigation block alone",
+          "ts": "03:09",
+          "verified": false
+        }
+      ],
+      "notes": "The presenter’s mitigation block is the broken swing high of a swing-failure pattern, not the engine order-block subtype: the engine enum contains mitigation but order_blocks.cpp never assigns it. This rewrite therefore uses the registry swing_failure_pattern alias 'mitigation_block' and a separate overlap proxy limited to bullish FVGs and bullish engine order blocks.",
+      "examples": [
+        "ex1_mb_schematics",
+        "ex2_bearish_mb",
+        "ex3_bullish_mb",
+        "ex4_bullish_mb_ob_confluence"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Trade parameters (Stop Loss and Take Profit)",
+          "why": "The video focuses purely on identifying mitigation blocks and overlap confluence, omitting trade management specifics.",
+          "ts": "00:00"
+        },
+        {
+          "issue": "Entry-level proxy follows the active swing-high candle",
+          "why": "The wick-versus-body rule reconstructs the swing-high candle body from price history; if a newer confirmed swing high forms before the retrace, engine-side frozen mitigation-block fields would be needed to keep the original candle locked in.",
+          "ts": "08:27"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The sequence, required confluence, and distinction from support/resistance are explicitly detailed and demonstrated across multiple examples."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_mb_schematics",
+      "strategy_id": "mitigation_block_setup",
+      "video_span": {
+        "start": "01:27",
+        "end": "06:56",
+        "canonical_frame_ts": "03:18"
+      },
+      "example_role": "explanation_only",
+      "chart_kind": "schematic_drawing",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "schematic",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "swing high"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "swing low / low"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "bearish_bos",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "swing failure / rejection lower"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "fair value gap / premium array"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": false,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "bearish order block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "inferred from setup direction",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "swing_failure_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "swing failure pattern"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "line",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Draws the structural path of a swing failure pattern."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A downward move is followed by a retracement up, creating a swing high.",
+          "maps_to_signal_step": 1,
+          "ts": "01:43"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price drops to form a swing low, then rallies but fails to take out the previous swing high (forming a lower high).",
+          "maps_to_signal_step": 1,
+          "ts": "01:51"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price rejects lower, breaking the swing low and confirming the swing failure pattern. This broken low becomes the mitigation block.",
+          "maps_to_signal_step": 1,
+          "ts": "02:06"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "An overlapping premium array (such as an FVG or Order Block) is identified at the exact level of the mitigation block.",
+          "maps_to_signal_step": 2,
+          "ts": "02:44"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price trades back into the broken low (the mitigation block), triggering the short entry, and continues lower.",
+          "maps_to_signal_step": 3,
+          "ts": "02:25"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "schematic"
+      },
+      "presenter_commentary": "He explains the logic behind the pattern: buyers enter at the support (swing low), enter drawdown as price breaks it, and act as liquidity providers by closing at breakeven when price returns, allowing the market to push lower.",
+      "engine_check": {
+        "should_detect": [],
+        "may_differ": [
+          {
+            "signal": "custom_signals.swing_failure_pattern",
+            "reason": "Traidle's default dictionary defines mitigation blocks strictly, while the presenter insists on the 'Swing Failure' prerequisite and requires an overlapping FVG/OB for it to be tradable."
+          },
+          {
+            "signal": "custom_signals.swing_failure_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact price data, symbols, or timeframes.",
+          "why": "This segment uses a purely hand-drawn schematic on a blank chart background without any scale, axes, or real candlestick data.",
+          "ts": "01:27"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_bearish_mb",
+      "strategy_id": "mitigation_block_setup",
+      "video_span": {
+        "start": "06:56",
+        "end": "09:43",
+        "canonical_frame_ts": "09:00"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "this high"
+              },
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "this low / mitigation block"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "bearish_bos",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "swing failure / continue lower"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": false,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bearish",
+            "bias_source": "inferred from setup direction",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "swing_failure_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "swing failure"
+            },
+            {
+              "name": "mb_fvg_overlap_sensitivity",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "overlapping / take the wick"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Presenter points to the broken low acting as the mitigation block."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price traces a down move, retraces up to make a high, drops to make a low, then rallies but fails to take out the initial high.",
+          "maps_to_signal_step": 1,
+          "ts": "07:09"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price breaks lower, sweeping the intermediate low, completing the swing failure pattern.",
+          "maps_to_signal_step": 1,
+          "ts": "07:17"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The presenter identifies the broken low as the bearish mitigation block. Because the wick of the low overlaps with a bearish FVG, the entry is placed at the wick.",
+          "maps_to_signal_step": 2,
+          "ts": "08:27"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price retraces back into the mitigation block (and FVG), filling the criteria for entry, before continuing lower.",
+          "maps_to_signal_step": 3,
+          "ts": "09:30"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "short",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He emphasizes the overlap rule here: if the mitigation block's wick overlaps with the FVG, you use the wick as the sensitivity point. If it doesn't overlap, you use the candle body.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bearish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.mb_fvg_overlap_sensitivity",
+            "reason": "Traidle generally uses structural points or FVG midpoints for entries; the presenter's specific rule of choosing wick vs body strictly based on FVG overlap is a custom nuance."
+          },
+          {
+            "signal": "custom_signals.swing_failure_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "I am operating from the video transcript and lack visual access to the video frames to read the chart's price axis, symbol, timeframe, or candlestick values.",
+          "ts": "06:56"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_bullish_mb",
+      "strategy_id": "mitigation_block_setup",
+      "video_span": {
+        "start": "09:43",
+        "end": "11:42",
+        "canonical_frame_ts": "11:30"
+      },
+      "example_role": "textbook_illustration",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "this low"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "this high / mitigation block"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "bullish_bos",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "continue higher"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gap"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "inferred from setup direction",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "swing_failure_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "swing failure / not a breaker pattern"
+            },
+            {
+              "name": "mb_fvg_overlap_sensitivity",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "take the body instead"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Points out the broken high acting as the bullish mitigation block and its overlap with an FVG."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price makes a big move up, traces a down move to form a low, rallies to make a high, then drops but fails to take out the initial low.",
+          "maps_to_signal_step": 1,
+          "ts": "10:04"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price pushes up and breaks the intermediate high, completing the swing failure pattern. This broken high becomes the bullish mitigation block.",
+          "maps_to_signal_step": 1,
+          "ts": "10:13"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "An overlapping bullish fair value gap is identified at the level of the mitigation block.",
+          "maps_to_signal_step": 2,
+          "ts": "11:27"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price returns to the mitigation block. The presenter chooses the up candle's body for the entry level.",
+          "maps_to_signal_step": 3,
+          "ts": "11:11"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He strictly distinguishes this setup from a breaker block, emphasizing that for an MB, the extreme (the initial low here) must NOT be swept. He also notes taking the body for the entry level instead of the wick, citing personal preference.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.mb_fvg_overlap_sensitivity",
+            "reason": "Traidle generally uses FVG boundaries or equilibrium; the presenter specifically uses the 'up candle' body of the broken high due to his specific overlap logic."
+          },
+          {
+            "signal": "custom_signals.swing_failure_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "I am operating from the video transcript and lack visual access to the video frames to read the chart's price axis, symbol, timeframe, or candlestick values.",
+          "ts": "09:43"
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_bullish_mb_ob_confluence",
+      "strategy_id": "mitigation_block_setup",
+      "video_span": {
+        "start": "11:42",
+        "end": "13:29",
+        "canonical_frame_ts": "13:10"
+      },
+      "example_role": "variation",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1",
+          "frame_role": "full",
+          "symbol": null,
+          "feed_as_shown": null,
+          "timeframe": null,
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": true,
+                "presenter_calls_it": "the high"
+              }
+            ],
+            "structural_events": [
+              {
+                "candle_i": null,
+                "kind": "bullish_bos",
+                "reference_price": null,
+                "candle_close": null,
+                "is_mss": false,
+                "presenter_calls_it": "pattern"
+              }
+            ],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value gap / fair value Gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "inferred from setup direction",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "swing_failure_pattern",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "swing fill your pattern"
+            },
+            {
+              "name": "mitigation_block_pd_array_overlap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "three discount arrays at the same exact spot"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "other",
+              "text": null,
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Highlights the cluster of a mitigation block, an FVG, and an order block stacked together."
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "A bullish swing failure pattern forms where a lower high fails to sweep the absolute low and the intermediate high is subsequently broken.",
+          "maps_to_signal_step": 1,
+          "ts": "12:14"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "The broken high (mitigation block) is identified. It directly overlaps with a bullish fair value gap.",
+          "maps_to_signal_step": 2,
+          "ts": "12:27"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Just below the FVG, a bullish order block is also identified, creating a highly defended zone containing three discount arrays.",
+          "maps_to_signal_step": 2,
+          "ts": "12:51"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1",
+          "candle_i": null,
+          "what_happens": "Price retraces into this heavily supported zone and bounces. The entry is highlighted on the up candle of the mitigation block.",
+          "maps_to_signal_step": 3,
+          "ts": "12:43"
+        }
+      ],
+      "trade": {
+        "taken": false,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [],
+        "outcome": "not_taken",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He uses this example to showcase the power of confluence. Having a mitigation block, a fair value gap, and an order block stacked in the exact same spot acts as a 'super strong' defense for price.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "order_block.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.swing_failure_pattern",
+            "reason": "Custom concept, not an engine detection; moved from should_detect."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot extract real price or time data.",
+          "why": "I am operating from the video transcript and lack visual access to the video frames to read the chart's price axis, symbol, timeframe, or candlestick values.",
+          "ts": "11:42"
+        }
+      ]
+    }
+  ]
+}

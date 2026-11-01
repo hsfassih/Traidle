@@ -1,0 +1,1488 @@
+{
+  "strategies": [
+    {
+      "strategy_id": "swing_trading_lost_art",
+      "aliases": [
+        "Original Entry",
+        "Re-entry Opportunity",
+        "Fractal Swing Plan"
+      ],
+      "category": "htf_continuation",
+      "summary": "After a monthly, weekly, or daily higher-timeframe PD-array tap, use the mapped lower timeframe to trade the first same-direction FVG that develops into a new short-term range and overlapping entry zone. Once the original trade is risk-free or partially realized, the same overlap logic can be reused one rung higher for a re-entry toward the higher-timeframe objective.",
+      "direction": "both",
+      "symmetric": true,
+      "timeframes": {
+        "bias_tf": "1d|1w|1mo",
+        "setup_tf": "1h|4h",
+        "entry_tf": "1h|4h",
+        "strict": false,
+        "notes": "Fractal mapping: 1mo context uses 4h for the original entry, then 1d for the re-entry; 1w and 1d contexts use 1h for the original entry, then 4h for the re-entry. The re-entry is the same overlap logic one contract-ladder rung above the original execution timeframe."
+      },
+      "requires_context": {
+        "bias": [
+          "bullish",
+          "bearish"
+        ],
+        "session": [],
+        "time_window_ny": null,
+        "day_of_week": null,
+        "other": [
+          "custom_signals.htf_pd_array_tap"
+        ]
+      },
+      "glossary": {
+        "Original Entry": "The first execution on the mapped lower timeframe after the higher-timeframe PD-array tap.",
+        "Re-entry Opportunity": "The same overlap-based execution taken one ladder rung higher after the original trade is already risk-free or partially realized."
+      },
+      "signals_required": [
+        {
+          "step": 1,
+          "signal": "custom_signals.htf_pd_array_tap",
+          "equals": true,
+          "timeframe": "bias_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "03:26"
+        },
+        {
+          "step": 2,
+          "signal": "fvg.bullish",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": true,
+          "provenance": "presenter_stated",
+          "ts": "03:32"
+        },
+        {
+          "step": 3,
+          "signal": "custom_signals.short_term_range",
+          "equals": true,
+          "timeframe": "setup_tf",
+          "optional": false,
+          "max_candles_after_previous_step": null,
+          "traidle_supported": false,
+          "provenance": "presenter_stated",
+          "ts": "04:10"
+        }
+      ],
+      "custom_signals": [
+        {
+          "name": "htf_pd_array_tap",
+          "kind": "price_action",
+          "plain_definition": "Price trades into a higher-timeframe discount array (bullish) or premium array (bearish), such as a fair value gap or order block.",
+          "numeric_definition": "(low <= bullish_fvg[0].gap_high@bias_tf AND high >= bullish_fvg[0].gap_low@bias_tf AND NOT bullish_fvg[0].filled@bias_tf) OR (low <= bullish_ob[0].zone_high@bias_tf AND high >= bullish_ob[0].zone_low@bias_tf AND NOT bullish_ob[0].invalidated@bias_tf)",
+          "definition_source": "inferred",
+          "ts": "03:26"
+        },
+        {
+          "name": "short_term_range",
+          "kind": "price_action",
+          "plain_definition": "A directional swing (swing low to swing high for longs) containing a fair value gap that has not been closed through and holds price on pullbacks.",
+          "numeric_definition": "swing_high[0].open_time > swing_low[0].open_time AND bullish_fvg[0].confirmed_at > swing_low[0].open_time AND NOT bullish_fvg[0].filled",
+          "definition_source": "inferred",
+          "ts": "04:10"
+        },
+        {
+          "name": "overlapping_pd_array",
+          "kind": "indicator_relation",
+          "plain_definition": "A fair value gap that shares price with another PD array (order block) on the same timeframe; the shared range is the entry zone.",
+          "numeric_definition": "max(bullish_fvg[0].gap_low, bullish_ob[0].zone_low) <= min(bullish_fvg[0].gap_high, bullish_ob[0].zone_high) AND NOT bullish_fvg[0].filled AND NOT bullish_ob[0].invalidated",
+          "definition_source": "inferred",
+          "ts": "10:15"
+        },
+        {
+          "name": "intermediate_term_low",
+          "kind": "level",
+          "plain_definition": "A swing low flanked by a higher swing low on its left and a higher swing low on its right.",
+          "numeric_definition": "swing_low[1].price < swing_low[0].price AND swing_low[1].price < swing_low[2].price",
+          "definition_source": "presenter_stated",
+          "ts": "04:42"
+        }
+      ],
+      "sequence": [
+        "Wait for price to tap the monthly, weekly, or daily higher-timeframe discount array that points to the opposing premium objective.",
+        "On the mapped execution chart, mark the first bullish fair value gap that forms after the tap.",
+        "Let that move become a new short-term range and buy the overlapping PD-array retracement; once the original trade is risk-free, repeat the same overlap logic one rung higher for the re-entry."
+      ],
+      "invalidation": [
+        {
+          "text": "If a logical reason remains for price to return to your entry based on unmitigated FLOD/LLOD below current price action, do not move to breakeven yet.",
+          "provenance": "presenter_stated",
+          "ts": "07:08",
+          "numeric_definition": null
+        }
+      ],
+      "filters": [
+        {
+          "text": "Do not execute on multiple pairs at once; maximum 2% total account risk, meaning maximum two 1% setups simultaneously.",
+          "provenance": "presenter_stated",
+          "ts": "14:04",
+          "numeric_definition": null
+        },
+        {
+          "text": "Ideally, enter trades on a Monday, Tuesday, or Wednesday to catch the weekly range expansion.",
+          "provenance": "presenter_stated",
+          "ts": "06:11",
+          "numeric_definition": "ny_dow >= 1 AND ny_dow <= 3"
+        },
+        {
+          "text": "Do not take a Re-entry if you are not already at least Break Even on the Original Entry.",
+          "provenance": "presenter_stated",
+          "ts": "09:31",
+          "numeric_definition": null
+        }
+      ],
+      "entry_rule": {
+        "text": "Enter on the overlapping part of the new short-term range, where the execution-timeframe FVG shares price with another PD array.",
+        "structured": {
+          "type": "limit",
+          "reference": "custom_signals.overlapping_pd_array"
+        },
+        "provenance": "presenter_stated",
+        "ts": "10:15",
+        "quote": "enter on the overlapping part of the short term range... overlapping is always a fair value Gap with another discount rate"
+      },
+      "target_rule": {
+        "text": "Use 1:2 RR as the training benchmark; once experienced, hold toward the higher-timeframe context high/low.",
+        "structured": {
+          "type": "rr_multiple",
+          "reference": 2.0
+        },
+        "provenance": "presenter_stated",
+        "ts": "05:08",
+        "quote": "you Target around 1 to 2 RR... start off with is just a one to two nothing more"
+      },
+      "stop_rule": {
+        "text": "Place the stop beyond the intermediate-term low of the original entry; covering just the bodies is permissible.",
+        "structured": {
+          "type": "beyond",
+          "reference": "custom_signals.intermediate_term_low",
+          "buffer_atr": null
+        },
+        "provenance": "presenter_stated",
+        "ts": "04:42",
+        "quote": "stop loss is always on the original entry type it's always beneath this intermediate term low"
+      },
+      "management": {
+        "breakeven": "Move to breakeven when price creates a new Last Line of Defense (e.g., a new FVG) above your entry, removing any logical reason for price to return.",
+        "partials": "You can target 1:2 RR for partials or full exit.",
+        "trailing": null,
+        "notes": "Aggressive breakeven strategy protects capital since you are catching long-term swings."
+      },
+      "risk": {
+        "typical_rr": 2.0,
+        "min_rr": 2.0,
+        "risk_per_trade_pct": 1.0
+      },
+      "reinforces": [],
+      "conflicts_with": [],
+      "weight": 1.0,
+      "historical_stats": {
+        "occurrences": null,
+        "win_rate": null,
+        "avg_r": null,
+        "last_backtested": null
+      },
+      "presenter_claims": [
+        {
+          "claim": "You can catch the weekly or monthly range trading this way even if you have a full-time job.",
+          "ts": "01:10",
+          "verified": false
+        }
+      ],
+      "notes": "Fractal continuation model. The machine form captures the original entry directly and treats the higher-timeframe re-entry as the same overlap logic repeated one ladder rung higher once the first trade is already risk-free; that account-state prerequisite is not computable from price data alone. The overlap proxy is limited to the registry's fair-value-gap plus order-block confluence, so prior-high and breaker examples remain descriptive.",
+      "examples": [
+        "ex1_monthly_context_4h_entry",
+        "ex2_monthly_context_daily_reentry",
+        "ex3_weekly_context_1h_to_4h",
+        "ex4_daily_context_1h_to_4h"
+      ],
+      "uncertainties": [
+        {
+          "issue": "Re-entry permission depends on the state of the original trade",
+          "why": "The presenter requires the first trade to be at breakeven or partially realized before the higher-timeframe re-entry is allowed, but that portfolio state is not stored in market data.",
+          "ts": "09:31"
+        },
+        {
+          "issue": "Not every overlap partner is machine-zoned",
+          "why": "The registry overlap is a fair-value-gap plus order-block proxy, while the examples also cite prior highs and breakers as valid overlap partners.",
+          "ts": "10:15"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "reason": "The rules for context, entry timeframes, stop placement, and the specific breakeven logic are clearly articulated with multiple examples across different timeframes."
+      }
+    }
+  ],
+  "examples": [
+    {
+      "example_id": "ex1_monthly_context_4h_entry",
+      "strategy_id": "swing_trading_lost_art",
+      "video_span": {
+        "start": "01:58",
+        "end": "08:48",
+        "canonical_frame_ts": "08:10"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_monthly",
+          "frame_role": "htf_context",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "1mo",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "this premium array right there in between this low to that high"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "monthly fair value gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "monthly order block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Monthly chart retracing into discount array and aiming for premium array.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "htf_pd_array_tap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "discount rate"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_4h",
+          "frame_role": "full",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "intermediate term low"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "bullish fair value gap right there only a bullish fair value gap right there that is our ST"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "second fair value Gap... overlapping part is that fair value gap with that order block"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "last long defense"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "this fair value gap and not that fair value gap because this fair value gap is above that high to the left"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order block right there"
+              },
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "breaker",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "breaker right there sitting at our entry"
+              },
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "mitigation",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "mitigation block as well"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Monthly context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "short_term_range",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "new short-term range"
+            },
+            {
+              "name": "overlapping_pd_array",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "first overlapping part"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "Target box",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Shows the 1 to 2 Risk/Reward target"
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_monthly",
+          "candle_i": null,
+          "what_happens": "Identifies monthly context: a discount array consisting of a monthly FVG and order block, expecting continuation to a higher premium array.",
+          "maps_to_signal_step": 1,
+          "ts": "02:16"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_4h",
+          "candle_i": null,
+          "what_happens": "Drops to 4H. Waits for the first bullish FVG (the ST) to form after tapping the monthly discount array.",
+          "maps_to_signal_step": 2,
+          "ts": "03:32"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_4h",
+          "candle_i": null,
+          "what_happens": "Waits for a new short-term range to be created, leaving a second FVG that overlaps with an order block.",
+          "maps_to_signal_step": 3,
+          "ts": "04:17"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_4h",
+          "candle_i": null,
+          "what_happens": "Enters on a limit at the overlapping FVG/OB. Stop loss is placed below the intermediate term low.",
+          "maps_to_signal_step": null,
+          "ts": "04:36"
+        },
+        {
+          "step": 5,
+          "frame_id": "f2_4h",
+          "candle_i": null,
+          "what_happens": "Price expands higher. The stop is moved to breakeven only when price creates a new short-term range containing a FVG above a previous structural high, meaning the Last Line of Defense is now above the original entry.",
+          "maps_to_signal_step": null,
+          "ts": "08:10"
+        },
+        {
+          "step": 6,
+          "frame_id": "f2_4h",
+          "candle_i": null,
+          "what_happens": "The trade reaches the 1:2 Risk/Reward target.",
+          "maps_to_signal_step": null,
+          "ts": "05:57"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_4h"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": 2.0,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He uses this to demonstrate the 'Original Entry' for a monthly plan. He emphasizes the mechanical breakeven rule: you only go breakeven when the First Line of Defense and Last Line of Defense shift upward such that there is no logical reason for price to ever return to your entry.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "order_block.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.htf_pd_array_tap",
+            "reason": "Requires cross-timeframe context from the Monthly down to the 4H."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices",
+          "why": "Missing visual access to the chart data.",
+          "ts": "01:58"
+        }
+      ]
+    },
+    {
+      "example_id": "ex2_monthly_context_daily_reentry",
+      "strategy_id": "swing_trading_lost_art",
+      "video_span": {
+        "start": "08:49",
+        "end": "12:33",
+        "canonical_frame_ts": "11:22"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "full",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "short term low of that short term range"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "monthly context a high right there"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "first line of defense... fair value Gap"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "another discount rate"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Continuing the Monthly context setup.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "short_term_range",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "new short-term range"
+            },
+            {
+              "name": "overlapping_pd_array",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "overlapping part is right there"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "Target box",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Shows targeting the monthly context high"
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "The trader zooms out to the Daily timeframe because the original 4H entry is already at breakeven or took profit.",
+          "maps_to_signal_step": null,
+          "ts": "09:31"
+        },
+        {
+          "step": 2,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Price creates a new Daily short-term range. The trader identifies the overlapping part: a Daily FVG overlapping with another discount array.",
+          "maps_to_signal_step": 3,
+          "ts": "10:15"
+        },
+        {
+          "step": 3,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "An entry limit is placed on the Daily overlapping zone. The stop loss is placed below the short-term low, specifically covering the candle bodies.",
+          "maps_to_signal_step": null,
+          "ts": "10:53"
+        },
+        {
+          "step": 4,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "The target is set to the Monthly context high. The presenter notes the RR is only 0.8 to the immediate high, but valid because the true target is the monthly high.",
+          "maps_to_signal_step": null,
+          "ts": "11:09"
+        },
+        {
+          "step": 5,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Price taps the entry and eventually expands to hit the Monthly context high target.",
+          "maps_to_signal_step": null,
+          "ts": "11:59"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f1_daily"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": null,
+        "precision": "approx"
+      },
+      "presenter_commentary": "This illustrates the 'Re-entry Opportunity'. He specifies you must wait for a clean overlapping short-term range on the Daily, and crucially, you must already be risk-free on the original 4H entry before taking this one.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish",
+          "order_block.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.overlapping_pd_array",
+            "reason": "Requires parsing structural overlap manually."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices",
+          "why": "Missing visual access to the chart data.",
+          "ts": "08:49"
+        }
+      ]
+    },
+    {
+      "example_id": "ex3_weekly_context_1h_to_4h",
+      "strategy_id": "swing_trading_lost_art",
+      "video_span": {
+        "start": "12:34",
+        "end": "18:53",
+        "canonical_frame_ts": "16:17"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_weekly",
+          "frame_role": "htf_context",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "1w",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "original high right there... premium array"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "fair value gap right there"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "order Block"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Moving higher from a Weekly discount array targeting a Weekly premium array.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "htf_pd_array_tap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "discount array"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_1h",
+          "frame_role": "setup",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "1h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "intermediate term low"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "that high"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "st right there"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "for Five Guys overlapping"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Weekly context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "short_term_range",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "new short-term range"
+            },
+            {
+              "name": "overlapping_pd_array",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "overlapping part that high with the for Five Guys"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "Target box",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Shows targeting a 1 to 2 Risk/Reward"
+            }
+          ],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f3_4h",
+          "frame_role": "full",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "open",
+                "presenter_calls_it": "for Value being created"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "breaker",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "breaker right there"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Weekly context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_weekly",
+          "candle_i": null,
+          "what_happens": "Trader notes price reaching a Weekly FVG (discount array) and anticipates a move toward a Weekly high (premium array).",
+          "maps_to_signal_step": 1,
+          "ts": "12:40"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "Drops to 1H timeframe to find the original entry. A bullish ST (first FVG) appears, followed by a new short-term range.",
+          "maps_to_signal_step": 2,
+          "ts": "15:21"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "The new short-term range pulls back into a 1H FVG that overlaps with a prior high. The trader enters long here.",
+          "maps_to_signal_step": 3,
+          "ts": "15:45"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "Stop is placed below the intermediate term low. Target is set for 1:2 RR, which is eventually hit. The trader moves to breakeven when new higher ranges form.",
+          "maps_to_signal_step": null,
+          "ts": "16:10"
+        },
+        {
+          "step": 5,
+          "frame_id": "f3_4h",
+          "candle_i": null,
+          "what_happens": "The trader zooms out to the 4H timeframe to look for a re-entry opportunity.",
+          "maps_to_signal_step": null,
+          "ts": "16:56"
+        },
+        {
+          "step": 6,
+          "frame_id": "f3_4h",
+          "candle_i": null,
+          "what_happens": "Price expands directly to the final target without forming a new short-term range pullback on the 4H, meaning the re-entry is missed, which the presenter says is perfectly fine.",
+          "maps_to_signal_step": null,
+          "ts": "18:29"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_1h"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": 2.0,
+        "precision": "approx"
+      },
+      "presenter_commentary": "The presenter highlights that it's acceptable to miss the higher timeframe re-entry if the market doesn't provide a short-term range pullback before hitting the ultimate target. The fractal plan secures profits on the initial 1H entry regardless.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.overlapping_pd_array",
+            "reason": "Requires parsing structural overlap manually (a FVG overlapping a prior swing high)."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices",
+          "why": "Missing visual access to the chart data.",
+          "ts": "12:34"
+        }
+      ]
+    },
+    {
+      "example_id": "ex4_daily_context_1h_to_4h",
+      "strategy_id": "swing_trading_lost_art",
+      "video_span": {
+        "start": "18:54",
+        "end": "22:35",
+        "canonical_frame_ts": "22:13"
+      },
+      "example_role": "real_trade_win",
+      "chart_kind": "real_market",
+      "frames": [
+        {
+          "frame_id": "f1_daily",
+          "frame_role": "htf_context",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "1d",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "daily premium array right there"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Moving from a daily discount to a daily premium array inside a broader monthly context.",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "htf_pd_array_tap",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "daily discount"
+            }
+          ],
+          "annotations_drawn_by_presenter": [],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f2_1h",
+          "frame_role": "setup",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "1h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "intermediate term low"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "this high"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "first St"
+              },
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "fair value Gap sitting right there"
+              }
+            ],
+            "order_blocks": [
+              {
+                "anchor_i": null,
+                "bullish": true,
+                "subtype": "standard",
+                "zone_low": null,
+                "zone_high": null,
+                "presenter_calls_it": "tiny order block right there"
+              }
+            ],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Daily context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "short_term_range",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "new short-term range higher"
+            },
+            {
+              "name": "overlapping_pd_array",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "overlapping with either a high"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "Target box",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Shows targeting just above 1.71 RR to hit the target, rounded in logic to a 1 to 2 equivalent due to broader context."
+            }
+          ],
+          "indicators_on_screen": []
+        },
+        {
+          "frame_id": "f3_4h",
+          "frame_role": "full",
+          "symbol": "USDJPY",
+          "feed_as_shown": null,
+          "timeframe": "4h",
+          "chart_timezone": null,
+          "date_range_shown": {
+            "from": null,
+            "to": null
+          },
+          "data_locator_confidence": "none",
+          "precision": "approx",
+          "price_axis_labels_seen": [],
+          "estimated_price_error": null,
+          "candle_columns": [
+            "i",
+            "time",
+            "o",
+            "h",
+            "l",
+            "c",
+            "v"
+          ],
+          "candles": [],
+          "low_confidence_candles": [],
+          "signals_observed": {
+            "swing_points": [
+              {
+                "candle_i": null,
+                "is_high": false,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "short-term range which is that low"
+              },
+              {
+                "candle_i": null,
+                "is_high": true,
+                "price": null,
+                "swept": false,
+                "presenter_calls_it": "that high"
+              }
+            ],
+            "structural_events": [],
+            "fvgs": [
+              {
+                "c1_i": null,
+                "c3_i": null,
+                "bullish": true,
+                "gap_low": null,
+                "gap_high": null,
+                "state": "mitigated",
+                "presenter_calls_it": "overlapping fair value Gap right there"
+              }
+            ],
+            "order_blocks": [],
+            "liquidity_levels": [],
+            "premium_discount": null,
+            "bias": "bullish",
+            "bias_source": "Daily context",
+            "kill_zone": "unknown"
+          },
+          "custom_signals_observed": [
+            {
+              "name": "overlapping_pd_array",
+              "candle_i_range": null,
+              "measured": {
+                "body": null,
+                "range": null,
+                "lower_wick": null,
+                "upper_wick": null
+              },
+              "presenter_calls_it": "overlapping part which is that high with that overlapping fair value Gap"
+            }
+          ],
+          "annotations_drawn_by_presenter": [
+            {
+              "type": "box",
+              "text": "Target box",
+              "price_from": null,
+              "price_to": null,
+              "candle_from_i": null,
+              "candle_to_i": null,
+              "meaning": "Shows targeting the same target level"
+            }
+          ],
+          "indicators_on_screen": []
+        }
+      ],
+      "setup_walkthrough": [
+        {
+          "step": 1,
+          "frame_id": "f1_daily",
+          "candle_i": null,
+          "what_happens": "Identifies the daily context: price has moved into a daily discount array and is targeting a daily premium array.",
+          "maps_to_signal_step": 1,
+          "ts": "19:14"
+        },
+        {
+          "step": 2,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "Drops to the 1H timeframe. The first ST (bullish FVG) forms but fails to produce a pullback (no new short-term range). Price expands and forms a second ST.",
+          "maps_to_signal_step": 2,
+          "ts": "19:40"
+        },
+        {
+          "step": 3,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "A new short-term range forms, returning into a 1H FVG that overlaps with an old high. Trader enters long.",
+          "maps_to_signal_step": 3,
+          "ts": "19:59"
+        },
+        {
+          "step": 4,
+          "frame_id": "f2_1h",
+          "candle_i": null,
+          "what_happens": "Stop loss is placed below the bodies of the intermediate term low. Target is set for roughly 1.71 R (rounded conceptually to 1:2) since it aligns with the larger context high.",
+          "maps_to_signal_step": null,
+          "ts": "20:20"
+        },
+        {
+          "step": 5,
+          "frame_id": "f3_4h",
+          "candle_i": null,
+          "what_happens": "Once the 1H trade is risk-free, the trader looks for a 4H re-entry opportunity. Price pulls back into a 4H overlapping FVG (overlapping with a prior high).",
+          "maps_to_signal_step": null,
+          "ts": "21:41"
+        },
+        {
+          "step": 6,
+          "frame_id": "f3_4h",
+          "candle_i": null,
+          "what_happens": "A secondary long entry is executed on the 4H. Both the original 1H entry and the 4H re-entry eventually hit their take profits.",
+          "maps_to_signal_step": null,
+          "ts": "22:20"
+        }
+      ],
+      "trade": {
+        "taken": true,
+        "direction": "long",
+        "entry": {
+          "price": null,
+          "candle_i": null,
+          "frame_id": "f2_1h"
+        },
+        "stop": {
+          "price": null
+        },
+        "targets": [
+          {
+            "price": null
+          }
+        ],
+        "outcome": "win",
+        "exit": {
+          "price": null,
+          "candle_i": null
+        },
+        "r_multiple": 1.71,
+        "precision": "approx"
+      },
+      "presenter_commentary": "He notes that because we are in a strong higher timeframe (Monthly/Daily) context, it is acceptable to 'stretch' a 1.71 RR target slightly to a 1:2. Also emphasizes you can use the exact same logic on the 4H for a subsequent re-entry.",
+      "engine_check": {
+        "should_detect": [
+          "fvg.bullish"
+        ],
+        "may_differ": [
+          {
+            "signal": "custom_signals.overlapping_pd_array",
+            "reason": "Requires parsing structural overlap manually."
+          }
+        ]
+      },
+      "uncertainties": [
+        {
+          "issue": "Cannot read exact candle prices",
+          "why": "Missing visual access to the chart data.",
+          "ts": "18:54"
+        }
+      ]
+    }
+  ]
+}
